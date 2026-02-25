@@ -10,6 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/inputmask@5.0.8/dist/inputmask.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         @media print {
             .no-print { display: none !important; }
@@ -21,7 +23,6 @@
         }
         
         .print-only { display: none; }
-        
         :root { --primary-color: #1e40af; }
         
         .scrollbar-thin { scrollbar-width: thin; }
@@ -43,7 +44,7 @@
         .report-item:last-child { border-bottom: none; }
         .analytic-list { margin-top: 0.25rem; margin-bottom: 0.75rem; padding-left: 1rem; border-left: 3px solid #bfdbfe; font-size: 0.8rem; color: #4b5563; }
         
-        /* Lista E-mail Otimizada - Largura Total */
+        /* Lista Split View */
         .split-view { display: flex; height: calc(100vh - 220px); border: 1px solid #e5e7eb; background: white; border-radius: 0.5rem; overflow: hidden; width: 100%; }
         .split-list { width: 30%; min-width: 300px; border-right: 1px solid #e5e7eb; overflow-y: auto; background-color: #f9fafb; }
         .split-detail { flex: 1; overflow-y: auto; padding: 2rem; background-color: white; }
@@ -58,17 +59,65 @@
         .st-pendente { background-color: #ffedd5; color: #9a3412; }
         .st-concluido { background-color: #d1fae5; color: #065f46; }
         
-        /* Tabela Otimizada - Largura Total */
+        /* Tabela */
         .table-container { width: 100%; overflow-x: auto; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         table { width: 100%; border-collapse: collapse; }
         th, td { white-space: nowrap; padding: 0.75rem 1rem; text-align: left; }
-        
         .priority-highlight { font-weight: bold; background-color: #fef9c3 !important; }
-
         .resizable-v { resize: vertical; overflow: auto; min-height: 200px; }
+
+        /* Login e App Overlay */
+        #login-overlay { position: fixed; inset: 0; background: #f3f4f6; display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        #app { display: none; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 font-sans">
+
+    <div id="login-overlay">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-200 animate-fadeIn">
+            
+            <div id="login-section">
+                <div class="flex justify-center mb-6">
+                    <div class="bg-blue-600 p-3 rounded-full"><i data-lucide="shield-check" class="text-white w-8 h-8"></i></div>
+                </div>
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso ao Sistema</h2>
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Usuário</label>
+                        <input type="text" id="log-user" required class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
+                        <input type="password" id="log-pass" required class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+                    <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition-colors">Entrar</button>
+                </form>
+                <button onclick="toggleLoginReg()" class="w-full text-blue-600 text-sm mt-4 hover:underline">Não tem conta? Cadastre-se</button>
+            </div>
+
+            <div id="reg-section" class="hidden">
+                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Criar Nova Conta</h2>
+                <form onsubmit="handleCadastro(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome Completo</label>
+                        <input type="text" id="reg-name" required class="w-full border p-3 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome de Usuário</label>
+                        <input type="text" id="reg-user" required class="w-full border p-3 rounded-lg outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
+                        <input type="password" id="reg-pass" required class="w-full border p-3 rounded-lg outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-bold">Cadastrar</button>
+                </form>
+                <button onclick="toggleLoginReg()" class="w-full text-gray-600 text-sm mt-4 hover:underline">Voltar para o Login</button>
+            </div>
+            
+            <p id="error-msg" class="text-red-500 text-sm mt-4 hidden text-center font-bold"></p>
+        </div>
+    </div>
 
     <div id="app" class="min-h-screen flex flex-col">
         <header class="bg-white shadow-sm border-b sticky top-0 z-50 no-print">
@@ -80,7 +129,10 @@
                         </div>
                         <div>
                             <h1 class="text-xl font-bold text-gray-900" id="header-org-name">Controle Correicional</h1>
-                            <p class="text-sm text-gray-600" id="header-subtitle">Sistema Institucional</p>
+                            <div class="flex items-center space-x-2">
+                                <p class="text-sm text-gray-600" id="header-subtitle">Sistema Institucional</p>
+                                <span id="admin-badge" class="hidden bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase border border-purple-200">Admin</span>
+                            </div>
                         </div>
                     </div>
                     <div class="flex items-center space-x-4">
@@ -88,6 +140,9 @@
                             <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
                             <span class="text-xs font-medium">Conectando...</span>
                         </div>
+                        <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition-colors" title="Sair do Sistema">
+                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                        </button>
                     </div>
                 </div>
                 
@@ -399,7 +454,7 @@
 
                     <div class="flex justify-end space-x-3 pt-6 border-t">
                         <button type="button" onclick="showPage('processos')" class="px-6 py-2 border rounded hover:bg-gray-100">Cancelar</button>
-                        <button type="button" onclick="submitProcessForm()" class="bg-blue-600 text-white px-8 py-2 rounded hover:bg-blue-700">Salvar</button>
+                        <button type="button" onclick="submitProcessForm()" class="bg-blue-600 text-white px-8 py-2 rounded hover:bg-blue-700">Salvar na Nuvem</button>
                     </div>
                 </form>
             </div>
@@ -565,13 +620,13 @@
                     <h2 class="text-xl font-bold mb-4">Configurações</h2>
                     
                     <div class="border-b mb-6 pb-6">
-                        <h3 class="font-semibold text-gray-700 mb-2">Backup de Dados</h3>
+                        <h3 class="font-semibold text-gray-700 mb-2">Backup Local (Opcional)</h3>
                         <div class="flex space-x-4">
                             <button onclick="exportBackup()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"><i data-lucide="download" class="w-4 h-4 mr-2"></i> Exportar JSON</button>
                             <button onclick="document.getElementById('import-file').click()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"><i data-lucide="upload" class="w-4 h-4 mr-2"></i> Importar JSON</button>
                             <input type="file" id="import-file" class="hidden" accept=".json" onchange="importBackup(event)">
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Salve e restaure sua base de processos e configurações localmente de forma segura.</p>
+                        <p class="text-xs text-gray-500 mt-2">Os dados já estão salvos na nuvem. Use isso apenas se quiser uma cópia física extra.</p>
                     </div>
 
                     <div class="border-b mb-4">
@@ -621,179 +676,172 @@
     </div>
 
     <script>
-        // Estruturas locais para exibição reativa
+        // --- CONFIGURAÇÃO SUPABASE ---
+        const SUPABASE_URL = 'https://oivvunhshvstkttzexun.supabase.co'; 
+        const SUPABASE_KEY = 'SUA_KEY_AQUI'; // <- MANTENHA A SUA CHAVE QUE JÁ ESTAVA NO ARQUIVO 53
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // --- VARIÁVEIS DE ESTADO GLOBAIS ---
+        let currentUser = null;
+        let processos = []; 
+        let currentAccused = [], currentView = 'cards';
+        let isPriorityFilterActive = false;
+        
         let config = {
-            orgName: 'Controle Correicional',
-            subtitle: 'Sistema Institucional',
-            defaultUnit: 'SEAP', itemsPerPage: 20, 
-            pjYears: 5,
+            orgName: 'Controle Correicional', subtitle: 'Sistema Institucional', defaultUnit: 'SEAP', itemsPerPage: 20, pjYears: 5,
             pf: { adv: 180, susp: 2, dem: 5 }, 
             alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
         };
-        let processos = []; 
-        let currentAccused = [], currentView = 'cards';
-        let isOnline = false;
-        let isPriorityFilterActive = false;
 
-        // --- SINCRONIZAÇÃO EM TEMPO REAL COM GENOSDB ---
-        let dbProcessos;
-        let dbConfig;
+        // --- AUTH & LOGIN ---
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('log-user').value;
+            const p = document.getElementById('log-pass').value;
+            const err = document.getElementById('error-msg');
+            const btn = document.getElementById('btn-login');
 
-        // Inicializamos GenosDB dinamicamente para manter o resto do arquivo estruturalmente igual 
-        // e compatível com as chamadas de botões no HTML global.
-        import("https://cdn.jsdelivr.net/npm/genosdb@latest/dist/index.min.js").then(async (module) => {
-            const { gdb } = module;
-            
-            dbProcessos = await gdb("CorregedoriaV3_processos", { rtc: true });
-            dbConfig = await gdb("CorregedoriaV3_config", { rtc: true });
-            
-            setOnlineStatus(); // Marca como conectado (Armazenamento OPFS + P2P Habilitado)
-            
-            // Monitor de Configurações
-            await dbConfig.map(({ id, value, action }) => {
-                if (id === 'main_config' && value && action !== 'removed') {
-                    if(!isOnline) setOnlineStatus();
-                    if(value.orgName) config.orgName = value.orgName;
-                    if(value.subtitle) config.subtitle = value.subtitle;
-                    if(value.defaultUnit) config.defaultUnit = value.defaultUnit;
-                    if(value.itemsPerPage) config.itemsPerPage = value.itemsPerPage;
-                    if(value.pjYears) config.pjYears = value.pjYears;
-                    if(value.pf) config.pf = typeof value.pf === 'string' ? JSON.parse(value.pf) : value.pf;
-                    if(value.alerts) config.alerts = typeof value.alerts === 'string' ? JSON.parse(value.alerts) : value.alerts;
-                    
-                    updateHeader();
-                    if(!document.getElementById('page-configuracoes').classList.contains('hidden')) { loadConfigsToForm(); }
-                    if(!document.getElementById('page-dashboard').classList.contains('hidden')) { loadDashboard(); }
-                } else if (action === 'initial' && !value) {
-                    saveConfigsToDB(); // Estado vazio, empurra padrão para o banco local
-                }
-            });
+            btn.innerText = 'Verificando...';
 
-            // Monitor de Processos (Atualização reativa estilo GenosDB)
-            await dbProcessos.map(({ id, value, action }) => {
-                if(!isOnline) setOnlineStatus();
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .select('*')
+                .eq('username', u)
+                .eq('senha', p)
+                .single();
+
+            btn.innerText = 'Entrar';
+
+            if (data) {
+                currentUser = data;
+                document.getElementById('login-overlay').style.display = 'none';
+                document.getElementById('app').style.display = 'flex';
+                document.getElementById('user-display').innerText = `Operador: ${data.nome_completo}`;
+                if(data.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
                 
-                if (action === 'removed' || value === null) {
-                    processos = processos.filter(p => p.id !== id);
-                } else if (action === 'initial' || action === 'added' || action === 'updated') {
-                    if (value) {
-                        const existingIndex = processos.findIndex(p => p.id === id);
-                        const proc = { ...value, id: id };
-                        if(typeof proc.acusados === 'string') {
-                            try { proc.acusados = JSON.parse(proc.acusados); } catch (e) { proc.acusados = []; }
-                        }
-                        
-                        if (existingIndex > -1) { processos[existingIndex] = proc; } 
-                        else { processos.push(proc); }
-                    }
-                }
-                refreshActivePage();
-            });
-            
-            // Render inicial em caso de delay
-            refreshActivePage();
-            
-        }).catch(err => {
-            console.error("Erro ao inicializar GenosDB:", err);
-            showToast("Erro ao conectar no banco de dados distribuído.", "error");
-        });
-
-        function setOnlineStatus() {
-            isOnline = true;
-            const statusDiv = document.getElementById('db-status');
-            statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full bg-green-500"></div><span class="text-xs font-medium text-green-700">Online</span>`;
-            statusDiv.className = "flex items-center space-x-2 px-3 py-1 bg-green-50 rounded-full border border-green-200";
+                initApp();
+            } else {
+                err.innerText = "Usuário ou senha inválidos.";
+                err.classList.remove('hidden');
+            }
         }
-        
+
+        async function handleCadastro(e) {
+            e.preventDefault();
+            const n = document.getElementById('reg-name').value;
+            const u = document.getElementById('reg-user').value;
+            const p = document.getElementById('reg-pass').value;
+
+            const { error } = await supabaseClient
+                .from('usuarios')
+                .insert([{ nome_completo: n, username: u, senha: p, is_admin: false }]);
+
+            if (error) {
+                alert("Erro ao cadastrar: Usuário já existe ou falha na conexão.");
+            } else {
+                alert("Usuário cadastrado com sucesso! Faça login.");
+                toggleLoginReg();
+            }
+        }
+
+        function toggleLoginReg() {
+            document.getElementById('login-section').classList.toggle('hidden');
+            document.getElementById('reg-section').classList.toggle('hidden');
+            document.getElementById('error-msg').classList.add('hidden');
+        }
+
+        function logout() { location.reload(); }
+
+        // --- INICIALIZAÇÃO SUPABASE E DADOS ---
+        async function initApp() {
+            setOnlineStatus('Conectando...');
+            await fetchConfig();
+            await fetchProcessos();
+            subscribeRealtime();
+            setOnlineStatus('Online', true);
+            showPage('dashboard');
+        }
+
+        function setOnlineStatus(msg, isOk=false) {
+            const statusDiv = document.getElementById('db-status');
+            statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${isOk ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}"></div><span class="text-xs font-medium ${isOk ? 'text-green-700' : 'text-yellow-700'}">${msg}</span>`;
+            statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${isOk ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`;
+        }
+
+        async function fetchConfig() {
+            try {
+                const { data, error } = await supabaseClient.from('configuracoes').select('dados').eq('id', 'main').single();
+                if (data && data.dados) {
+                    config = data.dados;
+                }
+            } catch(e) { console.log('Tabela configuracoes não encontrada ou vazia. Usando padrão local.'); }
+            updateHeader();
+            loadConfigsToForm();
+        }
+
+        async function saveConfigsToSupabase() {
+            try {
+                const { error } = await supabaseClient.from('configuracoes').upsert([{ id: 'main', dados: config }]);
+                if(error) throw error;
+            } catch(e) { console.log('Não foi possível salvar config na nuvem. Apenas local foi atualizado.'); }
+        }
+
+        async function fetchProcessos() {
+            const { data, error } = await supabaseClient.from('processos').select('*');
+            if (error) {
+                console.error(error);
+                showToast("Erro ao carregar processos da nuvem.", "error");
+                return;
+            }
+            
+            // Tratamento do Array de Acusados que vem da nuvem
+            processos = data.map(p => {
+                if (typeof p.acusados === 'string') {
+                    try { p.acusados = JSON.parse(p.acusados); } catch (e) { p.acusados = []; }
+                }
+                return p;
+            });
+            refreshActivePage();
+        }
+
+        function subscribeRealtime() {
+            supabaseClient
+                .channel('public:processos')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, payload => {
+                    fetchProcessos(); // Atualiza toda a tela de todos automaticamente
+                })
+                .subscribe();
+        }
+
+        async function saveProcessToSupabase(data) {
+            const dbData = { ...data };
+            // Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
+            dbData.acusados = JSON.stringify(data.acusados); 
+            
+            const { error } = await supabaseClient.from('processos').upsert([dbData]);
+            if (error) {
+                console.error("Erro Supabase:", error);
+                alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
+            } else {
+                showToast("Processo salvo na nuvem com sucesso!");
+                fetchProcessos();
+                showPage('processos');
+            }
+        }
+
+        async function deleteProcessFromSupabase(id) {
+            const { error } = await supabaseClient.from('processos').delete().eq('id', id);
+            if (error) alert("Erro ao excluir.");
+            else fetchProcessos();
+        }
+
+
+        // --- LÓGICA DE NEGÓCIO E INTERFACE (Preservada Inteiramente) ---
         function refreshActivePage() {
             if(!document.getElementById('page-dashboard').classList.contains('hidden')) loadDashboard();
             if(!document.getElementById('page-processos').classList.contains('hidden')) refreshProcessos();
             if(!document.getElementById('page-relatorios').classList.contains('hidden')) populateAnalystFilters();
         }
-
-        // --- FUNÇÕES DE PERSISTÊNCIA (GenosDB) ---
-
-        async function saveConfigsToDB() {
-            if (!dbConfig) return;
-            await dbConfig.put({
-                orgName: config.orgName,
-                subtitle: config.subtitle,
-                defaultUnit: config.defaultUnit,
-                itemsPerPage: config.itemsPerPage,
-                pjYears: config.pjYears,
-                pf: JSON.stringify(config.pf),
-                alerts: JSON.stringify(config.alerts)
-            }, 'main_config');
-        }
-
-        async function saveProcessToDB(data) {
-            if (!dbProcessos) return;
-            const pId = data.id.toString(); 
-            const dbData = { ...data };
-            dbData.acusados = JSON.stringify(data.acusados);
-            delete dbData.id;
-            await dbProcessos.put(dbData, pId);
-        }
-
-        async function deleteProcessFromDB(id) { 
-            if (!dbProcessos) return;
-            await dbProcessos.remove(id.toString()); 
-        }
-
-        // --- FUNÇÕES DE BACKUP (JSON) ---
-        
-        function exportBackup() {
-            const backupData = {
-                config: config,
-                processos: processos
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "backup_corregedoria_" + new Date().toISOString().split('T')[0] + ".json");
-            document.body.appendChild(downloadAnchorNode); 
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
-            showToast("Backup exportado com sucesso!");
-        }
-
-        function importBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-                    
-                    if (importedData.config && dbConfig) {
-                        await dbConfig.put({
-                            orgName: importedData.config.orgName,
-                            subtitle: importedData.config.subtitle,
-                            defaultUnit: importedData.config.defaultUnit,
-                            itemsPerPage: importedData.config.itemsPerPage,
-                            pjYears: importedData.config.pjYears,
-                            pf: JSON.stringify(importedData.config.pf),
-                            alerts: JSON.stringify(importedData.config.alerts)
-                        }, 'main_config');
-                    }
-                    
-                    if (importedData.processos && Array.isArray(importedData.processos) && dbProcessos) {
-                        for(const p of importedData.processos) {
-                            await saveProcessToDB(p); 
-                        }
-                    }
-                    
-                    showToast("Backup importado com sucesso. Sincronizando...");
-                    setTimeout(() => window.location.reload(), 2000); 
-                } catch (err) {
-                    alert("Erro ao ler/importar o arquivo JSON. Certifique-se de que é um backup válido.");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; // Limpa o input para permitir nova importação
-        }
-
-        // --- LÓGICA DE NEGÓCIO ---
 
         function saveConfigs() {
             config.orgName = document.getElementById('conf-org-name').value;
@@ -804,17 +852,11 @@
             config.pf.adv = parseInt(document.getElementById('conf-pf-adv').value) || 180;
             config.pf.susp = parseInt(document.getElementById('conf-pf-susp').value) || 2;
             config.pf.dem = parseInt(document.getElementById('conf-pf-dem').value) || 5;
-
-            config.alerts.crit = {
-                task: parseInt(document.getElementById('conf-crit-task').value), adv: parseInt(document.getElementById('conf-crit-adv').value),
-                susp: parseInt(document.getElementById('conf-crit-susp').value), dem: parseInt(document.getElementById('conf-crit-dem').value)
-            };
-            config.alerts.high = {
-                task: parseInt(document.getElementById('conf-high-task').value), adv: parseInt(document.getElementById('conf-high-adv').value),
-                susp: parseInt(document.getElementById('conf-high-susp').value), dem: parseInt(document.getElementById('conf-high-dem').value)
-            };
+            config.alerts.crit = { task: parseInt(document.getElementById('conf-crit-task').value), adv: parseInt(document.getElementById('conf-crit-adv').value), susp: parseInt(document.getElementById('conf-crit-susp').value), dem: parseInt(document.getElementById('conf-crit-dem').value) };
+            config.alerts.high = { task: parseInt(document.getElementById('conf-high-task').value), adv: parseInt(document.getElementById('conf-high-adv').value), susp: parseInt(document.getElementById('conf-high-susp').value), dem: parseInt(document.getElementById('conf-high-dem').value) };
             
-            saveConfigsToDB();
+            saveConfigsToSupabase();
+            updateHeader();
             showToast('Configurações salvas e sincronizadas!');
         }
 
@@ -859,52 +901,39 @@
                 obs: document.getElementById('process-obs').value,
             };
 
-            // Validação dos Campos Obrigatórios requeridos
             if(!data.sei || !data.data_conhecimento || !data.objeto || !data.tipo_acusado || currentAccused.length === 0) {
                 return alert('Preencha os campos obrigatórios (*):\n- Processo SEI\n- Data Conhecimento do Fato\n- Objeto\n- Acusado(s)\n- Tipo de Pessoa.');
             }
             
-            saveProcessToDB(data);
-            showToast("Processo salvo e sincronizado!");
-            showPage('processos');
+            saveProcessToSupabase(data);
         }
 
         function deleteProcess(id) {
             if(confirm('Tem certeza que deseja excluir este processo?')) {
-                deleteProcessFromDB(id);
+                deleteProcessFromSupabase(id);
                 showToast("Processo excluído!");
                 if(currentView === 'list') document.getElementById('split-detail-view').innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div>';
             }
         }
 
-        // --- Helpers e UI ---
-        function updateHeader() {
-            document.getElementById('header-org-name').innerText = config.orgName;
-            document.getElementById('header-subtitle').innerText = config.subtitle;
-        }
+        function updateHeader() { document.getElementById('header-org-name').innerText = config.orgName; document.getElementById('header-subtitle').innerText = config.subtitle; }
         function formatDate(str) { if(!str) return '—'; const d = new Date(str); return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
         
         function getStatusFromProcess(p) {
             if (p.status_manual && p.status_manual !== "") return p.status_manual;
-            
             if (p.data_despacho) return 'Concluído';
             if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
             if (p.analista) return 'Em análise';
-            
             return 'Aguardando Distribuição';
         }
 
         function getStatusClass(status) {
-            const map = {
-                'Aguardando Distribuição': 'st-aguardando', 
-                'Em análise': 'st-analise', 
-                'Pendente de análise do(a) Corregedor(a)': 'st-pendente',
-                'Concluído': 'st-concluido'
-            };
+            const map = { 'Aguardando Distribuição': 'st-aguardando', 'Em análise': 'st-analise', 'Pendente de análise do(a) Corregedor(a)': 'st-pendente', 'Concluído': 'st-concluido' };
             return map[status] || 'st-arquivado';
         }
+
         function showToast(msg, type = 'info') {
-            const colors = { info: 'bg-gray-800', error: 'bg-red-600' };
+            const colors = { info: 'bg-gray-800', error: 'bg-red-600', success: 'bg-green-600' };
             const el = document.createElement('div');
             el.className = `${colors[type]} text-white px-4 py-2 rounded shadow-lg animate-fadeIn`;
             el.innerText = msg;
@@ -923,14 +952,10 @@
             if(pageId === 'processos') refreshProcessos();
             if(pageId === 'novo-processo') resetForm();
             if(pageId === 'configuracoes') loadConfigsToForm();
-            if(pageId === 'relatorios') {
-                populateAnalystFilters();
-                switchReportTab('geral');
-            }
+            if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
         }
         function closeReport() { document.getElementById('report-output').classList.add('hidden'); }
 
-        // DASHBOARD
         function loadDashboard() {
             document.getElementById('stat-total').innerText = processos.length;
             document.getElementById('stat-aguardando').innerText = processos.filter(p => getStatusFromProcess(p) === 'Aguardando Distribuição').length;
@@ -951,9 +976,7 @@
                 }
             });
 
-            document.getElementById('prazont-ok').innerText = ntOk;
-            document.getElementById('prazont-alerta').innerText = ntAlerta;
-            document.getElementById('prazont-vencido').innerText = ntVencido;
+            document.getElementById('prazont-ok').innerText = ntOk; document.getElementById('prazont-alerta').innerText = ntAlerta; document.getElementById('prazont-vencido').innerText = ntVencido;
 
             tasks.sort((a, b) => a.days - b.days);
             document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${t.p.sei}</span> <span class="text-gray-600 truncate block w-40">${t.p.objeto}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
@@ -963,264 +986,92 @@
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
-
-                const isAtRisk = (daysAdv <= config.alerts.high.adv) || 
-                                 (daysSusp <= config.alerts.high.susp) || 
-                                 (daysDem <= config.alerts.high.dem);
-                
-                if (isAtRisk) {
-                    const minDays = Math.min(daysAdv, daysSusp, daysDem);
-                    atRiskProcesses.push({
-                        p: p,
-                        minDays: minDays,
-                        days: { adv: daysAdv, susp: daysSusp, dem: daysDem } 
-                    });
-                }
+                const isAtRisk = (daysAdv <= config.alerts.high.adv) || (daysSusp <= config.alerts.high.susp) || (daysDem <= config.alerts.high.dem);
+                if (isAtRisk) { atRiskProcesses.push({ p: p, minDays: Math.min(daysAdv, daysSusp, daysDem), days: { adv: daysAdv, susp: daysSusp, dem: daysDem } }); }
             });
 
             atRiskProcesses.sort((a, b) => a.minDays - b.minDays);
-
             document.getElementById('presc-list-dashboard').innerHTML = atRiskProcesses.length ? atRiskProcesses.map(item => {
-                const p = item.p;
-                const days = item.days;
-
+                const p = item.p; const days = item.days;
                 const getStatusHtml = (label, date, daysLeft, critThreshold, highThreshold) => {
                     if (!date || date === '—') return `<div class="text-gray-400">${label}: —</div>`;
-                    
-                    const isPrescribed = daysLeft < 0;
-                    const isCritical = daysLeft <= critThreshold;
-                    const isHigh = daysLeft <= highThreshold;
-
+                    const isPrescribed = daysLeft < 0; const isCritical = daysLeft <= critThreshold; const isHigh = daysLeft <= highThreshold;
                     let colorClass = 'text-gray-700';
-                    if (isPrescribed || isCritical) colorClass = 'text-red-600 font-bold';
-                    else if (isHigh) colorClass = 'text-yellow-600';
-
-                    const statusText = isPrescribed ? `Prescrito (${-daysLeft}d)` : `${daysLeft} dias`;
-                    return `<div>${label}: <span class="${colorClass}">${formatDate(date)} (${statusText})</span></div>`;
+                    if (isPrescribed || isCritical) colorClass = 'text-red-600 font-bold'; else if (isHigh) colorClass = 'text-yellow-600';
+                    return `<div>${label}: <span class="${colorClass}">${formatDate(date)} (${isPrescribed ? `Prescrito (${-daysLeft}d)` : `${daysLeft} dias`})</span></div>`;
                 };
-
-                return `
-                    <div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}">
-                        <div class="flex justify-between items-start mb-1">
-                            <span class="font-mono font-semibold">${p.sei}</span>
-                            <span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span>
-                        </div>
-                        <div class="text-xs bg-gray-50 p-2 rounded border space-y-1">
-                            ${getStatusHtml('Advertência', p.calc_advertencia, days.adv, config.alerts.crit.adv, config.alerts.high.adv)}
-                            ${getStatusHtml('Suspensão', p.calc_suspensao, days.susp, config.alerts.crit.susp, config.alerts.high.susp)}
-                            ${getStatusHtml('Demissão', p.calc_demissao, days.dem, config.alerts.crit.dem, config.alerts.high.dem)}
-                        </div>
-                    </div>
-                `;
+                return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${p.sei}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${getStatusHtml('Advertência', p.calc_advertencia, days.adv, config.alerts.crit.adv, config.alerts.high.adv)}${getStatusHtml('Suspensão', p.calc_suspensao, days.susp, config.alerts.crit.susp, config.alerts.high.susp)}${getStatusHtml('Demissão', p.calc_demissao, days.dem, config.alerts.crit.dem, config.alerts.high.dem)}</div></div>`;
             }).join('') : '<p class="text-gray-500 text-sm">Nenhum risco de prescrição iminente.</p>';
 
             const statusCounts = { 'Aguardando Distribuição': 0, 'Em análise': 0, 'Pendente de análise do(a) Corregedor(a)': 0, 'Concluído': 0 };
-            processos.forEach(p => { 
-                const status = getStatusFromProcess(p); 
-                if (status in statusCounts) { statusCounts[status]++; }
-            });
+            processos.forEach(p => { const status = getStatusFromProcess(p); if (status in statusCounts) { statusCounts[status]++; } });
             document.getElementById('chart-status').innerHTML = Object.keys(statusCounts).map(k => `<div class="flex items-center text-sm mb-1"><span class="w-40">${k}</span><div class="flex-1 bg-gray-100 rounded h-4"><div class="bg-blue-500 h-full" style="width: ${(processos.length ? (statusCounts[k]/processos.length)*100 : 0)}%"></div></div><span class="ml-2 font-bold">${statusCounts[k]}</span></div>`).join('');
         }
 
-        // VIEWS E FILTROS ATUALIZADOS
-        function toggleAdvancedFilters() {
-            document.getElementById('advanced-filters-panel').classList.toggle('hidden');
-        }
-
+        function toggleAdvancedFilters() { document.getElementById('advanced-filters-panel').classList.toggle('hidden'); }
         function togglePriorityFilter() {
             isPriorityFilterActive = !isPriorityFilterActive;
             const btn = document.getElementById('btn-filter-priority');
-            if(isPriorityFilterActive) {
-                btn.classList.add('bg-yellow-400', 'text-yellow-900', 'font-bold');
-                btn.classList.remove('bg-yellow-50', 'text-yellow-700');
-            } else {
-                btn.classList.remove('bg-yellow-400', 'text-yellow-900', 'font-bold');
-                btn.classList.add('bg-yellow-50', 'text-yellow-700');
-            }
+            if(isPriorityFilterActive) { btn.classList.add('bg-yellow-400', 'text-yellow-900', 'font-bold'); btn.classList.remove('bg-yellow-50', 'text-yellow-700'); } 
+            else { btn.classList.remove('bg-yellow-400', 'text-yellow-900', 'font-bold'); btn.classList.add('bg-yellow-50', 'text-yellow-700'); }
             refreshProcessos();
         }
-
         function clearAllFilters() {
             document.getElementById('search-process').value = '';
             document.querySelectorAll('#advanced-filters-panel input, #advanced-filters-panel select').forEach(el => el.value = '');
-            if(isPriorityFilterActive) togglePriorityFilter();
-            else refreshProcessos();
+            if(isPriorityFilterActive) togglePriorityFilter(); else refreshProcessos();
         }
 
         function setViewMode(mode) {
-            currentView = mode;
-            localStorage.setItem('correg_view_mode', mode);
+            currentView = mode; localStorage.setItem('correg_view_mode', mode);
             const activeClasses = ['bg-blue-100', 'text-blue-700'];
-            ['cards', 'table', 'list'].forEach(m => {
-                const btn = document.getElementById(`btn-view-${m}`);
-                btn.classList.remove(...activeClasses);
-                if (m === mode) {
-                    btn.classList.add(...activeClasses);
-                }
-            });
+            ['cards', 'table', 'list'].forEach(m => { const btn = document.getElementById(`btn-view-${m}`); btn.classList.remove(...activeClasses); if (m === mode) { btn.classList.add(...activeClasses); } });
             refreshProcessos();
         }
 
         function refreshProcessos() {
-            const container = document.getElementById('process-view-container');
-            container.className = "w-full";
-            
+            const container = document.getElementById('process-view-container'); container.className = "w-full";
             const search = document.getElementById('search-process').value.toLowerCase();
+            const getVal = (id) => document.getElementById(id)?.value; const getValLower = (id) => (document.getElementById(id)?.value || '').toLowerCase();
             
-            // Valores dos filtros avançados
-            const getVal = (id) => document.getElementById(id)?.value;
-            const getValLower = (id) => (document.getElementById(id)?.value || '').toLowerCase();
-            
-            const fpStatus = getVal('fp-status');
-            const fpSei = getValLower('fp-sei');
-            const fpObjeto = getValLower('fp-objeto');
-            const fpAcusados = getValLower('fp-acusados');
-            const fpAnalista = getValLower('fp-analista');
-            const fpResultado = getVal('fp-resultado');
-            const fpTipoAcusado = getVal('fp-tipo_acusado');
-            const fpPenalidades = getVal('fp-penalidades');
-            
-            const fpDataEnt = getVal('fp-data_ent');
-            const fpDataConhecimento = getVal('fp-data_conhecimento');
-            const fpDataDistribuicao = getVal('fp-data_distribuicao');
-            const fpPrazoNtData = getVal('fp-prazo_nt_data');
-            const fpDataEntregaNt = getVal('fp-data_entrega_nt');
-            const fpDataDespacho = getVal('fp-data_despacho');
-            
-            const fpUnidadeOrigem = getValLower('fp-unidade_origem');
-            const fpDocOrigem = getValLower('fp-doc_origem');
-            const fpJuntado = getValLower('fp-juntado');
-            const fpRelacionados = getValLower('fp-relacionados');
-            const fpDocResp = getValLower('fp-doc_resp');
-            
-            const fpOpPolicial = getVal('fp-op_policial');
-            const fpOpPolicialDetalhes = getValLower('fp-op_policial_detalhes');
-            const fpPossuiInquerito = getVal('fp-possui_inquerito');
-            const fpInqueritoDetalhes = getValLower('fp-inquerito_detalhes');
-            const fpCadEpad = getVal('fp-cad_epad');
-            const fpEpadDetalhes = getValLower('fp-epad_detalhes');
-            
-            const fpTacApto = getVal('fp-tac_apto');
-            const fpTacSit = getVal('fp-tac_sit');
-            const fpTacObs = getValLower('fp-tac_obs');
-            const fpObs = getValLower('fp-obs');
+            const fpStatus = getVal('fp-status'), fpSei = getValLower('fp-sei'), fpObjeto = getValLower('fp-objeto'), fpAcusados = getValLower('fp-acusados'), fpAnalista = getValLower('fp-analista'), fpResultado = getVal('fp-resultado'), fpTipoAcusado = getVal('fp-tipo_acusado'), fpPenalidades = getVal('fp-penalidades');
+            const fpDataEnt = getVal('fp-data_ent'), fpDataConhecimento = getVal('fp-data_conhecimento'), fpDataDistribuicao = getVal('fp-data_distribuicao'), fpPrazoNtData = getVal('fp-prazo_nt_data'), fpDataEntregaNt = getVal('fp-data_entrega_nt'), fpDataDespacho = getVal('fp-data_despacho');
+            const fpUnidadeOrigem = getValLower('fp-unidade_origem'), fpDocOrigem = getValLower('fp-doc_origem'), fpJuntado = getValLower('fp-juntado'), fpRelacionados = getValLower('fp-relacionados'), fpDocResp = getValLower('fp-doc_resp');
+            const fpOpPolicial = getVal('fp-op_policial'), fpOpPolicialDetalhes = getValLower('fp-op_policial_detalhes'), fpPossuiInquerito = getVal('fp-possui_inquerito'), fpInqueritoDetalhes = getValLower('fp-inquerito_detalhes'), fpCadEpad = getVal('fp-cad_epad'), fpEpadDetalhes = getValLower('fp-epad_detalhes');
+            const fpTacApto = getVal('fp-tac_apto'), fpTacSit = getVal('fp-tac_sit'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs');
 
             const filtered = processos.filter(p => {
-                if (search) {
-                    const matchGlobal = Object.values(p).some(val => 
-                        val && typeof val === 'string' && val.toLowerCase().includes(search)
-                    ) || (p.acusados && p.acusados.join(' ').toLowerCase().includes(search));
-                    if (!matchGlobal) return false;
-                }
-
+                if (search) { const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && val.toLowerCase().includes(search)) || (p.acusados && p.acusados.join(' ').toLowerCase().includes(search)); if (!matchGlobal) return false; }
                 if (isPriorityFilterActive && !p.prioritario) return false;
-
-                if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false;
-                if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false;
-                if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false;
-                if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false;
-                if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false;
-                if (fpResultado && p.resultado !== fpResultado) return false;
-                if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false;
-                if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
-                
-                if (fpDataEnt && p.data_ent !== fpDataEnt) return false;
-                if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false;
-                if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false;
-                if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false;
-                if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false;
-                if (fpDataDespacho && p.data_despacho !== fpDataDespacho) return false;
-
-                if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false;
-                if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false;
-                if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false;
-                if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false;
-                if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
-
-                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false;
-                if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false;
-                if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false;
-                if (fpTacApto && String(!!p.tac_apto) !== fpTacApto) return false;
-
-                if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false;
-                if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false;
-                if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
-                
-                if (fpTacSit && p.tac_sit !== fpTacSit) return false;
-                if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false;
-                if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
-
+                if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
+                if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (fpDataDespacho && p.data_despacho !== fpDataDespacho) return false;
+                if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false; if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false; if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false; if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
+                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false; if (fpTacApto && String(!!p.tac_apto) !== fpTacApto) return false;
+                if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
+                if (fpTacSit && p.tac_sit !== fpTacSit) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
                 return true;
             });
             
             container.innerHTML = '';
-            if (currentView === 'table') renderTableView(container, filtered);
-            else if (currentView === 'list') renderListView(container, filtered);
-            else renderCardsView(container, filtered);
+            if (currentView === 'table') renderTableView(container, filtered); else if (currentView === 'list') renderListView(container, filtered); else renderCardsView(container, filtered);
             lucide.createIcons();
         }
 
         function renderTableView(container, data) {
             let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
             data.forEach(p => { 
-                const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—';
-                const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`;
-                html += `
-                    <tr class="${p.prioritario ? 'priority-highlight' : ''}">
-                        <td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td>
-                        <td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td>
-                        <td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td>
-                        <td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td>
-                        <td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td>
-                        <td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td>
-                        <td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td>
-                        <td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td>
-                        <td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td>
-                        <td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td>
-                    </tr>`; 
+                const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`;
+                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`; 
             });
-            html += `</tbody></table></div>`;
-            container.innerHTML = html;
+            html += `</tbody></table></div>`; container.innerHTML = html;
         }
 
         function renderCardsView(container, data) {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full";
             data.forEach(p => {
-                const st = getStatusFromProcess(p);
-                const card = document.createElement('div');
+                const st = getStatusFromProcess(p); const card = document.createElement('div');
                 card.className = `bg-white p-5 rounded-lg shadow border flex flex-col justify-between ${p.prioritario ? 'priority-highlight border-yellow-400' : ''}`;
-                card.innerHTML = `
-                    <div>
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="font-mono text-gray-700">${p.sei}</span>
-                            <div class="flex items-center space-x-2">
-                                ${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}
-                                <button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </div>
-                        </div>
-                        <p class="font-semibold truncate mb-2" title="${p.objeto}">${p.objeto}</p>
-                        
-                        <div class="text-sm text-gray-700 space-y-1 mb-3">
-                            <p><b>Acusado(s):</b> <span class="truncate" title="${p.acusados?.join(', ') || ''}">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p>
-                            <p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p>
-                            <p><b>Resultado:</b> ${p.resultado && p.resultado !== 'Não definida' ? p.resultado : '—'}</p>
-                        </div>
-                        
-                        <div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3">
-                            <p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p>
-                            <p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p>
-                        </div>
-                        
-                        <div class="flex items-center space-x-2 text-xs">
-                            ${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}
-                            ${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}
-                        </div>
-                    </div>
-                    
-                    <div class="text-right mt-4 pt-3 border-t">
-                        <button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button>
-                    </div>
-                `;
+                card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold truncate mb-2" title="${p.objeto}">${p.objeto}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="truncate">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Resultado:</b> ${p.resultado && p.resultado !== 'Não definida' ? p.resultado : '—'}</p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p></div><div class="flex items-center space-x-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
                 container.appendChild(card);
             });
         }
@@ -1229,19 +1080,9 @@
             container.innerHTML = `<div class="split-view resizable-view"><div class="split-list" id="split-list-items"></div><div class="split-detail" id="split-detail-view"><div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div></div></div>`;
             const listContainer = document.getElementById('split-list-items');
             data.forEach(p => {
-                const item = document.createElement('div'); 
-                item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`;
-                item.onclick = () => showDetailInSplit(p, item);
-                
+                const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
-
-                item.innerHTML = `
-                    <button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                    <div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div>
-                    <div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div>
-                    <div class="text-xs text-gray-600 truncate mt-1" title="${acusadosStr}"><b>Acusado:</b> ${acusadosStr}</div>
-                    <div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div>
-                `;
+                item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div>`;
                 listContainer.appendChild(item);
             });
         }
@@ -1249,75 +1090,9 @@
         function showDetailInSplit(p, itemEl) {
             document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active')); itemEl.classList.add('active');
             const detailContainer = document.getElementById('split-detail-view');
-            
-            detailContainer.innerHTML = `
-                <div class="flex justify-between items-start border-b pb-4 mb-4">
-                    <h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2>
-                    <button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm">
-                        <div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div>
-                        <div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div>
-                        <div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div>
-                    </div>
-                    <div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm">
-                        <div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div>
-                        <div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div>
-                        <div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div>
-                    </div>
-                     <div class="mt-4 p-3 bg-yellow-50 rounded border text-sm">
-                        <h4 class="font-bold mb-1">Prazos Prescricionais</h4>
-                        <div class="grid grid-cols-3 gap-2">
-                            <div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div>
-                            <div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div>
-                            <div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>
-                            ${p.calc_pj ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mb-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm">
-                        <div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                        <div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${p.resultado || '—'}</p></div>
-                        <div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(p.data_despacho)}</p></div>
-                        <div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div>
-                    </div>
-                    <div class="mt-4 p-3 bg-blue-50 rounded border text-sm">
-                        <b>Apto a TAC:</b> <span class="font-bold">${p.tac_apto ? 'Sim' : 'Não'}</span>
-                        ${p.tac_apto ? `<span class="ml-4"><b>Situação:</b> ${p.tac_sit || 'N/D'}</span>` : ''}
-                        ${p.tac_apto && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}
-                    </div>
-                    <div class="mt-4 text-sm">
-                        <p class="font-bold text-xs text-gray-500">Observações Gerais</p>
-                        <p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p>
-                    </div>
-                </div>
-            `;
+            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2"><div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>${p.calc_pj ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${p.resultado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(p.data_despacho)}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Apto a TAC:</b> <span class="font-bold">${p.tac_apto ? 'Sim' : 'Não'}</span>${p.tac_apto ? `<span class="ml-4"><b>Situação:</b> ${p.tac_sit || 'N/D'}</span>` : ''}${p.tac_apto && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
 
-        // FORM OPS
         function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; renderAccused(); ['policial-details', 'inquerito-details', 'epad-details', 'tac-details'].forEach(id => document.getElementById(id).classList.add('hidden')); }
         function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); document.getElementById('input-acusado').value=''; renderAccused(); }}
         function removeAcusado(idx) { currentAccused.splice(idx, 1); renderAccused(); }
@@ -1327,106 +1102,47 @@
         function toggleFilterDetail(elementId) { document.getElementById(elementId).classList.toggle('hidden'); }
         
         function editProcess(id) {
-            const p = processos.find(x=>x.id==id); if(!p)return; showPage('novo-processo'); resetForm();
-            document.getElementById('novo-processo-title').innerText = "Editar Processo";
-            Object.keys(p).forEach(key => {
-                const el = document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`);
-                if (el) { el.type === 'checkbox' ? el.checked = p[key] : el.value = p[key] || ''; }
-            });
-            document.getElementById('process-id').value = p.id;
-            document.getElementById('process-data-entrada').value = p.data_ent;
-            document.getElementById('process-relacionados').value = p.relacionados;
-            document.getElementById('process-doc-resposta').value = p.doc_resp;
-            document.getElementById('process-prazo-data').value = p.prazo_nt_data;
-            document.getElementById('process-data-despacho').value = p.data_despacho || '';
-            document.getElementById('process-status-manual').value = p.status_manual || '';
-            
-            toggleConditionalField('policial-details', p.op_policial);
-            toggleConditionalField('inquerito-details', p.possui_inquerito);
-            toggleConditionalField('epad-details', p.cad_epad);
-            toggleTacDetails();
-            
-            currentAccused = p.acusados||[]; renderAccused(); 
-            calculatePrescription();
+            const p = processos.find(x=>x.id==id); if(!p)return; showPage('novo-processo'); resetForm(); document.getElementById('novo-processo-title').innerText = "Editar Processo";
+            Object.keys(p).forEach(key => { const el = document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`); if (el) { el.type === 'checkbox' ? el.checked = p[key] : el.value = p[key] || ''; } });
+            document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
+            toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad); toggleTacDetails();
+            currentAccused = p.acusados||[]; renderAccused(); calculatePrescription();
         }
 
         function calculatePrescription() { 
-            const d = document.getElementById('process-data-conhecimento').value; 
-            const tipo = document.getElementById('process-tipo-acusado').value;
+            const d = document.getElementById('process-data-conhecimento').value; const tipo = document.getElementById('process-tipo-acusado').value;
             document.getElementById('container-pf').classList.add('hidden'); document.getElementById('container-pj').classList.add('hidden');
             if(!d) return; 
-            const dt = new Date(d);
-            const adv = new Date(dt); adv.setDate(adv.getDate() + (config.pf?.adv || 180)); 
-            const sus = new Date(dt); sus.setFullYear(sus.getFullYear() + (config.pf?.susp || 2)); 
-            const dem = new Date(dt); dem.setFullYear(dem.getFullYear() + (config.pf?.dem || 5)); 
-            const pjDate = new Date(dt); pjDate.setFullYear(pjDate.getFullYear() + (config.pjYears || 5));
-            document.getElementById('calc-advertencia').value = adv.toISOString().split('T')[0];
-            document.getElementById('calc-suspensao').value = sus.toISOString().split('T')[0];
-            document.getElementById('calc-demissao').value = dem.toISOString().split('T')[0];
-            document.getElementById('calc-pj').value = pjDate.toISOString().split('T')[0];
+            const dt = new Date(d); const adv = new Date(dt); adv.setDate(adv.getDate() + (config.pf?.adv || 180)); const sus = new Date(dt); sus.setFullYear(sus.getFullYear() + (config.pf?.susp || 2)); const dem = new Date(dt); dem.setFullYear(dem.getFullYear() + (config.pf?.dem || 5)); const pjDate = new Date(dt); pjDate.setFullYear(pjDate.getFullYear() + (config.pjYears || 5));
+            document.getElementById('calc-advertencia').value = adv.toISOString().split('T')[0]; document.getElementById('calc-suspensao').value = sus.toISOString().split('T')[0]; document.getElementById('calc-demissao').value = dem.toISOString().split('T')[0]; document.getElementById('calc-pj').value = pjDate.toISOString().split('T')[0];
             if (tipo === 'Pessoa Física' || tipo === 'Pessoa Física + Jurídica') document.getElementById('container-pf').classList.remove('hidden');
             if (tipo === 'Pessoa Jurídica' || tipo === 'Pessoa Física + Jurídica') document.getElementById('container-pj').classList.remove('hidden');
         }
 
         function setupPrazoHandlers() {
-            const diasEl = document.getElementById('process-prazo-dias');
-            const dataEl = document.getElementById('process-prazo-data');
-            const distEl = document.getElementById('process-data-distribuicao');
-
-            const updateData = () => {
-                if(!diasEl.value) return;
-                if(!distEl.value) { showToast('Preencha a Data de Distribuição para calcular o prazo.', 'error'); return; }
-                const distDate = new Date(distEl.value);
-                distDate.setDate(distDate.getDate() + parseInt(diasEl.value) + 1);
-                dataEl.value = distDate.toISOString().split('T')[0];
-            };
-            const updateDias = () => {
-                if (dataEl.value && distEl.value) { diasEl.value = diffDays(distEl.value, dataEl.value); }
-            };
-            diasEl.addEventListener('input', updateData);
-            distEl.addEventListener('change', updateData);
-            dataEl.addEventListener('change', updateDias);
+            const diasEl = document.getElementById('process-prazo-dias'); const dataEl = document.getElementById('process-prazo-data'); const distEl = document.getElementById('process-data-distribuicao');
+            const updateData = () => { if(!diasEl.value) return; if(!distEl.value) { showToast('Preencha a Data de Distribuição.', 'error'); return; } const distDate = new Date(distEl.value); distDate.setDate(distDate.getDate() + parseInt(diasEl.value) + 1); dataEl.value = distDate.toISOString().split('T')[0]; };
+            const updateDias = () => { if (dataEl.value && distEl.value) { diasEl.value = diffDays(distEl.value, dataEl.value); } };
+            diasEl.addEventListener('input', updateData); distEl.addEventListener('change', updateData); dataEl.addEventListener('change', updateDias);
         }
         
         function loadConfigsToForm() { 
-            document.getElementById('conf-org-name').value = config.orgName;
-            document.getElementById('conf-subtitle').value = config.subtitle;
-            document.getElementById('conf-default-unit').value = config.defaultUnit || '';
-            document.getElementById('conf-items-page').value = config.itemsPerPage || 20;
-            document.getElementById('conf-pj-years').value = config.pjYears || 5;
-            document.getElementById('conf-pf-adv').value = config.pf?.adv || 180;
-            document.getElementById('conf-pf-susp').value = config.pf?.susp || 2;
-            document.getElementById('conf-pf-dem').value = config.pf?.dem || 5;
-            document.getElementById('conf-crit-task').value = config.alerts.crit.task; 
-            document.getElementById('conf-crit-adv').value = config.alerts.crit.adv;
-            document.getElementById('conf-crit-susp').value = config.alerts.crit.susp;
-            document.getElementById('conf-crit-dem').value = config.alerts.crit.dem;
-            document.getElementById('conf-high-task').value = config.alerts.high.task; 
-            document.getElementById('conf-high-adv').value = config.alerts.high.adv;
-            document.getElementById('conf-high-susp').value = config.alerts.high.susp;
-            document.getElementById('conf-high-dem').value = config.alerts.high.dem;
+            document.getElementById('conf-org-name').value = config.orgName; document.getElementById('conf-subtitle').value = config.subtitle; document.getElementById('conf-default-unit').value = config.defaultUnit || ''; document.getElementById('conf-items-page').value = config.itemsPerPage || 20; document.getElementById('conf-pj-years').value = config.pjYears || 5; document.getElementById('conf-pf-adv').value = config.pf?.adv || 180; document.getElementById('conf-pf-susp').value = config.pf?.susp || 2; document.getElementById('conf-pf-dem').value = config.pf?.dem || 5; document.getElementById('conf-crit-task').value = config.alerts.crit.task; document.getElementById('conf-crit-adv').value = config.alerts.crit.adv; document.getElementById('conf-crit-susp').value = config.alerts.crit.susp; document.getElementById('conf-crit-dem').value = config.alerts.crit.dem; document.getElementById('conf-high-task').value = config.alerts.high.task; document.getElementById('conf-high-adv').value = config.alerts.high.adv; document.getElementById('conf-high-susp').value = config.alerts.high.susp; document.getElementById('conf-high-dem').value = config.alerts.high.dem;
         }
 
         // --- RELATÓRIOS ---
         function switchReportTab(tab) {
-            closeReport();
-            document.querySelectorAll('.report-filters').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`filters-${tab}`).classList.remove('hidden');
+            closeReport(); document.querySelectorAll('.report-filters').forEach(el => el.classList.add('hidden')); document.getElementById(`filters-${tab}`).classList.remove('hidden');
             const active = ['border-blue-600', 'text-blue-600', 'font-bold'], inactive = ['border-transparent', 'text-gray-500'];
             document.querySelectorAll('.report-tab-btn').forEach(btn => { btn.classList.remove(...active); btn.classList.add(...inactive); });
-            const activeBtn = document.getElementById(`tab-rep-${tab}`);
-            activeBtn.classList.add(...active); activeBtn.classList.remove(...inactive);
+            const activeBtn = document.getElementById(`tab-rep-${tab}`); activeBtn.classList.add(...active); activeBtn.classList.remove(...inactive);
         }
 
         function populateAnalystFilters() {
             const analysts = [...new Set(processos.map(p => p.analista).filter(Boolean))].sort();
-            const selects = [document.getElementById('rep-dist-analista'), document.getElementById('rep-ent-analista')];
-            selects.forEach(select => {
-                if(!select) return;
-                const currentValue = select.value;
-                select.innerHTML = '<option value="">Todos</option>';
-                analysts.forEach(a => select.innerHTML += `<option value="${a}">${a}</option>`);
-                select.value = currentValue;
+            [document.getElementById('rep-dist-analista'), document.getElementById('rep-ent-analista')].forEach(select => {
+                if(!select) return; const currentValue = select.value; select.innerHTML = '<option value="">Todos</option>';
+                analysts.forEach(a => select.innerHTML += `<option value="${a}">${a}</option>`); select.value = currentValue;
             });
             document.getElementById('analistas-list').innerHTML = analysts.map(a => `<option value="${a}"></option>`).join('');
         }
@@ -1439,274 +1155,110 @@
         }
 
         function generateGeneralReport() {
-            closeReport();
-            let filtered = [...processos];
-            const v = id => document.getElementById(id).value.toLowerCase();
-            const c = id => document.getElementById(id).checked;
-
-            if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei')));
-            if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto')));
-            if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado')));
-            if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value);
-            if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value);
-            if (v('f-resultado')) filtered = filtered.filter(p => p.resultado === document.getElementById('f-resultado').value);
-            if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física');
-            if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica');
-            if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade')));
-            if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem')));
-            if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado')));
-            if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value);
-            if (c('f-concluido')) filtered = filtered.filter(p => p.data_despacho);
-            if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
-            
-            // Checkboxes com pesquisa atrelada
-            if (c('f-epad')) { filtered = filtered.filter(p => p.cad_epad); const d = v('f-epad-det'); if(d) filtered = filtered.filter(p => p.epad_detalhes && p.epad_detalhes.toLowerCase().includes(d)); }
-            if (c('f-inquerito')) { filtered = filtered.filter(p => p.possui_inquerito); const d = v('f-inq-det'); if(d) filtered = filtered.filter(p => p.inquerito_detalhes && p.inquerito_detalhes.toLowerCase().includes(d)); }
-            if (c('f-op-policial')) { filtered = filtered.filter(p => p.op_policial); const d = v('f-op-det'); if(d) filtered = filtered.filter(p => p.op_policial_detalhes && p.op_policial_detalhes.toLowerCase().includes(d)); }
-            if (c('f-tac')) { filtered = filtered.filter(p => p.tac_apto); const d = v('f-tac-det'); if(d) filtered = filtered.filter(p => p.tac_obs && p.tac_obs.toLowerCase().includes(d)); }
-
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório Geral de Processos (${filtered.length})</h2>`;
-            html += `<table class="w-full text-xs text-left border-collapse border border-gray-300"><thead class="bg-gray-100"><tr><th class="border p-1">SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Analista</th><th class="border p-1">Status</th><th class="border p-1">Resultado</th><th class="border p-1">Prazo NT</th><th class="border p-1">Prioritário</th></tr></thead><tbody>`;
+            closeReport(); let filtered = [...processos]; const v = id => document.getElementById(id).value.toLowerCase(); const c = id => document.getElementById(id).checked;
+            if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei'))); if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto'))); if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado'))); if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value); if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value); if (v('f-resultado')) filtered = filtered.filter(p => p.resultado === document.getElementById('f-resultado').value); if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física'); if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica'); if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade'))); if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem'))); if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado'))); if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value); if (c('f-concluido')) filtered = filtered.filter(p => p.data_despacho); if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
+            if (c('f-epad')) { filtered = filtered.filter(p => p.cad_epad); const d = v('f-epad-det'); if(d) filtered = filtered.filter(p => p.epad_detalhes && p.epad_detalhes.toLowerCase().includes(d)); } if (c('f-inquerito')) { filtered = filtered.filter(p => p.possui_inquerito); const d = v('f-inq-det'); if(d) filtered = filtered.filter(p => p.inquerito_detalhes && p.inquerito_detalhes.toLowerCase().includes(d)); } if (c('f-op-policial')) { filtered = filtered.filter(p => p.op_policial); const d = v('f-op-det'); if(d) filtered = filtered.filter(p => p.op_policial_detalhes && p.op_policial_detalhes.toLowerCase().includes(d)); } if (c('f-tac')) { filtered = filtered.filter(p => p.tac_apto); const d = v('f-tac-det'); if(d) filtered = filtered.filter(p => p.tac_obs && p.tac_obs.toLowerCase().includes(d)); }
+            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório Geral de Processos (${filtered.length})</h2><table class="w-full text-xs text-left border-collapse border border-gray-300"><thead class="bg-gray-100"><tr><th class="border p-1">SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Analista</th><th class="border p-1">Status</th><th class="border p-1">Resultado</th><th class="border p-1">Prazo NT</th><th class="border p-1">Prioritário</th></tr></thead><tbody>`;
             filtered.forEach(p => { html += `<tr><td class="border p-1 font-mono">${p.sei}</td><td class="border p-1">${p.objeto}</td><td class="border p-1">${p.analista||'—'}</td><td class="border p-1">${getStatusFromProcess(p)}</td><td class="border p-1">${p.resultado}</td><td class="border p-1">${formatDate(p.prazo_nt_data)}</td><td class="border p-1">${p.prioritario ? 'Sim' : 'Não'}</td></tr>`; });
-            html += `</tbody></table>`;
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            html += `</tbody></table>`; document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
         
         function generateStatusReport() {
-            closeReport();
-            const statusTarget = document.getElementById('rep-status-val').value;
-            const start = document.getElementById('rep-status-de').value;
-            const end = document.getElementById('rep-status-ate').value;
-
-            let filtered = processos.filter(p => {
-                let match = true;
-                if (statusTarget) match = match && getStatusFromProcess(p) === statusTarget;
-                if (start) match = match && p.data_ent >= start;
-                if (end) match = match && p.data_ent <= end;
-                return match;
-            });
-
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos por Status (${filtered.length})</h2>`;
-            html += `<p class="text-sm text-center mb-4">Status: ${statusTarget || 'Todos'} | Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>`;
-            html += renderAnalyticTable(filtered);
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            closeReport(); const statusTarget = document.getElementById('rep-status-val').value; const start = document.getElementById('rep-status-de').value; const end = document.getElementById('rep-status-ate').value;
+            let filtered = processos.filter(p => { let match = true; if (statusTarget) match = match && getStatusFromProcess(p) === statusTarget; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; return match; });
+            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos por Status (${filtered.length})</h2><p class="text-sm text-center mb-4">Status: ${statusTarget || 'Todos'} | Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function generateProgressReport() {
-            closeReport();
-            const tipo = document.getElementById('rep-andamento-tipo').value;
-            const start = document.getElementById('rep-andamento-de').value;
-            const end = document.getElementById('rep-andamento-ate').value;
-
-            let filtered = processos.filter(p => {
-                let match = true;
-                if (start) match = match && p.data_ent >= start;
-                if (end) match = match && p.data_ent <= end;
-                
-                if (tipo === 'finalizado') match = match && (p.data_despacho != null && p.data_despacho !== '');
-                else if (tipo === 'andamento') match = match && (!p.data_despacho || p.data_despacho === '');
-                return match;
-            });
-
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos - ${tipo === 'andamento' ? 'Em Andamento' : tipo === 'finalizado' ? 'Finalizados' : 'Todos'} (${filtered.length})</h2>`;
-            html += `<p class="text-sm text-center mb-4">Período de Entrada: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>`;
-            html += renderAnalyticTable(filtered);
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            closeReport(); const tipo = document.getElementById('rep-andamento-tipo').value; const start = document.getElementById('rep-andamento-de').value; const end = document.getElementById('rep-andamento-ate').value;
+            let filtered = processos.filter(p => { let match = true; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; if (tipo === 'finalizado') match = match && (p.data_despacho != null && p.data_despacho !== ''); else if (tipo === 'andamento') match = match && (!p.data_despacho || p.data_despacho === ''); return match; });
+            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos - ${tipo === 'andamento' ? 'Em Andamento' : tipo === 'finalizado' ? 'Finalizados' : 'Todos'} (${filtered.length})</h2><p class="text-sm text-center mb-4">Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
         
         function generateDistributionReport() {
-            closeReport();
-            const analista = document.getElementById('rep-dist-analista').value;
-            const start = document.getElementById('rep-dist-start').value, end = document.getElementById('rep-dist-end').value;
-            const isAnalytic = document.querySelector('input[name="rep-dist-type"]:checked').value === 'analitico';
+            closeReport(); const analista = document.getElementById('rep-dist-analista').value; const start = document.getElementById('rep-dist-start').value, end = document.getElementById('rep-dist-end').value; const isAnalytic = document.querySelector('input[name="rep-dist-type"]:checked').value === 'analitico';
             let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end));
-            
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Distribuição de Processos</h2><p class="text-center text-sm mb-4">Total: ${filtered.length} processos</p>`;
-            if (isAnalytic) html += renderAnalyticTable(filtered);
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Distribuição de Processos</h2><p class="text-center text-sm mb-4">Total: ${filtered.length} processos</p>`; if (isAnalytic) html += renderAnalyticTable(filtered);
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function generatePrescriptionReport() {
-            closeReport();
-            const tipo = document.getElementById('rep-presc-tipo').value;
-            const incluirVencidos = document.getElementById('rep-presc-vencidos').checked;
-            const isAnalytic = document.querySelector('input[name="rep-presc-type"]:checked').value === 'analitico';
-            const hoje = new Date().toISOString().split('T')[0];
-            const key = `calc_${tipo}`;
-            
-            let filtered = processos.filter(p => p[key] && (incluirVencidos || p[key] >= hoje));
-            filtered.sort((a,b) => (a[key] > b[key]) ? 1 : -1);
-
+            closeReport(); const tipo = document.getElementById('rep-presc-tipo').value; const incluirVencidos = document.getElementById('rep-presc-vencidos').checked; const isAnalytic = document.querySelector('input[name="rep-presc-type"]:checked').value === 'analitico'; const hoje = new Date().toISOString().split('T')[0]; const key = `calc_${tipo}`;
+            let filtered = processos.filter(p => p[key] && (incluirVencidos || p[key] >= hoje)); filtered.sort((a,b) => (a[key] > b[key]) ? 1 : -1);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Controle Prescricional - ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} (${filtered.length})</h2>`;
-            if (isAnalytic) {
-                html += `<table class="w-full text-xs text-left border-collapse border border-gray-300"><thead class="bg-gray-100"><tr><th class="border p-1">Processo SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Data Conhecimento</th><th class="border p-1">Data Prescrição</th><th class="border p-1">Dias Restantes</th></tr></thead><tbody>`;
-                filtered.forEach(p => {
-                    const diasRestantes = diffDays(hoje, p[key]);
-                    const cor = diasRestantes < 0 ? 'text-red-600' : diasRestantes < config.alerts.crit.adv ? 'text-red-600' : 'text-gray-800';
-                    html += `<tr><td class="border p-1 font-mono">${p.sei}</td><td class="border p-1">${p.objeto}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1 font-bold ${cor}">${formatDate(p[key])}</td><td class="border p-1 font-bold ${cor}">${diasRestantes < 0 ? 'PRESCRITO' : diasRestantes}</td></tr>`;
-                });
-                html += `</tbody></table>`;
-            }
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            if (isAnalytic) { html += `<table class="w-full text-xs text-left border-collapse border border-gray-300"><thead class="bg-gray-100"><tr><th class="border p-1">Processo SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Data Conhecimento</th><th class="border p-1">Data Prescrição</th><th class="border p-1">Dias Restantes</th></tr></thead><tbody>`; filtered.forEach(p => { const diasRestantes = diffDays(hoje, p[key]); const cor = diasRestantes < 0 ? 'text-red-600' : diasRestantes < config.alerts.crit.adv ? 'text-red-600' : 'text-gray-800'; html += `<tr><td class="border p-1 font-mono">${p.sei}</td><td class="border p-1">${p.objeto}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1 font-bold ${cor}">${formatDate(p[key])}</td><td class="border p-1 font-bold ${cor}">${diasRestantes < 0 ? 'PRESCRITO' : diasRestantes}</td></tr>`; }); html += `</tbody></table>`; }
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function generateDeliveredPendingReport() {
-            closeReport();
-            const analista = document.getElementById('rep-ent-analista').value;
-            const start = document.getElementById('rep-ent-start').value, end = document.getElementById('rep-ent-end').value;
-            const isAnalytic = document.querySelector('input[name="rep-ent-type"]:checked').value === 'analitico';
-            let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end));
-            const entregues = filtered.filter(p => p.data_entrega_nt), pendentes = filtered.filter(p => !p.data_entrega_nt);
-
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Entregues vs. Pendentes</h2><p class="text-center text-sm mb-6">Filtros: Analista (${analista || 'Todos'}), Período (${formatDate(start)} a ${formatDate(end)})</p>`;
-            html += `<div class="report-item"><span class="font-medium">Entregues</span><span>${entregues.length}</span></div>`;
-            if (isAnalytic) html += renderAnalyticTable(entregues);
-            html += `<div class="report-item mt-4"><span class="font-medium">Pendentes</span><span>${pendentes.length}</span></div>`;
-            if (isAnalytic) html += renderAnalyticTable(pendentes);
-            
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            closeReport(); const analista = document.getElementById('rep-ent-analista').value; const start = document.getElementById('rep-ent-start').value, end = document.getElementById('rep-ent-end').value; const isAnalytic = document.querySelector('input[name="rep-ent-type"]:checked').value === 'analitico';
+            let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end)); const entregues = filtered.filter(p => p.data_entrega_nt), pendentes = filtered.filter(p => !p.data_entrega_nt);
+            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Entregues vs. Pendentes</h2><p class="text-center text-sm mb-6">Filtros: Analista (${analista || 'Todos'}), Período (${formatDate(start)} a ${formatDate(end)})</p><div class="report-item"><span class="font-medium">Entregues</span><span>${entregues.length}</span></div>`; if (isAnalytic) html += renderAnalyticTable(entregues); html += `<div class="report-item mt-4"><span class="font-medium">Pendentes</span><span>${pendentes.length}</span></div>`; if (isAnalytic) html += renderAnalyticTable(pendentes);
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function diffDays(d1, d2) {
-            if(!d1 || !d2) return 0;
-            return Math.ceil((new Date(d2) - new Date(d1)) / (1000 * 3600 * 24));
-        }
+        function diffDays(d1, d2) { if(!d1 || !d2) return 0; return Math.ceil((new Date(d2) - new Date(d1)) / (1000 * 3600 * 24)); }
         
-        function calculateAverageDays(list, startField, endField) {
-            const today = new Date().toISOString().split('T')[0];
-            const durations = list.map(p => {
-                if(p[startField]) {
-                    return diffDays(p[startField], p[endField] || today);
-                }
-                return null;
-            }).filter(d => d !== null);
-            if (durations.length === 0) return 0;
-            const sum = durations.reduce((acc, curr) => acc + curr, 0);
-            return Math.round(sum / durations.length);
-        }
+        function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
 
         function generateManagerialReport() {
-            closeReport();
-            const startStr = document.getElementById('rep-man-start').value, endStr = document.getElementById('rep-man-end').value;
-            const type = document.querySelector('input[name="rep-man-type"]:checked').value, isAnalytic = type === 'analitico';
+            closeReport(); const startStr = document.getElementById('rep-man-start').value, endStr = document.getElementById('rep-man-end').value; const type = document.querySelector('input[name="rep-man-type"]:checked').value, isAnalytic = type === 'analitico';
             const filtered = processos.filter(p => p.data_ent && (!startStr || p.data_ent >= startStr) && (!endStr || p.data_ent <= endStr));
+            const renderRow = (label, data, analyticList) => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderAnalyticTable(analyticList) : '');
             
-            const renderRow = (label, data, analyticList) => {
-                return `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderAnalyticTable(analyticList) : '');
-            };
-
-            const totalCount = filtered.length;
-            const archivedList = filtered.filter(p => p.resultado === 'Arquivado');
-            const aptTacList = filtered.filter(p => p.tac_apto);
-            const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
+            const archivedList = filtered.filter(p => p.resultado === 'Arquivado'); const aptTacList = filtered.filter(p => p.tac_apto); const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
+            const analyzedList = filtered.filter(p => p.data_entrega_nt); const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
+            const juntadoList = filtered.filter(p => p.juntado && p.juntado.length > 5); const juizoList = analyzedList.filter(p => p.resultado !== 'Arquivado'); const ipsList = analyzedList.filter(p => p.resultado === 'Instauração de IPS');
             
-            const analyzedList = filtered.filter(p => p.data_entrega_nt);
-            const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
+            const resultadoMap = { 'arquivados': archivedList, 'celebracao_tac': analyzedList.filter(p => p.resultado === 'Para celebrar TAC'), 'instauracao_pad': analyzedList.filter(p => p.resultado === 'Instauração de PAD'), 'instauracao_par': analyzedList.filter(p => p.resultado === 'Instauração de PAR'), 'instauracao_sinpa': analyzedList.filter(p => p.resultado === 'Instauração de SINPA'), 'instauracao_sinac': analyzedList.filter(p => p.resultado === 'Instauração de SINAC'), 'instauracao_sinve': analyzedList.filter(p => p.resultado === 'Instauração de SINVE'), 'min_transportes': analyzedList.filter(p => p.resultado === 'Encaminhado para o Min. dos Transportes'), 'instauracao_ips': ipsList };
+            const tacMap = { 'negociacao': filtered.filter(p => p.tac_sit === 'Em negociação'), 'celebrados': filtered.filter(p => p.tac_sit === 'Celebrado'), 'recusados': filtered.filter(p => p.tac_sit === 'Recusado'), 'finalizados': filtered.filter(p => p.tac_sit === 'Finalizado') };
 
-            const juntadoList = filtered.filter(p => p.juntado && p.juntado.length > 5);
-            const juizoList = analyzedList.filter(p => p.resultado !== 'Arquivado');
-            
-            const ipsList = analyzedList.filter(p => p.resultado === 'Instauração de IPS');
-            
-            const resultadoMap = {
-                'arquivados': archivedList,
-                'celebracao_tac': analyzedList.filter(p => p.resultado === 'Para celebrar TAC'),
-                'instauracao_pad': analyzedList.filter(p => p.resultado === 'Instauração de PAD'),
-                'instauracao_par': analyzedList.filter(p => p.resultado === 'Instauração de PAR'),
-                'instauracao_sinpa': analyzedList.filter(p => p.resultado === 'Instauração de SINPA'),
-                'instauracao_sinac': analyzedList.filter(p => p.resultado === 'Instauração de SINAC'),
-                'instauracao_sinve': analyzedList.filter(p => p.resultado === 'Instauração de SINVE'),
-                'min_transportes': analyzedList.filter(p => p.resultado === 'Encaminhado para o Min. dos Transportes'),
-                'instauracao_ips': ipsList
-            };
-            
-            const tacMap = {
-                'negociacao': filtered.filter(p => p.tac_sit === 'Em negociação'),
-                'celebrados': filtered.filter(p => p.tac_sit === 'Celebrado'),
-                'recusados': filtered.filter(p => p.tac_sit === 'Recusado'),
-                'finalizados': filtered.filter(p => p.tac_sit === 'Finalizado')
-            };
-
-            let periodText = (startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período";
-            let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${periodText}</h2><p class="text-sm text-gray-500">Tipo: ${type.toUpperCase()}</p></div>
-                
-                <div class="report-section">
-                    <div class="report-header">Resumo Geral</div>
-                    ${renderRow('Quantidade total de processos', totalCount, filtered)}
-                    ${renderRow('Quantidade de processos arquivados', archivedList.length, archivedList)}
-                    ${renderRow('Processos aptos a celebração de TAC', aptTacList.length, aptTacList)}
-                    ${renderRow('Tempo médio (em dias)', avgProcessTime, [])}
-                </div>
-
-                <div class="report-section">
-                    <div class="report-header">Notícias de irregularidade – Mensal</div>
-                    <div class="report-sub-header">Análise preliminar</div>
-                    ${renderRow('Quantidade de processos analisados', analyzedList.length, analyzedList)}
-                    ${renderRow('Tempo médio de análise (em dias)', avgAnalysisTime, [])}
-                    <div class="report-sub-header">Resultados</div>
-                    ${renderRow('Número de processos arquivados', resultadoMap.arquivados.length, resultadoMap.arquivados)}
-                    ${renderRow('Número de processos encaminhados para juízo de admissibilidade', juizoList.length, juizoList)}
-                    ${renderRow('Quantidade de juntados a processo existente', juntadoList.length, juntadoList)}
-                </div>
-
-                <div class="report-section">
-                    <div class="report-header">Juízo de Admissibilidade</div>
-                    <div class="report-sub-header">Processos Analisados – IPS</div>
-                    ${renderRow('Número de Processos analisados', ipsList.length, ipsList)}
-                    ${renderRow('Tempo médio de análise (em dias)', calculateAverageDays(ipsList, 'data_distribuicao', 'data_entrega_nt'), [])}
-                    <div class="report-sub-header">Resultados</div>
-                    ${renderRow('Número de processos arquivados', resultadoMap.arquivados.length, resultadoMap.arquivados)}
-                    ${renderRow('Número de processos para celebração de TAC', resultadoMap.celebracao_tac.length, resultadoMap.celebracao_tac)}
-                    ${renderRow('Número de processos para instauração de PAD', resultadoMap.instauracao_pad.length, resultadoMap.instauracao_pad)}
-                    ${renderRow('Número de processos para instauração de PAR', resultadoMap.instauracao_par.length, resultadoMap.instauracao_par)}
-                    ${renderRow('Número de processos para instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}
-                    ${renderRow('Número de processos para instauração de SINAC', resultadoMap.instauracao_sinac.length, resultadoMap.instauracao_sinac)}
-                    ${renderRow('Número de processos para instauração de SINVE', resultadoMap.instauracao_sinve.length, resultadoMap.instauracao_sinve)}
-                    ${renderRow('Número de processos encaminhados ao Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}
-                    ${renderRow('Número de processos encaminhados para instauração de IPS', resultadoMap.instauracao_ips.length, resultadoMap.instauracao_ips)}
-                </div>
-
-                <div class="report-section">
-                    <div class="report-header">Termo de Ajustamento de Conduta – TAC</div>
-                    ${renderRow('Número de TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao)}
-                    ${renderRow('Número de TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados)}
-                    ${renderRow('Número de TACs Recusados', tacMap.recusados.length, tacMap.recusados)}
-                    ${renderRow('Número de TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados)}
-                </div>
-            `;
-            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+            let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div><div class="report-section"><div class="report-header">Resumo Geral</div>${renderRow('Quantidade total de processos', filtered.length, filtered)}${renderRow('Quantidade de processos arquivados', archivedList.length, archivedList)}${renderRow('Processos aptos a celebração de TAC', aptTacList.length, aptTacList)}${renderRow('Tempo médio (em dias)', avgProcessTime, [])}</div><div class="report-section"><div class="report-header">Notícias de irregularidade</div><div class="report-sub-header">Análise preliminar</div>${renderRow('Quantidade de processos analisados', analyzedList.length, analyzedList)}${renderRow('Tempo médio de análise (em dias)', avgAnalysisTime, [])}<div class="report-sub-header">Resultados</div>${renderRow('Número de processos arquivados', resultadoMap.arquivados.length, resultadoMap.arquivados)}${renderRow('Encaminhados para juízo de admissibilidade', juizoList.length, juizoList)}${renderRow('Quantidade de juntados a processo existente', juntadoList.length, juntadoList)}</div><div class="report-section"><div class="report-header">Juízo de Admissibilidade</div><div class="report-sub-header">Processos Analisados – IPS</div>${renderRow('Número de Processos analisados', ipsList.length, ipsList)}${renderRow('Tempo médio de análise (em dias)', calculateAverageDays(ipsList, 'data_distribuicao', 'data_entrega_nt'), [])}<div class="report-sub-header">Resultados</div>${renderRow('Processos arquivados', resultadoMap.arquivados.length, resultadoMap.arquivados)}${renderRow('Celebração de TAC', resultadoMap.celebracao_tac.length, resultadoMap.celebracao_tac)}${renderRow('Instauração de PAD', resultadoMap.instauracao_pad.length, resultadoMap.instauracao_pad)}${renderRow('Instauração de PAR', resultadoMap.instauracao_par.length, resultadoMap.instauracao_par)}${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}${renderRow('Instauração de SINAC', resultadoMap.instauracao_sinac.length, resultadoMap.instauracao_sinac)}${renderRow('Instauração de SINVE', resultadoMap.instauracao_sinve.length, resultadoMap.instauracao_sinve)}${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}${renderRow('Instauração de IPS', resultadoMap.instauracao_ips.length, resultadoMap.instauracao_ips)}</div><div class="report-section"><div class="report-header">Termo de Ajustamento de Conduta – TAC</div>${renderRow('TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao)}${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados)}${renderRow('TACs Recusados', tacMap.recusados.length, tacMap.recusados)}${renderRow('TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados)}</div>`;
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function exportToWord() { 
             const sourceHTML = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title></head><body>" + document.getElementById("report-content").innerHTML + "</body></html>";
-            const source = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML);
-            const el = document.createElement("a"); el.href = source; el.download = 'relatorio.doc'; el.click();
+            const el = document.createElement("a"); el.href = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML); el.download = 'relatorio.doc'; el.click();
         }
+        
         function exportToExcel() {
             const table = document.querySelector("#report-content table");
-            if (table) {
-                const wb = XLSX.utils.table_to_book(table, {sheet: "Relatorio"});
-                XLSX.writeFile(wb, 'Relatorio_Filtrado.xlsx');
-            } else {
-                showToast('Não há uma tabela no relatório para exportar.', 'error');
-            }
+            if (table) { const wb = XLSX.utils.table_to_book(table, {sheet: "Relatorio"}); XLSX.writeFile(wb, 'Relatorio_Filtrado.xlsx'); } else { showToast('Não há tabela no relatório.', 'error'); }
         }
 
-        // Inicialização
+        function exportBackup() {
+            const backupData = { config: config, processos: processos };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const el = document.createElement('a'); el.setAttribute("href", dataStr); el.setAttribute("download", "backup_corregedoria_" + new Date().toISOString().split('T')[0] + ".json");
+            document.body.appendChild(el); el.click(); el.remove(); showToast("Backup exportado!");
+        }
+
+        function importBackup(event) {
+            const file = event.target.files[0]; if (!file) return; const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (importedData.config) { config = importedData.config; await saveConfigsToSupabase(); }
+                    if (importedData.processos && Array.isArray(importedData.processos)) {
+                        for(const p of importedData.processos) { await saveProcessToSupabase(p); }
+                    }
+                    showToast("Backup importado. Recarregando..."); setTimeout(() => window.location.reload(), 2000); 
+                } catch (err) { alert("Erro ao ler JSON válido."); }
+            };
+            reader.readAsText(file); event.target.value = '';
+        }
+
+        // --- INICIALIZAÇÃO DE UI ---
         document.addEventListener('DOMContentLoaded', () => { 
             lucide.createIcons(); 
             Inputmask({ mask: "99999.999999/9999-99", placeholder: "_", showMaskOnHover: false, showMaskOnFocus: true }).mask(document.querySelectorAll(".mask-sei"));
             setViewMode(localStorage.getItem('correg_view_mode') || 'cards');
             setupPrazoHandlers();
-            showPage('dashboard'); 
         });
+
     </script>
 </body>
 </html>
