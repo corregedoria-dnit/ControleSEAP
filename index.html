@@ -814,20 +814,36 @@
         }
 
         async function saveProcessToSupabase(data) {
-            const dbData = { ...data };
-            // Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
-            dbData.acusados = JSON.stringify(data.acusados); 
-            
-            const { error } = await supabaseClient.from('processos').upsert([dbData]);
-            if (error) {
-                console.error("Erro Supabase:", error);
-                alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
-            } else {
-                showToast("Processo salvo na nuvem com sucesso!");
-                fetchProcessos();
-                showPage('processos');
-            }
+const dbData = { ...data };
+// Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
+dbData.acusados = JSON.stringify(data.acusados);
+
+        const { error } = await supabaseClient.from('processos').upsert([dbData]);
+        if (error) {
+            console.error("Erro Supabase:", error);
+            alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
+        } else {
+            showToast("Processo salvo na nuvem com sucesso!");
+            fetchProcessos();
+            showPage('processos');
         }
+    }
+    
+        //    async function saveProcessToSupabase(data) {
+      //      const dbData = { ...data };
+            // Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
+        //    dbData.acusados = JSON.stringify(data.acusados); 
+          //  
+          //  const { error } = await supabaseClient.from('processos').upsert([dbData]);
+          //  if (error) {
+          //      console.error("Erro Supabase:", error);
+          //      alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
+          //  } else {
+          //      showToast("Processo salvo na nuvem com sucesso!");
+          //      fetchProcessos();
+          //      showPage('processos');
+         //   }
+      //  }
 
         async function deleteProcessFromSupabase(id) {
             const { error } = await supabaseClient.from('processos').delete().eq('id', id);
@@ -1262,6 +1278,7 @@
     </script>
 </body>
 </html>
+
 
 
 
