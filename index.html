@@ -814,20 +814,113 @@
         }
 
         async function saveProcessToSupabase(data) {
-const dbData = { ...data };
-// Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
-dbData.acusados = JSON.stringify(data.acusados);
+  // cria cópia e sanitize
+  const dbData = { ...data };
 
-        const { error } = await supabaseClient.from('processos').upsert([dbData]);
-        if (error) {
-            console.error("Erro Supabase:", error);
-            alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
-        } else {
-            showToast("Processo salvo na nuvem com sucesso!");
-            fetchProcessos();
-            showPage('processos');
-        }
+  // campos de data no seu schema - ajuste se tiver outros
+  const dateFields = [
+    'data_ent','data_conhecimento','calc_advertencia','calc_suspensao',
+    'calc_demissao','calc_pj','data_distribuicao','prazo_nt_data',
+    'data_entrega_nt','data_despacho'
+  ];
+
+  // campos booleanos (ajuste conforme seu schema)
+  const boolFields = ['op_policial','possui_inquerito','cad_epad','prioritario','tac_apto'];
+
+  // normaliza data: '', null, dd/mm/yyyy, ISO -> 'YYYY-MM-DD' ou null
+  function normalizeDateValue(value) {
+    if (value === undefined || value === null || value === '') return null;
+    if (value instanceof Date && !isNaN(value)) return value.toISOString().split('T')[0];
+    if (typeof value !== 'string') return null;
+    // aceita dd/mm/yyyy
+    const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
+    const d = new Date(value);
+    if (!isNaN(d)) return d.toISOString().split('T')[0];
+    return null;
+  }
+
+  // sanitize datas
+  dateFields.forEach(f => {
+    if (f in dbData) dbData[f] = normalizeDateValue(dbData[f]);
+  });
+
+  // sanitize booleanos (transforma 'true'/'false' strings em boolean)
+  boolFields.forEach(b => {
+    if (b in dbData) {
+      if (dbData[b] === 'true' || dbData[b] === true) dbData[b] = true;
+      else if (dbData[b] === 'false' || dbData[b] === false) dbData[b] = false;
+      else dbData[b] = Boolean(dbData[b]);
     }
+  });
+
+  // acusados: se for array mantém array (bom para jsonb), se for string tenta parse / split, se vazio vira null
+  if ('acusados' in dbData) {
+    if (Array.isArray(dbData.acusados)) {
+      dbData.acusados = dbData.acusados.length ? dbData.acusados : null;
+    } else if (typeof dbData.acusados === 'string') {
+      const s = dbData.acusados.trim();
+      if (s === '') dbData.acusados = null;
+      else {
+        try {
+          dbData.acusados = JSON.parse(s);
+        } catch {
+          // tenta separar por vírgula
+          dbData.acusados = s.split(',').map(x => x.trim()).filter(x => x);
+          if (dbData.acusados.length === 0) dbData.acusados = null;
+        }
+      }
+    } else if (dbData.acusados == null) {
+      dbData.acusados = null;
+    }
+    // Se a sua coluna é TEXT e não jsonb, transformar em string:
+    // dbData.acusados = dbData.acusados ? JSON.stringify(dbData.acusados) : null;
+  }
+
+  // transforma todas strings vazias restantes em null (opcional, evita muitos erros)
+  Object.keys(dbData).forEach(k => {
+    if (dbData[k] === '') dbData[k] = null;
+  });
+
+  // remove undefined para não poluir o payload
+  Object.keys(dbData).forEach(k => {
+    if (dbData[k] === undefined) delete dbData[k];
+  });
+
+  console.log('Payload para upsert:', dbData);
+
+  // Se você tem id (pk) use upsert com onConflict, caso contrário use insert
+  // Ajuste 'id' para sua PK se for outro nome
+  try {
+    const hasId = !!dbData.id;
+    const method = hasId ? 'upsert' : 'insert';
+    const query = hasId
+      ? supabaseClient.from('processos').upsert([dbData], { onConflict: 'id' })
+      : supabaseClient.from('processos').insert([dbData]);
+
+    const { data: resp, error } = await query;
+
+    if (error) {
+      console.error('Erro Supabase RAW:', error);
+      // se for erro de data (22007) tenta identificar quais campos estão vazios/inválidos
+      if (error.code === '22007') {
+        const badDates = dateFields.filter(f => data[f] === '' || data[f] === undefined || data[f] === null ? false : (normalizeDateValue(data[f]) === null));
+        console.warn('Campos de data com valor inválido:', badDates);
+      }
+      alert('Erro ao salvar no banco. Veja console para detalhes.');
+      return { success: false, error };
+    }
+
+    showToast("Processo salvo na nuvem com sucesso!");
+    fetchProcessos();
+    showPage('processos');
+    return { success: true, data: resp };
+  } catch (err) {
+    console.error('Erro inesperado ao salvar:', err);
+    alert('Erro inesperado ao salvar. Veja console.');
+    return { success: false, error: err };
+  }
+}
     
         //    async function saveProcessToSupabase(data) {
       //      const dbData = { ...data };
@@ -1278,6 +1371,7 @@ dbData.acusados = JSON.stringify(data.acusados);
     </script>
 </body>
 </html>
+
 
 
 
