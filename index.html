@@ -813,114 +813,39 @@
                 .subscribe();
         }
 
-        async function saveProcessToSupabase(data) {
-  // cria cópia e sanitize
-  const dbData = { ...data };
+         async function saveProcessToSupabase(data) {
+            const dbData = { ...data };
 
-  // campos de data no seu schema - ajuste se tiver outros
-  const dateFields = [
-    'data_ent','data_conhecimento','calc_advertencia','calc_suspensao',
-    'calc_demissao','calc_pj','data_distribuicao','prazo_nt_data',
-    'data_entrega_nt','data_despacho'
-  ];
+            // Itera sobre todas as chaves do objeto
+            for (const key in dbData) {
+                // Se o valor for uma string vazia, converte para null
+                if (dbData[key] === '') {
+                    dbData[key] = null;
+                }
+            }
 
-  // campos booleanos (ajuste conforme seu schema)
-  const boolFields = ['op_policial','possui_inquerito','cad_epad','prioritario','tac_apto'];
+            // Garante que o array de acusados seja um JSON ou null
+            // (Importante se sua coluna no Supabase for do tipo TEXT)
+            // Se for JSONB, pode enviar o array diretamente.
+            if (Array.isArray(dbData.acusados)) {
+                 dbData.acusados = dbData.acusados.length > 0 ? JSON.stringify(dbData.acusados) : null;
+            } else {
+                 dbData.acusados = null;
+            }
 
-  // normaliza data: '', null, dd/mm/yyyy, ISO -> 'YYYY-MM-DD' ou null
-  function normalizeDateValue(value) {
-    if (value === undefined || value === null || value === '') return null;
-    if (value instanceof Date && !isNaN(value)) return value.toISOString().split('T')[0];
-    if (typeof value !== 'string') return null;
-    // aceita dd/mm/yyyy
-    const m = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (m) return `${m[3]}-${m[2]}-${m[1]}`;
-    const d = new Date(value);
-    if (!isNaN(d)) return d.toISOString().split('T')[0];
-    return null;
-  }
+            console.log("Enviando para o Supabase:", dbData); // Ótimo para depurar
 
-  // sanitize datas
-  dateFields.forEach(f => {
-    if (f in dbData) dbData[f] = normalizeDateValue(dbData[f]);
-  });
-
-  // sanitize booleanos (transforma 'true'/'false' strings em boolean)
-  boolFields.forEach(b => {
-    if (b in dbData) {
-      if (dbData[b] === 'true' || dbData[b] === true) dbData[b] = true;
-      else if (dbData[b] === 'false' || dbData[b] === false) dbData[b] = false;
-      else dbData[b] = Boolean(dbData[b]);
-    }
-  });
-
-  // acusados: se for array mantém array (bom para jsonb), se for string tenta parse / split, se vazio vira null
-  if ('acusados' in dbData) {
-    if (Array.isArray(dbData.acusados)) {
-      dbData.acusados = dbData.acusados.length ? dbData.acusados : null;
-    } else if (typeof dbData.acusados === 'string') {
-      const s = dbData.acusados.trim();
-      if (s === '') dbData.acusados = null;
-      else {
-        try {
-          dbData.acusados = JSON.parse(s);
-        } catch {
-          // tenta separar por vírgula
-          dbData.acusados = s.split(',').map(x => x.trim()).filter(x => x);
-          if (dbData.acusados.length === 0) dbData.acusados = null;
+            const { error } = await supabaseClient.from('processos').upsert([dbData]);
+            
+            if (error) {
+                console.error("Erro Supabase:", error);
+                alert('Erro ao salvar no banco. Verifique o console para mais detalhes.');
+            } else {
+                showToast("Processo salvo na nuvem com sucesso!");
+                fetchProcessos();
+                showPage('processos');
+            }
         }
-      }
-    } else if (dbData.acusados == null) {
-      dbData.acusados = null;
-    }
-    // Se a sua coluna é TEXT e não jsonb, transformar em string:
-    // dbData.acusados = dbData.acusados ? JSON.stringify(dbData.acusados) : null;
-  }
-
-  // transforma todas strings vazias restantes em null (opcional, evita muitos erros)
-  Object.keys(dbData).forEach(k => {
-    if (dbData[k] === '') dbData[k] = null;
-  });
-
-  // remove undefined para não poluir o payload
-  Object.keys(dbData).forEach(k => {
-    if (dbData[k] === undefined) delete dbData[k];
-  });
-
-  console.log('Payload para upsert:', dbData);
-
-  // Se você tem id (pk) use upsert com onConflict, caso contrário use insert
-  // Ajuste 'id' para sua PK se for outro nome
-  try {
-    const hasId = !!dbData.id;
-    const method = hasId ? 'upsert' : 'insert';
-    const query = hasId
-      ? supabaseClient.from('processos').upsert([dbData], { onConflict: 'id' })
-      : supabaseClient.from('processos').insert([dbData]);
-
-    const { data: resp, error } = await query;
-
-    if (error) {
-      console.error('Erro Supabase RAW:', error);
-      // se for erro de data (22007) tenta identificar quais campos estão vazios/inválidos
-      if (error.code === '22007') {
-        const badDates = dateFields.filter(f => data[f] === '' || data[f] === undefined || data[f] === null ? false : (normalizeDateValue(data[f]) === null));
-        console.warn('Campos de data com valor inválido:', badDates);
-      }
-      alert('Erro ao salvar no banco. Veja console para detalhes.');
-      return { success: false, error };
-    }
-
-    showToast("Processo salvo na nuvem com sucesso!");
-    fetchProcessos();
-    showPage('processos');
-    return { success: true, data: resp };
-  } catch (err) {
-    console.error('Erro inesperado ao salvar:', err);
-    alert('Erro inesperado ao salvar. Veja console.');
-    return { success: false, error: err };
-  }
-}
     
         //    async function saveProcessToSupabase(data) {
       //      const dbData = { ...data };
@@ -969,9 +894,10 @@
             showToast('Configurações salvas e sincronizadas!');
         }
 
-        function submitProcessForm() {
+          function submitProcessForm() {
             const id = document.getElementById('process-id').value || Date.now().toString();
             
+            // Coleta todos os dados do formulário
             const data = { 
                 id: id,
                 sei: document.getElementById('process-sei').value,
@@ -1000,7 +926,7 @@
                 prazo_nt_data: document.getElementById('process-prazo-data').value,
                 data_entrega_nt: document.getElementById('process-data-entrega-nt').value,
                 status_manual: document.getElementById('process-status-manual').value,
-                data_despacho: document.getElementById('process-data-despacho').value,
+                data_despacho: document.getElementById('process-data-despacho').value, // <-- Aqui o valor pode ser ""
                 acusados: currentAccused,
                 resultado: document.getElementById('process-resultado').value,
                 doc_resp: document.getElementById('process-doc-resposta').value,
@@ -1010,9 +936,14 @@
                 obs: document.getElementById('process-obs').value,
             };
 
+            // Validação de campos obrigatórios
             if(!data.sei || !data.data_conhecimento || !data.objeto || !data.tipo_acusado || currentAccused.length === 0) {
                 return alert('Preencha os campos obrigatórios (*):\n- Processo SEI\n- Data Conhecimento do Fato\n- Objeto\n- Acusado(s)\n- Tipo de Pessoa.');
             }
+            
+            // Chama a função de salvar, que fará a limpeza dos dados
+            saveProcessToSupabase(data);
+        }
             
             saveProcessToSupabase(data);
         }
@@ -1371,6 +1302,7 @@
     </script>
 </body>
 </html>
+
 
 
 
