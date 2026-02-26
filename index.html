@@ -716,7 +716,7 @@
                 currentUser = data;
                 document.getElementById('login-overlay').style.display = 'none';
                 document.getElementById('app').style.display = 'flex';
-                document.getElementById('user-display').innerText = `Operador: ${data.nome_completo}`;
+              //  document.getElementById('user-display').innerText = `Operador: ${data.nome_completo}`;
                 if(data.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
                 
                 initApp();
@@ -1262,6 +1262,7 @@
     </script>
 </body>
 </html>
+
 
 
 
