@@ -471,7 +471,7 @@
                         <button onclick="switchReportTab('gerencial')" id="tab-rep-gerencial" class="pb-2 px-2 border-b-2 report-tab-btn">Gerencial Mensal</button>
                     </div>
 
-                                        <div class="p-4 border rounded bg-gray-50 mb-4">
+                                        <div id="report-common-config" class="p-4 border rounded bg-gray-50 mb-4">
                         <h3 class="font-semibold mb-2">Configuração dos relatórios (exceto Gerencial Mensal)</h3>
                         <p class="text-sm text-gray-600 mb-2">Selecione os campos que devem aparecer no resultado e na exportação para Word.</p>
                         <div id="rep-field-selector" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm"></div>
@@ -1362,6 +1362,8 @@
         // --- RELATÓRIOS ---
         function switchReportTab(tab) {
             closeReport(); document.querySelectorAll('.report-filters').forEach(el => el.classList.add('hidden')); document.getElementById(`filters-${tab}`).classList.remove('hidden');
+            const commonConfig = document.getElementById('report-common-config');
+            if (commonConfig) commonConfig.classList.toggle('hidden', tab === 'gerencial');
             const active = ['border-blue-600', 'text-blue-600', 'font-bold'], inactive = ['border-transparent', 'text-gray-500'];
             document.querySelectorAll('.report-tab-btn').forEach(btn => { btn.classList.remove(...active); btn.classList.add(...inactive); });
             const activeBtn = document.getElementById(`tab-rep-${tab}`); activeBtn.classList.add(...active); activeBtn.classList.remove(...inactive);
@@ -1445,12 +1447,12 @@
         const renderAnalyticTable = (data) => {
             if (!data || data.length === 0) return '<p class="text-sm text-gray-500">Nenhum registro encontrado.</p>';
             const fields = getSelectedReportFields();
-            const head = fields.map(f => `<th class="border p-1">${REPORT_FIELDS[f].label}</th>`).join('');
-            let table = `<div class="analytic-list border-t mt-2 pt-2"><table class="w-full text-xs border"><thead class="bg-gray-100"><tr>${head}</tr></thead><tbody>`;
+            const head = fields.map(f => `<th class="border p-1 whitespace-nowrap">${REPORT_FIELDS[f].label}</th>`).join('');
+            let table = `<div class="analytic-list border-t mt-2 pt-2"><div class="overflow-auto max-h-[60vh]"><table class="w-full min-w-max text-xs border"><thead class="bg-gray-100"><tr>${head}</tr></thead><tbody>`;
             data.forEach(p => {
-                table += '<tr>' + fields.map(f => `<td class="border p-1">${formatFieldValueForExport(f, p)}</td>`).join('') + '</tr>';
+                table += '<tr>' + fields.map(f => `<td class="border p-1 whitespace-nowrap">${formatFieldValueForExport(f, p)}</td>`).join('') + '</tr>';
             });
-            return table + '</tbody></table></div>';
+            return table + '</tbody></table></div></div>';
         }
 
         function generateGeneralReport() {
@@ -1507,10 +1509,21 @@
         
         function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
 
+
+        function renderManagerialFixedTable(data) {
+            if (!data || data.length === 0) return '';
+            let html = '<div class="analytic-list border-t mt-2 pt-2"><div class="overflow-auto max-h-[60vh]"><table class="w-full min-w-max text-xs border"><thead class="bg-gray-100"><tr><th class="border p-1 whitespace-nowrap">Nº SEI</th><th class="border p-1 whitespace-nowrap">Objeto</th><th class="border p-1 whitespace-nowrap">Acusado</th><th class="border p-1 whitespace-nowrap">Data de conhecimento do fato</th><th class="border p-1 whitespace-nowrap">Resultado</th></tr></thead><tbody>';
+            data.forEach(p => {
+                const acusado = Array.isArray(p.acusados) && p.acusados.length ? p.acusados.join(', ') : '—';
+                html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${acusado}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${p.resultado || '—'}</td></tr>`;
+            });
+            return html + '</tbody></table></div></div>';
+        }
+
         function generateManagerialReport() {
             closeReport(); const startStr = document.getElementById('rep-man-start').value, endStr = document.getElementById('rep-man-end').value; const type = document.querySelector('input[name="rep-man-type"]:checked').value, isAnalytic = type === 'analitico';
-            const filtered = processos.filter(p => p.data_ent && (!startStr || p.data_ent >= startStr) && (!endStr || p.data_ent <= endStr));
-            const renderRow = (label, data, analyticList) => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderAnalyticTable(analyticList) : '');
+            const filtered = processos.filter(p => { const refDate = p.data_ent || p.data_conhecimento; if (!refDate) return !startStr && !endStr; if (startStr && refDate < startStr) return false; if (endStr && refDate > endStr) return false; return true; });
+            const renderRow = (label, data, analyticList) => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderManagerialFixedTable(analyticList) : '');
             
             const archivedList = filtered.filter(p => p.resultado === 'Arquivado após análise preliminar' || p.resultado === 'Arquivado após juízo de admissibilidade'); const aptTacList = filtered.filter(p => p.tac_apto); const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
             const analyzedList = filtered.filter(p => getStatusFromProcess(p) === 'Aguardando Distribuição'); const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
