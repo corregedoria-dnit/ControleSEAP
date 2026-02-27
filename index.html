@@ -473,20 +473,8 @@
 
                                         <div class="p-4 border rounded bg-gray-50 mb-4">
                         <h3 class="font-semibold mb-2">Configuração dos relatórios (exceto Gerencial Mensal)</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
-                            <input type="text" id="rep-common-sei" class="border rounded px-2 py-1 text-sm" placeholder="SEI (múltiplos: sep. por vírgula)">
-                            <input type="text" id="rep-common-objeto" class="border rounded px-2 py-1 text-sm" placeholder="Objeto contém...">
-                            <select id="rep-common-status" class="border rounded px-2 py-1 text-sm"><option value="">Status (todos)</option><option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option><option value="Em análise">Em análise</option><option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option><option value="Concluído">Concluído</option></select>
-                            <select id="rep-common-resultado" class="border rounded px-2 py-1 text-sm"><option value="">Resultado (todos)</option><option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option><option value="Para celebrar TAC">Para celebrar TAC</option><option value="Instauração de PAD">Instauração de PAD</option><option value="Instauração de PAR">Instauração de PAR</option><option value="Instauração de SINPA">Instauração de SINPA</option><option value="Instauração de SINAC">Instauração de SINAC</option><option value="Instauração de SINVE">Instauração de SINVE</option><option value="Instauração de IPS">Instauração de IPS</option></select>
-                        </div>
-                        <div class="text-sm"><span class="font-medium mr-2">Campos exibidos:</span>
-                            <label class="mr-2"><input type="checkbox" class="rep-field" value="sei" checked> SEI</label>
-                            <label class="mr-2"><input type="checkbox" class="rep-field" value="objeto" checked> Objeto</label>
-                            <label class="mr-2"><input type="checkbox" class="rep-field" value="analista" checked> Analista</label>
-                            <label class="mr-2"><input type="checkbox" class="rep-field" value="status" checked> Status</label>
-                            <label class="mr-2"><input type="checkbox" class="rep-field" value="resultado" checked> Resultado</label>
-                            <label class="mr-2"><input type="checkbox" class="rep-field" value="data_ent" checked> Data Entrada</label>
-                        </div>
+                        <p class="text-sm text-gray-600 mb-2">Selecione os campos que devem aparecer no resultado e na exportação para Word.</p>
+                        <div id="rep-field-selector" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 text-sm"></div>
                     </div>
                     <div id="filters-geral" class="report-filters hidden animate-fadeIn">
                         <h3 class="font-semibold mb-2">Filtros do Relatório Geral</h3>
@@ -753,6 +741,8 @@
         let processos = []; 
         let currentAccused = [], currentView = 'cards';
         let isPriorityFilterActive = false;
+        let lastReportData = [];
+        let lastReportIsManagerial = false;
         
         let config = {
             orgName: 'Controle Correicional', subtitle: 'Sistema Institucional', defaultUnit: 'SEAP', itemsPerPage: 20, pjYears: 5,
@@ -1387,27 +1377,55 @@
         }
         
         const REPORT_FIELDS = {
+            id: { label: 'ID', get: p => p.id || '—' },
             sei: { label: 'SEI', get: p => p.sei || '—' },
+            data_ent: { label: 'Data de Entrada', get: p => formatDate(p.data_ent) },
             objeto: { label: 'Objeto', get: p => p.objeto || '—' },
+            unidade_origem: { label: 'Unidade de Origem', get: p => p.unidade_origem || '—' },
+            doc_origem: { label: 'Documento de Origem', get: p => p.doc_origem || '—' },
+            juntado: { label: 'Juntado a Processo', get: p => p.juntado || '—' },
+            relacionados: { label: 'Processos Relacionados', get: p => p.relacionados || '—' },
+            op_policial: { label: 'Operação Policial', get: p => p.op_policial ? 'Sim' : 'Não' },
+            op_policial_detalhes: { label: 'Detalhes Op. Policial', get: p => p.op_policial_detalhes || '—' },
+            possui_inquerito: { label: 'Possui Inquérito', get: p => p.possui_inquerito ? 'Sim' : 'Não' },
+            inquerito_detalhes: { label: 'Detalhes Inquérito', get: p => p.inquerito_detalhes || '—' },
+            cad_epad: { label: 'Cadastro no ePAD', get: p => p.cad_epad ? 'Sim' : 'Não' },
+            epad_detalhes: { label: 'Detalhes ePAD', get: p => p.epad_detalhes || '—' },
+            prioritario: { label: 'Prioritário', get: p => p.prioritario ? 'Sim' : 'Não' },
+            tipo_acusado: { label: 'Tipo de Pessoa', get: p => p.tipo_acusado || '—' },
+            penalidades: { label: 'Penalidades Aplicáveis', get: p => p.penalidades || '—' },
+            data_conhecimento: { label: 'Data de Conhecimento', get: p => formatDate(p.data_conhecimento) },
+            calc_advertencia: { label: 'Prescrição Advertência', get: p => formatDate(p.calc_advertencia) },
+            calc_suspensao: { label: 'Prescrição Suspensão', get: p => formatDate(p.calc_suspensao) },
+            calc_demissao: { label: 'Prescrição Demissão', get: p => formatDate(p.calc_demissao) },
+            calc_pj: { label: 'Prescrição PJ', get: p => formatDate(p.calc_pj) },
             analista: { label: 'Analista', get: p => p.analista || '—' },
+            data_distribuicao: { label: 'Data de Distribuição', get: p => formatDate(p.data_distribuicao) },
+            prazo_nt_data: { label: 'Prazo NT', get: p => formatDate(p.prazo_nt_data) },
+            data_entrega_nt: { label: 'Data Entrega NT', get: p => formatDate(p.data_entrega_nt) },
+            ips: { label: 'IPS?', get: p => p.ips === true ? 'Sim' : p.ips === false ? 'Não' : '—' },
             status: { label: 'Status', get: p => getStatusFromProcess(p) },
+            status_manual: { label: 'Status Manual', get: p => p.status_manual || '—' },
+            data_despacho: { label: 'Data Assinatura Despacho', get: p => formatDate(p.data_despacho) },
+            acusados: { label: 'Acusado(s)', get: p => Array.isArray(p.acusados) && p.acusados.length ? p.acusados.join(', ') : '—' },
             resultado: { label: 'Resultado', get: p => p.resultado || '—' },
-            data_ent: { label: 'Data Entrada', get: p => formatDate(p.data_ent) }
+            doc_resp: { label: 'Documento de Resposta', get: p => p.doc_resp || '—' },
+            tac_apto: { label: 'Apto a TAC', get: p => p.tac_apto ? 'Sim' : 'Não' },
+            tac_sit: { label: 'Situação TAC', get: p => p.tac_sit || '—' },
+            tac_obs: { label: 'Observações TAC', get: p => p.tac_obs || '—' },
+            obs: { label: 'Observações Gerais', get: p => p.obs || '—' }
         };
 
-        function applyCommonReportFilters(data, skip = false) {
-            if (skip) return data;
-            const seiTerms = (document.getElementById('rep-common-sei').value || '').toLowerCase().split(',').map(v => v.trim()).filter(Boolean);
-            const objeto = (document.getElementById('rep-common-objeto').value || '').toLowerCase();
-            const status = document.getElementById('rep-common-status').value;
-            const resultado = document.getElementById('rep-common-resultado').value;
-            return data.filter(p => {
-                if (seiTerms.length && !seiTerms.some(term => (p.sei || '').toLowerCase().includes(term))) return false;
-                if (objeto && !(p.objeto || '').toLowerCase().includes(objeto)) return false;
-                if (status && getStatusFromProcess(p) !== status) return false;
-                if (resultado && p.resultado !== resultado) return false;
-                return true;
-            });
+        const REPORT_FIELD_ORDER = Object.keys(REPORT_FIELDS);
+
+        function initReportFieldSelector() {
+            const container = document.getElementById('rep-field-selector');
+            if (!container) return;
+            const defaultFields = new Set(['sei', 'objeto', 'analista', 'status', 'resultado', 'data_ent']);
+            container.innerHTML = REPORT_FIELD_ORDER.map(key => {
+                const checked = defaultFields.has(key) ? 'checked' : '';
+                return `<label class="flex items-center gap-2"><input type="checkbox" class="rep-field" value="${key}" ${checked}> ${REPORT_FIELDS[key].label}</label>`;
+            }).join('');
         }
 
         function getSelectedReportFields() {
@@ -1415,13 +1433,22 @@
             return fields.length ? fields : ['sei', 'objeto', 'analista', 'status'];
         }
 
+        function setLastReport(data, isManagerial = false) {
+            lastReportData = Array.isArray(data) ? [...data] : [];
+            lastReportIsManagerial = isManagerial;
+        }
+
+        function formatFieldValueForExport(fieldKey, process) {
+            return REPORT_FIELDS[fieldKey]?.get(process) ?? '—';
+        }
+
         const renderAnalyticTable = (data) => {
-            if (!data || data.length === 0) return '';
+            if (!data || data.length === 0) return '<p class="text-sm text-gray-500">Nenhum registro encontrado.</p>';
             const fields = getSelectedReportFields();
             const head = fields.map(f => `<th class="border p-1">${REPORT_FIELDS[f].label}</th>`).join('');
             let table = `<div class="analytic-list border-t mt-2 pt-2"><table class="w-full text-xs border"><thead class="bg-gray-100"><tr>${head}</tr></thead><tbody>`;
             data.forEach(p => {
-                table += '<tr>' + fields.map(f => `<td class="border p-1">${REPORT_FIELDS[f].get(p)}</td>`).join('') + '</tr>';
+                table += '<tr>' + fields.map(f => `<td class="border p-1">${formatFieldValueForExport(f, p)}</td>`).join('') + '</tr>';
             });
             return table + '</tbody></table></div>';
         }
@@ -1430,47 +1457,49 @@
             closeReport(); let filtered = [...processos]; const v = id => document.getElementById(id).value.toLowerCase(); const c = id => document.getElementById(id).checked;
             if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei'))); if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto'))); if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado'))); if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value); if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value); if (v('f-resultado')) filtered = filtered.filter(p => p.resultado === document.getElementById('f-resultado').value); if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física'); if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica'); if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade'))); if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem'))); if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado'))); if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value); if (c('f-concluido')) filtered = filtered.filter(p => p.data_despacho); if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
             if (c('f-epad')) { filtered = filtered.filter(p => p.cad_epad); const d = v('f-epad-det'); if(d) filtered = filtered.filter(p => p.epad_detalhes && p.epad_detalhes.toLowerCase().includes(d)); } if (c('f-inquerito')) { filtered = filtered.filter(p => p.possui_inquerito); const d = v('f-inq-det'); if(d) filtered = filtered.filter(p => p.inquerito_detalhes && p.inquerito_detalhes.toLowerCase().includes(d)); } if (c('f-op-policial')) { filtered = filtered.filter(p => p.op_policial); const d = v('f-op-det'); if(d) filtered = filtered.filter(p => p.op_policial_detalhes && p.op_policial_detalhes.toLowerCase().includes(d)); } if (c('f-tac')) { filtered = filtered.filter(p => p.tac_apto); const d = v('f-tac-det'); if(d) filtered = filtered.filter(p => p.tac_obs && p.tac_obs.toLowerCase().includes(d)); }
-            filtered = applyCommonReportFilters(filtered);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório Geral de Processos (${filtered.length})</h2>${renderAnalyticTable(filtered)}`;
+            setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
         
         function generateStatusReport() {
             closeReport(); const statusTarget = document.getElementById('rep-status-val').value; const start = document.getElementById('rep-status-de').value; const end = document.getElementById('rep-status-ate').value;
             let filtered = processos.filter(p => { let match = true; if (statusTarget) match = match && getStatusFromProcess(p) === statusTarget; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; return match; });
-            filtered = applyCommonReportFilters(filtered);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos por Status (${filtered.length})</h2><p class="text-sm text-center mb-4">Status: ${statusTarget || 'Todos'} | Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
+            setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function generateProgressReport() {
             closeReport(); const tipo = document.getElementById('rep-andamento-tipo').value; const start = document.getElementById('rep-andamento-de').value; const end = document.getElementById('rep-andamento-ate').value;
             let filtered = processos.filter(p => { let match = true; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; if (tipo === 'finalizado') match = match && (p.data_despacho != null && p.data_despacho !== ''); else if (tipo === 'andamento') match = match && (!p.data_despacho || p.data_despacho === ''); return match; });
-            filtered = applyCommonReportFilters(filtered);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos - ${tipo === 'andamento' ? 'Em Andamento' : tipo === 'finalizado' ? 'Finalizados' : 'Todos'} (${filtered.length})</h2><p class="text-sm text-center mb-4">Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
+            setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
         
         function generateDistributionReport() {
             closeReport(); const analista = document.getElementById('rep-dist-analista').value; const start = document.getElementById('rep-dist-start').value, end = document.getElementById('rep-dist-end').value; const isAnalytic = document.querySelector('input[name="rep-dist-type"]:checked').value === 'analitico';
             let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end));
-            filtered = applyCommonReportFilters(filtered);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Distribuição de Processos</h2><p class="text-center text-sm mb-4">Total: ${filtered.length} processos</p>`; if (isAnalytic) html += renderAnalyticTable(filtered);
+            setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function generatePrescriptionReport() {
             closeReport(); const tipo = document.getElementById('rep-presc-tipo').value; const incluirVencidos = document.getElementById('rep-presc-vencidos').checked; const isAnalytic = document.querySelector('input[name="rep-presc-type"]:checked').value === 'analitico'; const hoje = new Date().toISOString().split('T')[0]; const key = `calc_${tipo}`;
-            let filtered = processos.filter(p => p[key] && (incluirVencidos || p[key] >= hoje)); filtered = applyCommonReportFilters(filtered); filtered.sort((a,b) => (a[key] > b[key]) ? 1 : -1);
+            let filtered = processos.filter(p => p[key] && (incluirVencidos || p[key] >= hoje)); filtered.sort((a,b) => (a[key] > b[key]) ? 1 : -1);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Controle Prescricional - ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} (${filtered.length})</h2>`;
             if (isAnalytic) { html += `<table class="w-full text-xs text-left border-collapse border border-gray-300"><thead class="bg-gray-100"><tr><th class="border p-1">Processo SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Data Conhecimento</th><th class="border p-1">Data Prescrição</th><th class="border p-1">Dias Restantes</th></tr></thead><tbody>`; filtered.forEach(p => { const diasRestantes = diffDays(hoje, p[key]); const cor = diasRestantes < 0 ? 'text-red-600' : diasRestantes < config.alerts.crit.adv ? 'text-red-600' : 'text-gray-800'; html += `<tr><td class="border p-1 font-mono">${p.sei}</td><td class="border p-1">${p.objeto}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1 font-bold ${cor}">${formatDate(p[key])}</td><td class="border p-1 font-bold ${cor}">${diasRestantes < 0 ? 'PRESCRITO' : diasRestantes}</td></tr>`; }); html += `</tbody></table>`; }
+            setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
         function generateDeliveredPendingReport() {
             closeReport(); const analista = document.getElementById('rep-ent-analista').value; const start = document.getElementById('rep-ent-start').value, end = document.getElementById('rep-ent-end').value; const isAnalytic = document.querySelector('input[name="rep-ent-type"]:checked').value === 'analitico';
-            let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end)); filtered = applyCommonReportFilters(filtered); const entregues = filtered.filter(p => p.data_entrega_nt), pendentes = filtered.filter(p => !p.data_entrega_nt);
+            let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end)); const entregues = filtered.filter(p => p.data_entrega_nt), pendentes = filtered.filter(p => !p.data_entrega_nt);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Entregues vs. Pendentes</h2><p class="text-center text-sm mb-6">Filtros: Analista (${analista || 'Todos'}), Período (${formatDate(start)} a ${formatDate(end)})</p><div class="report-item"><span class="font-medium">Entregues</span><span>${entregues.length}</span></div>`; if (isAnalytic) html += renderAnalyticTable(entregues); html += `<div class="report-item mt-4"><span class="font-medium">Pendentes</span><span>${pendentes.length}</span></div>`; if (isAnalytic) html += renderAnalyticTable(pendentes);
+            setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
@@ -1491,6 +1520,7 @@
             const tacMap = { 'negociacao': filtered.filter(p => p.tac_sit === 'Em negociação'), 'celebrados': filtered.filter(p => p.tac_sit === 'Celebrado'), 'recusados': filtered.filter(p => p.tac_sit === 'Recusado'), 'finalizados': filtered.filter(p => p.tac_sit === 'Finalizado') };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div><div class="report-section"><div class="report-header">Resumo Geral</div>${renderRow('Quantidade total de processos', filtered.length, filtered)}${renderRow('Quantidade de processos arquivados', archivedList.length, archivedList)}${renderRow('Processos aptos a celebração de TAC', aptTacList.length, aptTacList)}${renderRow('Tempo médio (em dias)', avgProcessTime, [])}</div><div class="report-section"><div class="report-header">Notícias de irregularidade</div><div class="report-sub-header">Análise preliminar</div>${renderRow('Quantidade de processos analisados', analyzedList.length, analyzedList)}${renderRow('Tempo médio de análise (em dias)', avgAnalysisTime, [])}<div class="report-sub-header">Resultados</div>${renderRow('Número de processos arquivados', resultadoMap.arquivados_preliminar.length, resultadoMap.arquivados_preliminar)}${renderRow('Encaminhados para juízo de admissibilidade', juizoList.length, juizoList)}${renderRow('Quantidade de juntados a processo existente', juntadoList.length, juntadoList)}</div><div class="report-section"><div class="report-header">Juízo de Admissibilidade</div><div class="report-sub-header">Processos Analisados – IPS</div>${renderRow('Número de Processos analisados', ipsList.length, ipsList)}${renderRow('Tempo médio de análise (em dias)', calculateAverageDays(ipsList, 'data_distribuicao', 'data_entrega_nt'), [])}<div class="report-sub-header">Resultados</div>${renderRow('Processos arquivados', resultadoMap.arquivados_admissibilidade.length, resultadoMap.arquivados_admissibilidade)}${renderRow('Celebração de TAC', resultadoMap.celebracao_tac.length, resultadoMap.celebracao_tac)}${renderRow('Instauração de PAD', resultadoMap.instauracao_pad.length, resultadoMap.instauracao_pad)}${renderRow('Instauração de PAR', resultadoMap.instauracao_par.length, resultadoMap.instauracao_par)}${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}${renderRow('Instauração de SINAC', resultadoMap.instauracao_sinac.length, resultadoMap.instauracao_sinac)}${renderRow('Instauração de SINVE', resultadoMap.instauracao_sinve.length, resultadoMap.instauracao_sinve)}${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}${renderRow('Instauração de IPS', resultadoMap.instauracao_ips.length, resultadoMap.instauracao_ips)}</div><div class="report-section"><div class="report-header">Termo de Ajustamento de Conduta – TAC</div>${renderRow('TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao)}${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados)}${renderRow('TACs Recusados', tacMap.recusados.length, tacMap.recusados)}${renderRow('TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados)}</div>`;
+            setLastReport(filtered, true);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
@@ -1500,8 +1530,34 @@
         }
         
         function exportToExcel() {
-            const table = document.querySelector("#report-content table");
-            if (table) { const wb = XLSX.utils.table_to_book(table, {sheet: "Relatorio"}); XLSX.writeFile(wb, 'Relatorio_Filtrado.xlsx'); } else { showToast('Não há tabela no relatório.', 'error'); }
+            if (!lastReportData || lastReportData.length === 0) {
+                showToast('Não há dados no relatório para exportação.', 'error');
+                return;
+            }
+
+            if (lastReportIsManagerial) {
+                const table = document.querySelector("#report-content table");
+                if (table) {
+                    const wb = XLSX.utils.table_to_book(table, { sheet: "Relatorio" });
+                    XLSX.writeFile(wb, 'Relatorio_Gerencial.xlsx');
+                } else {
+                    showToast('Não há tabela no relatório.', 'error');
+                }
+                return;
+            }
+
+            const rows = lastReportData.map(p => {
+                const row = {};
+                REPORT_FIELD_ORDER.forEach(field => {
+                    row[REPORT_FIELDS[field].label] = formatFieldValueForExport(field, p);
+                });
+                return row;
+            });
+
+            const ws = XLSX.utils.json_to_sheet(rows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Relatorio');
+            XLSX.writeFile(wb, 'Relatorio_Completo.xlsx');
         }
 
         function exportBackup() {
@@ -1532,6 +1588,7 @@
             Inputmask({ mask: "99999.999999/9999-99", placeholder: "_", showMaskOnHover: false, showMaskOnFocus: true }).mask(document.querySelectorAll(".mask-sei"));
             setViewMode(localStorage.getItem('correg_view_mode') || 'cards');
             setupPrazoHandlers();
+            initReportFieldSelector();
         });
 
     </script>
