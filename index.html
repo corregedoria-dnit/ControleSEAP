@@ -819,8 +819,8 @@
                 .subscribe();
         }
 
-         async function saveProcessToSupabase(data) {
-            const dbData = { ...data };
+         async function saveProcessToSupabase(data, isEditing = false) {
+            const dbData = { ...data };␊
 
             // Itera sobre todas as chaves do objeto
             for (const key in dbData) {
@@ -1449,3 +1449,4 @@
     </script>
 </body>
 </html>
+
