@@ -92,27 +92,6 @@
                     </div>
                     <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition-colors">Entrar</button>
                 </form>
-                <button onclick="toggleLoginReg()" class="w-full text-blue-600 text-sm mt-4 hover:underline">Não tem conta? Cadastre-se</button>
-            </div>
-
-            <div id="reg-section" class="hidden">
-                <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Criar Nova Conta</h2>
-                <form onsubmit="handleCadastro(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome Completo</label>
-                        <input type="text" id="reg-name" required class="w-full border p-3 rounded-lg outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Nome de Usuário</label>
-                        <input type="text" id="reg-user" required class="w-full border p-3 rounded-lg outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
-                        <input type="password" id="reg-pass" required class="w-full border p-3 rounded-lg outline-none">
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white p-3 rounded-lg font-bold">Cadastrar</button>
-                </form>
-                <button onclick="toggleLoginReg()" class="w-full text-gray-600 text-sm mt-4 hover:underline">Voltar para o Login</button>
             </div>
             
             <p id="error-msg" class="text-red-500 text-sm mt-4 hidden text-center font-bold"></p>
@@ -670,6 +649,56 @@
                     </div>
                     <div class="mt-6 flex justify-end"><button onclick="saveConfigs()" class="bg-blue-600 text-white px-6 py-2 rounded">Salvar Configurações</button></div>
                 </div>
+
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                            <h2 class="text-xl font-bold">Gerenciamento de Usuários</h2>
+                            <p id="users-manage-description" class="text-sm text-gray-500 mt-1">Administra contas de acesso do sistema.</p>
+                        </div>
+                        <button onclick="resetUserForm()" id="btn-user-new" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm">Novo usuário</button>
+                    </div>
+
+                    <form id="user-form" onsubmit="submitUserForm(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border rounded-lg p-4 mb-4 bg-gray-50">
+                        <input type="hidden" id="user-id">
+                        <div>
+                            <label class="block text-sm font-bold">Nome completo</label>
+                            <input type="text" id="user-name" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold">Usuário</label>
+                            <input type="text" id="user-username" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold">Senha</label>
+                            <input type="password" id="user-password" class="w-full border rounded px-3 py-2" placeholder="Obrigatória para novo usuário">
+                        </div>
+                        <div class="flex flex-col justify-end gap-2">
+                            <label id="user-admin-wrap" class="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" id="user-admin" class="rounded">
+                                <span>Administrador</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <button type="submit" id="btn-user-save" class="bg-blue-600 text-white px-3 py-2 rounded text-sm">Salvar usuário</button>
+                                <button type="button" onclick="resetUserForm()" class="bg-gray-500 text-white px-3 py-2 rounded text-sm">Limpar</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <div class="table-container border">
+                        <table>
+                            <thead class="bg-gray-100 text-sm">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Usuário</th>
+                                    <th>Perfil</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="text-sm bg-white"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
         </main>
@@ -683,6 +712,7 @@
 
         // --- VARIÁVEIS DE ESTADO GLOBAIS ---
         let currentUser = null;
+        let users = [];
         let processos = []; 
         let currentAccused = [], currentView = 'cards';
         let isPriorityFilterActive = false;
@@ -724,30 +754,6 @@
                 err.innerText = "Usuário ou senha inválidos.";
                 err.classList.remove('hidden');
             }
-        }
-
-        async function handleCadastro(e) {
-            e.preventDefault();
-            const n = document.getElementById('reg-name').value;
-            const u = document.getElementById('reg-user').value;
-            const p = document.getElementById('reg-pass').value;
-
-            const { error } = await supabaseClient
-                .from('usuarios')
-                .insert([{ nome_completo: n, username: u, senha: p, is_admin: false }]);
-
-            if (error) {
-                alert("Erro ao cadastrar: Usuário já existe ou falha na conexão.");
-            } else {
-                alert("Usuário cadastrado com sucesso! Faça login.");
-                toggleLoginReg();
-            }
-        }
-
-        function toggleLoginReg() {
-            document.getElementById('login-section').classList.toggle('hidden');
-            document.getElementById('reg-section').classList.toggle('hidden');
-            document.getElementById('error-msg').classList.add('hidden');
         }
 
         function logout() { location.reload(); }
@@ -989,7 +995,10 @@
             if(pageId === 'dashboard') loadDashboard();
             if(pageId === 'processos') refreshProcessos();
             if(pageId === 'novo-processo') resetForm();
-            if(pageId === 'configuracoes') loadConfigsToForm();
+            if(pageId === 'configuracoes') {
+                loadConfigsToForm();
+                fetchUsers();
+            }
             if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
         }
         function closeReport() { document.getElementById('report-output').classList.add('hidden'); }
@@ -1168,6 +1177,146 @@
             document.getElementById('conf-org-name').value = config.orgName; document.getElementById('conf-subtitle').value = config.subtitle; document.getElementById('conf-default-unit').value = config.defaultUnit || ''; document.getElementById('conf-items-page').value = config.itemsPerPage || 20; document.getElementById('conf-pj-years').value = config.pjYears || 5; document.getElementById('conf-pf-adv').value = config.pf?.adv || 180; document.getElementById('conf-pf-susp').value = config.pf?.susp || 2; document.getElementById('conf-pf-dem').value = config.pf?.dem || 5; document.getElementById('conf-crit-task').value = config.alerts.crit.task; document.getElementById('conf-crit-adv').value = config.alerts.crit.adv; document.getElementById('conf-crit-susp').value = config.alerts.crit.susp; document.getElementById('conf-crit-dem').value = config.alerts.crit.dem; document.getElementById('conf-high-task').value = config.alerts.high.task; document.getElementById('conf-high-adv').value = config.alerts.high.adv; document.getElementById('conf-high-susp').value = config.alerts.high.susp; document.getElementById('conf-high-dem').value = config.alerts.high.dem;
         }
 
+        async function fetchUsers() {
+            if (!currentUser) return;
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .select('id, nome_completo, username, senha, is_admin')
+                .order('nome_completo', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                showToast('Erro ao carregar usuários.', 'error');
+                return;
+            }
+
+            users = currentUser.is_admin ? data : data.filter(u => u.id === currentUser.id);
+            renderUsersManagement();
+            resetUserForm();
+        }
+
+        function renderUsersManagement() {
+            const description = document.getElementById('users-manage-description');
+            const table = document.getElementById('users-table-body');
+            const adminWrap = document.getElementById('user-admin-wrap');
+            const newBtn = document.getElementById('btn-user-new');
+
+            const isAdmin = !!currentUser?.is_admin;
+            description.innerText = isAdmin
+                ? 'Você pode visualizar e gerenciar todos os usuários cadastrados.'
+                : 'Você pode gerenciar somente o seu próprio cadastro.';
+            adminWrap.classList.toggle('hidden', !isAdmin);
+            newBtn.classList.toggle('hidden', !isAdmin);
+
+            if (!users.length) {
+                table.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-gray-500">Nenhum usuário encontrado.</td></tr>';
+                return;
+            }
+
+            table.innerHTML = users.map(u => `
+                <tr class="border-t">
+                    <td class="px-4 py-3">${u.nome_completo || '—'}</td>
+                    <td class="px-4 py-3 font-mono">${u.username || '—'}</td>
+                    <td class="px-4 py-3">${u.is_admin ? 'Administrador' : 'Usuário'}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="startEditUser('${u.id}')" class="text-blue-600 hover:underline mr-3">Editar</button>
+                        ${isAdmin ? `<button onclick="deleteUser('${u.id}')" class="text-red-600 hover:underline">Excluir</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function resetUserForm() {
+            const isAdmin = !!currentUser?.is_admin;
+            document.getElementById('user-form').reset();
+            document.getElementById('user-id').value = '';
+            document.getElementById('user-admin').checked = false;
+            document.getElementById('user-password').required = isAdmin;
+            document.getElementById('btn-user-save').innerText = 'Salvar usuário';
+            if (!isAdmin && currentUser) {
+                startEditUser(currentUser.id);
+            }
+        }
+
+        function startEditUser(userId) {
+            const selected = users.find(u => String(u.id) === String(userId));
+            if (!selected) return;
+
+            document.getElementById('user-id').value = selected.id;
+            document.getElementById('user-name').value = selected.nome_completo || '';
+            document.getElementById('user-username').value = selected.username || '';
+            document.getElementById('user-password').value = '';
+            document.getElementById('user-password').required = false;
+            document.getElementById('user-admin').checked = !!selected.is_admin;
+            document.getElementById('btn-user-save').innerText = 'Atualizar usuário';
+        }
+
+        async function submitUserForm(e) {
+            e.preventDefault();
+
+            const isAdmin = !!currentUser?.is_admin;
+            const id = document.getElementById('user-id').value;
+            const nome = document.getElementById('user-name').value.trim();
+            const username = document.getElementById('user-username').value.trim();
+            const senha = document.getElementById('user-password').value;
+            const isUserAdmin = isAdmin ? document.getElementById('user-admin').checked : false;
+
+            if (!isAdmin && id && String(id) !== String(currentUser.id)) {
+                showToast('Você só pode editar o próprio cadastro.', 'error');
+                return;
+            }
+            if (!isAdmin && !id) {
+                showToast('Você não possui permissão para criar novos usuários.', 'error');
+                return;
+            }
+            if (!id && !senha) {
+                showToast('Informe uma senha para o novo usuário.', 'error');
+                return;
+            }
+
+            const payload = { nome_completo: nome, username, is_admin: isUserAdmin };
+            if (senha) payload.senha = senha;
+
+            let result;
+            if (id) {
+                result = await supabaseClient.from('usuarios').update(payload).eq('id', id);
+            } else {
+                result = await supabaseClient.from('usuarios').insert([payload]);
+            }
+
+            if (result.error) {
+                console.error(result.error);
+                showToast('Erro ao salvar usuário.', 'error');
+                return;
+            }
+
+            showToast(id ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!', 'success');
+            resetUserForm();
+            fetchUsers();
+        }
+
+        async function deleteUser(userId) {
+            if (!currentUser?.is_admin) {
+                showToast('Apenas administradores podem excluir usuários.', 'error');
+                return;
+            }
+            if (String(userId) === String(currentUser.id)) {
+                showToast('Não é permitido excluir o próprio usuário administrador.', 'error');
+                return;
+            }
+            if (!confirm('Deseja realmente excluir este usuário?')) return;
+
+            const { error } = await supabaseClient.from('usuarios').delete().eq('id', userId);
+            if (error) {
+                console.error(error);
+                showToast('Erro ao excluir usuário.', 'error');
+                return;
+            }
+
+            showToast('Usuário excluído com sucesso!', 'success');
+            fetchUsers();
+        }
+
         // --- RELATÓRIOS ---
         function switchReportTab(tab) {
             closeReport(); document.querySelectorAll('.report-filters').forEach(el => el.classList.add('hidden')); document.getElementById(`filters-${tab}`).classList.remove('hidden');
@@ -1300,12 +1449,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
