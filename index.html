@@ -1039,21 +1039,42 @@ async function handleLogin(e) {
         }
 
         function showPage(pageId) {
-            if(pageId !== 'relatorios') closeReport();
-            document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`page-${pageId}`).classList.remove('hidden');
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
-            document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
-            
-            if(pageId === 'dashboard') loadDashboard();
-            if(pageId === 'processos') refreshProcessos();
-            if(pageId === 'novo-processo') resetForm();
-            if(pageId === 'configuracoes') {
-                loadConfigsToForm();
-                fetchUsers();
-            }
-            if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
-        }
+  if(pageId !== 'relatorios') closeReport();
+  
+  document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+  document.getElementById(`page-${pageId}`).classList.remove('hidden');
+  
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
+  document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
+  
+  if(pageId === 'dashboard') loadDashboard();
+  if(pageId === 'processos') refreshProcessos();
+  if(pageId === 'novo-processo') resetForm();
+  
+  if(pageId === 'configuracoes') {
+    loadConfigsToForm();
+    fetchUsers(); // Busca os usuários (se for admin, a tabela será preenchida)
+    setupConfiguracoesView(); // <--- ADICIONE ESTA LINHA AQUI
+  }
+  
+  if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
+}
+        //function showPage(pageId) {
+        //    if(pageId !== 'relatorios') closeReport();
+        //    document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+        //    document.getElementById(`page-${pageId}`).classList.remove('hidden');
+        //    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
+        //    document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
+        //    
+        //    if(pageId === 'dashboard') loadDashboard();
+        //    if(pageId === 'processos') refreshProcessos();
+        //    if(pageId === 'novo-processo') resetForm();
+        //    if(pageId === 'configuracoes') {
+        //        loadConfigsToForm();
+        //        fetchUsers();
+        //    }
+        //    if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
+       // }
         function closeReport() { document.getElementById('report-output').classList.add('hidden'); }
 
         function loadDashboard() {
@@ -1628,4 +1649,5 @@ async function handleLogin(e) {
     </script>
 </body>
 </html>
+
 
