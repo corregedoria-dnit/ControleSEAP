@@ -734,7 +734,38 @@
         const SUPABASE_URL = 'https://buqtsnywwsnzdyllesky.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-// Verifica se já existe uma sessão ativa ao carregar a página
+<script>
+// --- CONFIGURAÇÃO SUPABASE ---
+const SUPABASE_URL = 'https://sua-url-aqui.supabase.co';
+const SUPABASE_KEY = 'sua-chave-aqui';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
+// --- VARIÁVEIS DE ESTADO GLOBAIS ---
+let currentUser = null;
+let users = [];
+let processos = []; // <-- O ERRO ESTÁ ACONTECENDO PORQUE ESTA LINHA SUMIU
+let currentAccused = [];
+let currentView = 'cards';
+let isPriorityFilterActive = false;
+let lastReportData = [];
+let lastReportIsManagerial = false;
+let config = {
+  orgName: 'Controle Correicional', 
+  subtitle: 'Sistema Institucional', 
+  defaultUnit: 'SEAP', 
+  itemsPerPage: 20,
+  pjYears: 5,
+  pf: { adv: 180, susp: 2, dem: 5 },
+  alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
+};
+// 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
+
+// --- VERIFICAÇÃO DE SESSÃO (Que adicionamos antes) ---
+supabaseClient.auth.getSession().then(({ data: { session } }) => {
+// ... resto do código
+        
+        // Verifica se já existe uma sessão ativa ao carregar a página
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     currentUser = session.user;
@@ -1661,6 +1692,7 @@ async function handleLogin(e) {
     </script>
 </body>
 </html>
+
 
 
 
