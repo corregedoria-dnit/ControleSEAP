@@ -120,7 +120,7 @@
                             <span class="text-xs font-medium">Conectando...</span>
                         </div>
                         <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition-colors" title="Sair do Sistema">
-                            <i data-lucide="log-out" class="w-5 h-5"></i>
+                            <i data-lucide="log-out" class="..."></i> Sair
                         </button>
                     </div>
                 </div>
@@ -745,24 +745,25 @@ supabaseClient.auth.getSession().then(({ data: { session } }) => {
 });
 
 // Função de logout atualizada
-async function logout() { 
-  await supabaseClient.auth.signOut();
-  location.reload(); 
+async function logout() {
+  try {
+    // 1. Encerra a sessão no Supabase (remove o token do navegador)
+    const { error } = await supabaseClient.auth.signOut();
+    
+    if (error) throw error;
+
+    // 2. Limpa a variável global do usuário
+    currentUser = null;
+    
+    // 3. Recarrega a página para forçar a volta para a tela de login
+    window.location.href = window.location.pathname; // Mais seguro que apenas reload()
+    
+  } catch (error) {
+    console.error("Erro ao fazer logout:", error);
+    // Força o recarregamento da página mesmo se houver falha de rede
+    window.location.href = window.location.pathname;
+  }
 }
-        // --- VARIÁVEIS DE ESTADO GLOBAIS ---
-        let currentUser = null;
-        let users = [];
-        let processos = []; 
-        let currentAccused = [], currentView = 'cards';
-        let isPriorityFilterActive = false;
-        let lastReportData = [];
-        let lastReportIsManagerial = false;
-        
-        let config = {
-            orgName: 'Controle Correicional', subtitle: 'Sistema Institucional', defaultUnit: 'SEAP', itemsPerPage: 20, pjYears: 5,
-            pf: { adv: 180, susp: 2, dem: 5 }, 
-            alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
-        };
 
        // --- AUTH & LOGIN SEGURO ---
 async function handleLogin(e) {
@@ -1649,5 +1650,6 @@ async function handleLogin(e) {
     </script>
 </body>
 </html>
+
 
 
