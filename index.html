@@ -120,7 +120,7 @@
                             <span class="text-xs font-medium">Conectando...</span>
                         </div>
                         <button onclick="logout()" class="text-gray-400 hover:text-red-500 transition-colors" title="Sair do Sistema">
-                            <i data-lucide="log-out" class="..."></i> Sair
+                             <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sair
                         </button>
                     </div>
                 </div>
@@ -747,21 +747,32 @@ supabaseClient.auth.getSession().then(({ data: { session } }) => {
 // Função de logout atualizada
 async function logout() {
   try {
-    // 1. Encerra a sessão no Supabase (remove o token do navegador)
-    const { error } = await supabaseClient.auth.signOut();
-    
-    if (error) throw error;
-
-    // 2. Limpa a variável global do usuário
+    // 1. Tenta fazer o logout oficial no Supabase
+    await supabaseClient.auth.signOut();
+  } catch (error) {
+    console.error("Erro ao comunicar logout ao Supabase:", error);
+  } finally {
+    // 2. Limpa a variável global
     currentUser = null;
     
-    // 3. Recarrega a página para forçar a volta para a tela de login
-    window.location.href = window.location.pathname; // Mais seguro que apenas reload()
+    // 3. FORÇA a mudança visual IMEDIATAMENTE
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-overlay').style.display = 'flex';
     
-  } catch (error) {
-    console.error("Erro ao fazer logout:", error);
-    // Força o recarregamento da página mesmo se houver falha de rede
-    window.location.href = window.location.pathname;
+    // 4. Limpa os campos de login para não ficarem preenchidos
+    if(document.getElementById('log-pass')) {
+        document.getElementById('log-pass').value = '';
+    }
+    
+    // 5. Limpa o armazenamento local do Supabase à força (Fallback)
+    for (let key in localStorage) {
+      if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    // 6. Recarrega a página ignorando o cache
+    window.location.reload(true);
   }
 }
 
@@ -1650,6 +1661,7 @@ async function handleLogin(e) {
     </script>
 </body>
 </html>
+
 
 
 
