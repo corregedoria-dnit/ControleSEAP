@@ -734,7 +734,21 @@
         const SUPABASE_URL = 'https://buqtsnywwsnzdyllesky.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst'; 
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+// Verifica se já existe uma sessão ativa ao carregar a página
+supabaseClient.auth.getSession().then(({ data: { session } }) => {
+  if (session) {
+    currentUser = session.user;
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
+  }
+});
 
+// Função de logout atualizada
+async function logout() { 
+  await supabaseClient.auth.signOut();
+  location.reload(); 
+}
         // --- VARIÁVEIS DE ESTADO GLOBAIS ---
         let currentUser = null;
         let users = [];
@@ -750,39 +764,46 @@
             alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
         };
 
-        // --- AUTH & LOGIN ---
-        async function handleLogin(e) {
-            e.preventDefault();
-            const u = document.getElementById('log-user').value;
-            const p = document.getElementById('log-pass').value;
-            const err = document.getElementById('error-msg');
-            const btn = document.getElementById('btn-login');
+       // --- AUTH & LOGIN SEGURO ---
+async function handleLogin(e) {
+  e.preventDefault();
+  
+  // Nota: O Supabase Auth usa E-mail por padrão, não um "username" simples.
+  // Certifique-se de que os usuários usem e-mail para logar.
+  const email = document.getElementById('log-user').value; 
+  const password = document.getElementById('log-pass').value;
+  const err = document.getElementById('error-msg');
+  const btn = document.getElementById('btn-login');
+  
+  btn.innerText = 'Verificando...';
+  err.classList.add('hidden');
 
-            btn.innerText = 'Verificando...';
+  // Utilizando a autenticação nativa do Supabase
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: email,
+    password: password,
+  });
 
-            const { data, error } = await supabaseClient
-                .from('usuarios')
-                .select('*')
-                .eq('username', u)
-                .eq('senha', p)
-                .single();
+  btn.innerText = 'Entrar';
 
-            btn.innerText = 'Entrar';
+  if (error) {
+    console.error("Erro no login:", error.message);
+    err.innerText = "E-mail ou senha inválidos.";
+    err.classList.remove('hidden');
+    return;
+  }
 
-            if (data) {
-                currentUser = data;
-                document.getElementById('login-overlay').style.display = 'none';
-                document.getElementById('app').style.display = 'flex';
-              //  document.getElementById('user-display').innerText = `Operador: ${data.nome_completo}`;
-                if(data.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
-                
-                initApp();
-            } else {
-                err.innerText = "Usuário ou senha inválidos.";
-                err.classList.remove('hidden');
-            }
-        }
-
+  if (data.user) {
+    currentUser = data.user;
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    
+    // Para verificar se é admin, você pode usar os metadados do usuário no Supabase
+    // if(data.user.user_metadata?.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
+    
+    initApp();
+  }
+}
         function logout() { location.reload(); }
 
         // --- INICIALIZAÇÃO SUPABASE E DADOS ---
@@ -1607,3 +1628,4 @@
     </script>
 </body>
 </html>
+
