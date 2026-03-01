@@ -619,6 +619,8 @@
                 <div id="report-content"></div>
             </div>
 
+            <div id="page-configuracoes" class="page-content hidden animate-fadeIn max-w-7xl mx-auto">
+
           <!-- PAINEL DE BACKUP (Adicione o id="panel-backup") -->
 <div id="panel-backup" class="bg-white p-6 rounded-lg shadow mb-6">
   <!-- ... conteúdo do backup ... -->
@@ -659,6 +661,8 @@
   </div>
 </div>
 
+            </div>
+
 <script>
 // --- CONFIGURAÇÃO SUPABASE ---
 const SUPABASE_URL = 'https://buqtsnywwsnzdyllesky.supabase.co';
@@ -679,6 +683,140 @@ let config = {
   pjYears: 5, pf: { adv: 180, susp: 2, dem: 5 },
   alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
 };
+
+
+// --- UTILITÁRIOS BÁSICOS E FALLBACKS ---
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) return alert(message);
+  const colors = {
+    success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-600', info: 'bg-blue-600'
+  };
+  const toast = document.createElement('div');
+  toast.className = `${colors[type] || colors.info} text-white px-4 py-2 rounded shadow animate-fadeIn`;
+  toast.textContent = message;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+function setDbStatus(state, label, title = '') {
+  const status = document.getElementById('db-status');
+  if (!status) return;
+  const stateClass = {
+    connecting: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    connected: 'bg-green-50 text-green-700 border-green-200',
+    warning: 'bg-orange-50 text-orange-700 border-orange-200',
+    error: 'bg-red-50 text-red-700 border-red-200'
+  }[state] || 'bg-yellow-50 text-yellow-700 border-yellow-200';
+  status.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${stateClass}`;
+  status.title = title || label;
+  status.querySelector('span').textContent = label;
+  const dot = status.querySelector('div');
+  if (dot) dot.className = `w-2 h-2 rounded-full ${state === 'connected' ? 'bg-green-500' : state === 'error' ? 'bg-red-500' : state === 'warning' ? 'bg-orange-500' : 'bg-yellow-500'} ${state === 'connecting' ? 'animate-pulse' : ''}`;
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T00:00:00');
+  if (Number.isNaN(d.getTime())) return '—';
+  return d.toLocaleDateString('pt-BR');
+}
+
+function closeReport() {
+  const out = document.getElementById('report-output');
+  if (out) out.classList.add('hidden');
+}
+
+function getStatusFromProcess(p) {
+  if (!p) return 'Cadastrado';
+  if (p.status_manual) return p.status_manual;
+  if (p.data_despacho) return 'Concluído';
+  if (p.analista) return 'Em análise';
+  return 'Aguardando Distribuição';
+}
+
+function setViewMode(mode = 'cards') {
+  currentView = mode;
+  localStorage.setItem('correg_view_mode', mode);
+}
+
+function setupPrazoHandlers() {}
+function resetForm() {}
+function loadConfigsToForm() {}
+async function saveConfigsToSupabase() {}
+async function saveProcessToSupabase() {}
+function toggleAdvancedFilters() { document.getElementById('advanced-filters-panel')?.classList.toggle('hidden'); }
+function togglePriorityFilter() { isPriorityFilterActive = !isPriorityFilterActive; refreshProcessos(); }
+function clearAllFilters() { const el = document.getElementById('search-process'); if (el) el.value = ''; refreshProcessos(); }
+function toggleFilterDetail(id) { document.getElementById(id)?.classList.toggle('hidden'); }
+function resetUserForm() {}
+
+async function loadProcessos() {
+  const { data, error } = await supabaseClient.from('processos').select('*').order('data_ent', { ascending: false });
+  if (error) throw error;
+  processos = Array.isArray(data) ? data : [];
+}
+
+async function fetchUsers() {
+  const table = document.getElementById('panel-users-table');
+  if (!table) return;
+  const { data, error } = await supabaseClient.from('usuarios').select('id,nome_completo,username,is_admin').order('nome_completo');
+  if (error) {
+    table.innerHTML = '<div class="p-4 text-sm text-red-600">Não foi possível carregar usuários.</div>';
+    return;
+  }
+  users = data || [];
+  const rows = users.map(u => `<tr><td class="border p-2">${u.nome_completo || '—'}</td><td class="border p-2">${u.username || '—'}</td><td class="border p-2">${u.is_admin ? 'Sim' : 'Não'}</td></tr>`).join('');
+  table.innerHTML = `<table class="w-full text-sm"><thead><tr><th class="border p-2">Nome</th><th class="border p-2">Usuário</th><th class="border p-2">Admin</th></tr></thead><tbody>${rows || '<tr><td class="border p-2" colspan="3">Sem usuários</td></tr>'}</tbody></table>`;
+}
+
+function loadDashboard() {
+  const total = processos.length;
+  const aguardando = processos.filter(p => getStatusFromProcess(p) === 'Aguardando Distribuição').length;
+  const analise = processos.filter(p => getStatusFromProcess(p) === 'Em análise').length;
+  const concluidos = processos.filter(p => getStatusFromProcess(p) === 'Concluído').length;
+  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
+  setText('stat-total', total); setText('stat-aguardando', aguardando); setText('stat-analise', analise); setText('stat-concluidos', concluidos);
+}
+
+function refreshProcessos() {
+  const container = document.getElementById('process-view-container');
+  if (!container) return;
+  const term = (document.getElementById('search-process')?.value || '').toLowerCase();
+  const filtered = processos.filter(p => !term || [p.sei, p.objeto, p.analista, (p.acusados || []).join(' ')].join(' ').toLowerCase().includes(term));
+  if (!filtered.length) {
+    container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow text-sm text-gray-500">Nenhum processo encontrado.</div>';
+    return;
+  }
+  container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${filtered.map(p => `<div class="bg-white p-4 rounded border"><div class="font-mono text-sm text-blue-700">${p.sei || '—'}</div><div class="font-semibold mt-1">${p.objeto || 'Sem objeto'}</div><div class="text-sm text-gray-500 mt-1">Analista: ${p.analista || '—'}</div><div class="text-xs mt-2">Status: ${getStatusFromProcess(p)}</div></div>`).join('')}</div>`;
+}
+
+async function initApp() {
+  setDbStatus('connecting', 'Conectando...');
+  try {
+    const { error: pingError } = await supabaseClient.from('usuarios').select('id', { count: 'exact', head: true });
+    if (pingError) {
+      setDbStatus('warning', 'Conectado (sem permissão)', pingError.message);
+    } else {
+      setDbStatus('connected', 'Conectado');
+    }
+
+    try {
+      await loadProcessos();
+    } catch (processError) {
+      console.error(processError);
+      showToast('Conectou no Supabase, mas falhou ao carregar processos.', 'warning');
+    }
+
+    loadDashboard();
+    refreshProcessos();
+    populateAnalystFilters();
+  } catch (err) {
+    console.error(err);
+    setDbStatus('error', 'Falha na conexão', err.message || 'Erro desconhecido');
+    showToast('Falha ao conectar com o banco de dados.', 'error');
+  }
+}
 
 // --- VERIFICAÇÃO DE SESSÃO (Mantém logado) ---
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
@@ -763,7 +901,12 @@ async function logout() {
 function showPage(pageId) {
   if(pageId !== 'relatorios') closeReport();
   document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-  document.getElementById(`page-${pageId}`).classList.remove('hidden');
+  const targetPage = document.getElementById(`page-${pageId}`);
+  if (!targetPage) {
+    console.warn(`Página não encontrada: page-${pageId}`);
+    return;
+  }
+  targetPage.classList.remove('hidden');
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
   document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
   
@@ -803,17 +946,25 @@ function setupConfiguracoesView() {
     if(titleEl) titleEl.innerText = 'Meu Perfil';
     if(descEl) descEl.innerText = 'Atualize seus dados pessoais e altere sua senha.';
     
-    document.getElementById('user-id').value = currentUser.id;
-    document.getElementById('user-name').value = currentUser.nome_completo || '';
-    document.getElementById('user-username').value = currentUser.email || '';
-    document.getElementById('user-password').value = '';
-    document.getElementById('user-password').placeholder = 'Digite para alterar a senha';
-    document.getElementById('btn-user-save').innerText = 'Atualizar meus dados';
+    const userIdEl = document.getElementById('user-id');
+    const userNameEl = document.getElementById('user-name');
+    const userUsernameEl = document.getElementById('user-username');
+    const userPasswordEl = document.getElementById('user-password');
+    const userSaveBtnEl = document.getElementById('btn-user-save');
+    if (userIdEl) userIdEl.value = currentUser.id;
+    if (userNameEl) userNameEl.value = currentUser.nome_completo || '';
+    if (userUsernameEl) userUsernameEl.value = currentUser.email || '';
+    if (userPasswordEl) {
+      userPasswordEl.value = '';
+      userPasswordEl.placeholder = 'Digite para alterar a senha';
+    }
+    if (userSaveBtnEl) userSaveBtnEl.innerText = 'Atualizar meus dados';
   } else {
     if(titleEl) titleEl.innerText = 'Gerenciamento de Usuários';
     if(descEl) descEl.innerText = 'Administra contas de acesso do sistema.';
-    document.getElementById('btn-user-save').innerText = 'Salvar usuário';
-    resetUserForm();
+    const userSaveBtnEl = document.getElementById('btn-user-save');
+    if (userSaveBtnEl) userSaveBtnEl.innerText = 'Salvar usuário';
+    if (typeof resetUserForm === 'function') resetUserForm();
   }
 }
 
@@ -1138,12 +1289,3 @@ async function submitUserForm(e) {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
