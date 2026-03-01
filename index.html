@@ -81,7 +81,7 @@
                     <div class="bg-blue-600 p-3 rounded-full"><i data-lucide="shield-check" class="text-white w-8 h-8"></i></div>
                 </div>
                 <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso ao Sistema</h2>
-                <form id="login-form" class="space-y-4">
+                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Usuário</label>
                         <input type="text" id="log-user" required class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -90,7 +90,7 @@
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
                         <input type="password" id="log-pass" required class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
-                    <button type="button" onclick="handleLogin(event)" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition-colors">Entrar</button>
+                    <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition-colors">Entrar</button>
                 </form>
             </div>
             
@@ -620,48 +620,114 @@
             </div>
 
             <div id="page-configuracoes" class="page-content hidden animate-fadeIn max-w-7xl mx-auto">
+                <div id="panel-backup" class="bg-white p-6 rounded-lg shadow mb-6">
+                    <h2 class="text-xl font-bold mb-4">Configurações</h2>
+                    
+                    <div id="panel-configs-gerais" class="border-b mb-6 pb-6">
+                        <h3 class="font-semibold text-gray-700 mb-2">Backup Local (Opcional)</h3>
+                        <div class="flex space-x-4">
+                            <button onclick="exportBackup()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center"><i data-lucide="download" class="w-4 h-4 mr-2"></i> Exportar JSON</button>
+                            <button onclick="document.getElementById('import-file').click()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center"><i data-lucide="upload" class="w-4 h-4 mr-2"></i> Importar JSON</button>
+                            <input type="file" id="import-file" class="hidden" accept=".json" onchange="importBackup(event)">
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Os dados já estão salvos na nuvem. Use isso apenas se quiser uma cópia física extra.</p>
+                    </div>
 
-          <!-- PAINEL DE BACKUP (Adicione o id="panel-backup") -->
-<div id="panel-backup" class="bg-white p-6 rounded-lg shadow mb-6">
-  <!-- ... conteúdo do backup ... -->
-</div>
+                    <div class="border-b mb-4">
+                        <h3 class="font-semibold text-gray-700 mb-2">Geral</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-bold">Título Principal</label><input type="text" id="conf-org-name" class="border rounded px-3 py-2 w-full"></div>
+                            <div><label class="block text-sm font-bold">Subtítulo</label><input type="text" id="conf-subtitle" class="border rounded px-3 py-2 w-full"></div>
+                            <div><label class="block text-sm">Unidade Padrão</label><input type="text" id="conf-default-unit" class="border rounded px-3 py-2 w-full" value="SEAP"></div>
+                            <div><label class="block text-sm">Itens por Página</label><input type="number" id="conf-items-page" class="border rounded px-3 py-2 w-full" value="20"></div>
+                        </div>
+                    </div>
+                    <div class="border-b mb-4">
+                        <h3 class="font-semibold text-gray-700 mb-2">Prazos de Prescrição (Configuração)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                                <h4 class="font-bold text-sm text-blue-800 mb-2">Pessoa Física</h4>
+                                <div class="flex justify-between items-center mb-1"><label class="text-xs">Advertência (dias):</label><input type="number" id="conf-pf-adv" class="border w-24 px-2 py-1"></div>
+                                <div class="flex justify-between items-center mb-1"><label class="text-xs">Suspensão (anos):</label><input type="number" id="conf-pf-susp" class="border w-24 px-2 py-1"></div>
+                                <div class="flex justify-between items-center"><label class="text-xs">Demissão (anos):</label><input type="number" id="conf-pf-dem" class="border w-24 px-2 py-1"></div>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded border border-purple-200">
+                                <h4 class="font-bold text-sm text-purple-800 mb-2">Pessoa Jurídica</h4>
+                                <div class="flex justify-between items-center"><label class="text-xs">Prescrição PJ (anos):</label><input type="number" id="conf-pj-years" class="border w-24 px-2 py-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-700 mb-2">Alertas de Prazos (Dias)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="space-y-2"><h4 class="text-sm font-bold text-red-600">Alerta Crítico</h4>
+                            <div class="flex justify-between"><label class="text-sm">Advertência:</label><input type="number" id="conf-crit-adv" class="border w-20 px-2 py-1"></div>
+                            <div class="flex justify-between"><label class="text-sm">Suspensão:</label><input type="number" id="conf-crit-susp" class="border w-20 px-2 py-1"></div>
+                            <div class="flex justify-between"><label class="text-sm">Demissão:</label><input type="number" id="conf-crit-dem" class="border w-20 px-2 py-1"></div>
+                            <div class="flex justify-between"><label class="text-sm">Conclusão NT:</label><input type="number" id="conf-crit-task" class="border w-20 px-2 py-1"></div></div>
+                            <div class="space-y-2"><h4 class="text-sm font-bold text-yellow-600">Prioridade Alta</h4>
+                            <div class="flex justify-between"><label class="text-sm">Advertência:</label><input type="number" id="conf-high-adv" class="border w-20 px-2 py-1"></div>
+                            <div class="flex justify-between"><label class="text-sm">Suspensão:</label><input type="number" id="conf-high-susp" class="border w-20 px-2 py-1"></div>
+                            <div class="flex justify-between"><label class="text-sm">Demissão:</label><input type="number" id="conf-high-dem" class="border w-20 px-2 py-1"></div>
+                            <div class="flex justify-between"><label class="text-sm">Conclusão NT:</label><input type="number" id="conf-high-task" class="border w-20 px-2 py-1"></div></div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end"><button onclick="saveConfigs()" class="bg-blue-600 text-white px-6 py-2 rounded">Salvar Configurações</button></div>
+                </div>
 
-<!-- PAINEL DE CONFIGURAÇÕES GERAIS (Adicione o id="panel-configs-gerais") -->
-<div id="panel-configs-gerais" class="bg-white p-6 rounded-lg shadow mb-6">
-  <!-- ... campos de título, subtítulo, prazos, etc ... -->
-</div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="flex items-start justify-between gap-4 mb-4">
+                        <div>
+                            <h2 id="users-manage-title" class="text-xl font-bold">Gerenciamento de Usuários</h2>
+                            <p id="users-manage-description" class="text-sm text-gray-500 mt-1">Administra contas de acesso do sistema.</p>
+                        </div>
+                        <button onclick="resetUserForm()" id="btn-user-new" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm">Novo usuário</button>
+                    </div>
 
-<!-- GERENCIAMENTO DE USUÁRIOS -->
-<div class="bg-white p-6 rounded-lg shadow">
-  <div class="flex items-start justify-between gap-4 mb-4">
-    <div>
-      <!-- Adicione os IDs no título e descrição -->
-      <h2 id="users-manage-title" class="text-xl font-bold">Gerenciamento de Usuários</h2>
-      <p id="users-manage-description" class="text-sm text-gray-500 mt-1">Administra contas de acesso do sistema.</p>
-    </div>
-    <button onclick="resetUserForm()" id="btn-user-new" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm">Novo usuário</button>
-  </div>
+                    <form id="user-form" onsubmit="submitUserForm(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border rounded-lg p-4 mb-4 bg-gray-50">
+                        <input type="hidden" id="user-id">
+                        <div>
+                            <label class="block text-sm font-bold">Nome completo</label>
+                            <input type="text" id="user-name" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold">Usuário</label>
+                            <input type="text" id="user-username" required class="w-full border rounded px-3 py-2">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold">Senha</label>
+                            <input type="password" id="user-password" class="w-full border rounded px-3 py-2" placeholder="Obrigatória para novo usuário">
+                        </div>
+                        <div class="flex flex-col justify-end gap-2">
+                            <label id="user-admin-wrap" class="flex items-center gap-2 text-sm text-gray-700">
+                                <input type="checkbox" id="user-admin" class="rounded">
+                                <span>Administrador</span>
+                            </label>
+                            <div class="flex gap-2">
+                                <button type="submit" id="btn-user-save" class="bg-blue-600 text-white px-3 py-2 rounded text-sm">Salvar usuário</button>
+                                <button type="button" onclick="resetUserForm()" class="bg-gray-500 text-white px-3 py-2 rounded text-sm">Limpar</button>
+                            </div>
+                        </div>
+                    </form>
 
-  <form id="user-form" onsubmit="submitUserForm(event)" class="...">
-    <!-- ... campos do formulário ... -->
-    
-    <div class="flex flex-col justify-end gap-2">
-      <!-- Adicione o id="user-admin-wrap" na label do checkbox -->
-      <label id="user-admin-wrap" class="flex items-center gap-2 text-sm text-gray-700">
-        <input type="checkbox" id="user-admin" class="rounded">
-        <span>Administrador</span>
-      </label>
-      <!-- ... botões de salvar ... -->
-    </div>
-  </form>
-
-  <!-- TABELA DE USUÁRIOS (Adicione o id="panel-users-table") -->
-  <div id="panel-users-table" class="table-container border">
-    <!-- ... <table> ... -->
-  </div>
-</div>
-
+                    <div id="panel-users-table" class="table-container border">
+                        <table>
+                            <thead class="bg-gray-100 text-sm">
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Usuário</th>
+                                    <th>Perfil</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body" class="text-sm bg-white"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
+        </main>
+    </div>
 
 <script>
 // --- CONFIGURAÇÃO SUPABASE ---
@@ -669,178 +735,76 @@ const SUPABASE_URL = 'https://buqtsnywwsnzdyllesky.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst';
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
 // --- VARIÁVEIS DE ESTADO GLOBAIS ---
 let currentUser = null;
 let users = [];
-let processos = []; 
+let processos = []; // <-- O ERRO ESTÁ ACONTECENDO PORQUE ESTA LINHA SUMIU
 let currentAccused = [];
 let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
 let lastReportIsManagerial = false;
 let config = {
-  orgName: 'Controle Correicional', subtitle: 'Sistema Institucional', defaultUnit: 'SEAP', itemsPerPage: 20,
-  pjYears: 5, pf: { adv: 180, susp: 2, dem: 5 },
+  orgName: 'Controle Correicional', 
+  subtitle: 'Sistema Institucional', 
+  defaultUnit: 'SEAP', 
+  itemsPerPage: 20,
+  pjYears: 5,
+  pf: { adv: 180, susp: 2, dem: 5 },
   alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
 };
+// 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
 
-
-// --- UTILITÁRIOS BÁSICOS E FALLBACKS ---
-function showToast(message, type = 'info') {
-  const container = document.getElementById('toast-container');
-  if (!container) return alert(message);
-  const colors = {
-    success: 'bg-green-600', error: 'bg-red-600', warning: 'bg-yellow-600', info: 'bg-blue-600'
-  };
-  const toast = document.createElement('div');
-  toast.className = `${colors[type] || colors.info} text-white px-4 py-2 rounded shadow animate-fadeIn`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
-}
-
-function setDbStatus(state, label, title = '') {
-  const status = document.getElementById('db-status');
-  if (!status) return;
-  const stateClass = {
-    connecting: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    connected: 'bg-green-50 text-green-700 border-green-200',
-    warning: 'bg-orange-50 text-orange-700 border-orange-200',
-    error: 'bg-red-50 text-red-700 border-red-200'
-  }[state] || 'bg-yellow-50 text-yellow-700 border-yellow-200';
-  status.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${stateClass}`;
-  status.title = title || label;
-  status.querySelector('span').textContent = label;
-  const dot = status.querySelector('div');
-  if (dot) dot.className = `w-2 h-2 rounded-full ${state === 'connected' ? 'bg-green-500' : state === 'error' ? 'bg-red-500' : state === 'warning' ? 'bg-orange-500' : 'bg-yellow-500'} ${state === 'connecting' ? 'animate-pulse' : ''}`;
-}
-
-function formatDate(dateStr) {
-  if (!dateStr) return '—';
-  const d = new Date(dateStr + 'T00:00:00');
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleDateString('pt-BR');
-}
-
-function closeReport() {
-  const out = document.getElementById('report-output');
-  if (out) out.classList.add('hidden');
-}
-
-function getStatusFromProcess(p) {
-  if (!p) return 'Cadastrado';
-  if (p.status_manual) return p.status_manual;
-  if (p.data_despacho) return 'Concluído';
-  if (p.analista) return 'Em análise';
-  return 'Aguardando Distribuição';
-}
-
-function setViewMode(mode = 'cards') {
-  currentView = mode;
-  localStorage.setItem('correg_view_mode', mode);
-}
-
-function setupPrazoHandlers() {}
-function resetForm() {}
-function loadConfigsToForm() {}
-async function saveConfigsToSupabase() {}
-async function saveProcessToSupabase() {}
-function toggleAdvancedFilters() { document.getElementById('advanced-filters-panel')?.classList.toggle('hidden'); }
-function togglePriorityFilter() { isPriorityFilterActive = !isPriorityFilterActive; refreshProcessos(); }
-function clearAllFilters() { const el = document.getElementById('search-process'); if (el) el.value = ''; refreshProcessos(); }
-function toggleFilterDetail(id) { document.getElementById(id)?.classList.toggle('hidden'); }
-function resetUserForm() {}
-
-async function loadProcessos() {
-  const { data, error } = await supabaseClient.from('processos').select('*').order('data_ent', { ascending: false });
-  if (error) throw error;
-  processos = Array.isArray(data) ? data : [];
-}
-
-async function fetchUsers() {
-  const table = document.getElementById('panel-users-table');
-  if (!table) return;
-  const { data, error } = await supabaseClient.from('usuarios').select('id,nome_completo,username,is_admin').order('nome_completo');
-  if (error) {
-    table.innerHTML = '<div class="p-4 text-sm text-red-600">Não foi possível carregar usuários.</div>';
-    return;
-  }
-  users = data || [];
-  const rows = users.map(u => `<tr><td class="border p-2">${u.nome_completo || '—'}</td><td class="border p-2">${u.username || '—'}</td><td class="border p-2">${u.is_admin ? 'Sim' : 'Não'}</td></tr>`).join('');
-  table.innerHTML = `<table class="w-full text-sm"><thead><tr><th class="border p-2">Nome</th><th class="border p-2">Usuário</th><th class="border p-2">Admin</th></tr></thead><tbody>${rows || '<tr><td class="border p-2" colspan="3">Sem usuários</td></tr>'}</tbody></table>`;
-}
-
-function loadDashboard() {
-  const total = processos.length;
-  const aguardando = processos.filter(p => getStatusFromProcess(p) === 'Aguardando Distribuição').length;
-  const analise = processos.filter(p => getStatusFromProcess(p) === 'Em análise').length;
-  const concluidos = processos.filter(p => getStatusFromProcess(p) === 'Concluído').length;
-  const setText = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = String(val); };
-  setText('stat-total', total); setText('stat-aguardando', aguardando); setText('stat-analise', analise); setText('stat-concluidos', concluidos);
-}
-
-function refreshProcessos() {
-  const container = document.getElementById('process-view-container');
-  if (!container) return;
-  const term = (document.getElementById('search-process')?.value || '').toLowerCase();
-  const filtered = processos.filter(p => !term || [p.sei, p.objeto, p.analista, (p.acusados || []).join(' ')].join(' ').toLowerCase().includes(term));
-  if (!filtered.length) {
-    container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow text-sm text-gray-500">Nenhum processo encontrado.</div>';
-    return;
-  }
-  container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">${filtered.map(p => `<div class="bg-white p-4 rounded border"><div class="font-mono text-sm text-blue-700">${p.sei || '—'}</div><div class="font-semibold mt-1">${p.objeto || 'Sem objeto'}</div><div class="text-sm text-gray-500 mt-1">Analista: ${p.analista || '—'}</div><div class="text-xs mt-2">Status: ${getStatusFromProcess(p)}</div></div>`).join('')}</div>`;
-}
-
-async function initApp() {
-  setDbStatus('connecting', 'Conectando...');
-  try {
-    const { error: pingError } = await supabaseClient.from('usuarios').select('id', { count: 'exact', head: true });
-    if (pingError) {
-      setDbStatus('warning', 'Conectado (sem permissão)', pingError.message);
-    } else {
-      setDbStatus('connected', 'Conectado');
-    }
-
-    try {
-      await loadProcessos();
-    } catch (processError) {
-      console.error(processError);
-      showToast('Conectou no Supabase, mas falhou ao carregar processos.', 'warning');
-    }
-
-    loadDashboard();
-    refreshProcessos();
-    populateAnalystFilters();
-  } catch (err) {
-    console.error(err);
-    setDbStatus('error', 'Falha na conexão', err.message || 'Erro desconhecido');
-    showToast('Falha ao conectar com o banco de dados.', 'error');
-  }
-}
-
-// --- VERIFICAÇÃO DE SESSÃO (Mantém logado) ---
+        // Verifica se já existe uma sessão ativa ao carregar a página
 supabaseClient.auth.getSession().then(({ data: { session } }) => {
   if (session) {
     currentUser = session.user;
-    // Busca os dados de perfil (incluindo se é admin)
-    supabaseClient.from('usuarios').select('is_admin, nome_completo').eq('id', currentUser.id).single()
-      .then(({data}) => {
-        if(data) {
-          currentUser.is_admin = data.is_admin;
-          currentUser.nome_completo = data.nome_completo;
-          if(data.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
-        }
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        initApp();
-      });
+    document.getElementById('login-overlay').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    initApp();
   }
 });
 
-// --- AUTH & LOGIN SEGURO ---
+// Função de logout atualizada
+async function logout() {
+  try {
+    // 1. Tenta fazer o logout oficial no Supabase
+    await supabaseClient.auth.signOut();
+  } catch (error) {
+    console.error("Erro ao comunicar logout ao Supabase:", error);
+  } finally {
+    // 2. Limpa a variável global
+    currentUser = null;
+    
+    // 3. FORÇA a mudança visual IMEDIATAMENTE
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-overlay').style.display = 'flex';
+    
+    // 4. Limpa os campos de login para não ficarem preenchidos
+    if(document.getElementById('log-pass')) {
+        document.getElementById('log-pass').value = '';
+    }
+    
+    // 5. Limpa o armazenamento local do Supabase à força (Fallback)
+    for (let key in localStorage) {
+      if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+        localStorage.removeItem(key);
+      }
+    }
+
+    // 6. Recarrega a página ignorando o cache
+    window.location.reload(true);
+  }
+}
+
+       // --- AUTH & LOGIN SEGURO ---
 async function handleLogin(e) {
   e.preventDefault();
-  const email = document.getElementById('log-user').value.trim(); 
+  
+  // Nota: O Supabase Auth usa E-mail por padrão, não um "username" simples.
+  // Certifique-se de que os usuários usem e-mail para logar.
+  const email = document.getElementById('log-user').value; 
   const password = document.getElementById('log-pass').value;
   const err = document.getElementById('error-msg');
   const btn = document.getElementById('btn-login');
@@ -848,65 +812,272 @@ async function handleLogin(e) {
   btn.innerText = 'Verificando...';
   err.classList.add('hidden');
 
-  const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+  // Utilizando a autenticação nativa do Supabase
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
     email: email,
     password: password,
   });
 
-  if (authError) {
-    btn.innerText = 'Entrar';
+  btn.innerText = 'Entrar';
+
+  if (error) {
+    console.error("Erro no login:", error.message);
     err.innerText = "E-mail ou senha inválidos.";
     err.classList.remove('hidden');
     return;
   }
 
-  if (authData.user) {
-    currentUser = authData.user;
-    const { data: userData } = await supabaseClient.from('usuarios').select('is_admin, nome_completo').eq('id', currentUser.id).single();
-
-    if (userData) {
-      currentUser.is_admin = userData.is_admin;
-      currentUser.nome_completo = userData.nome_completo;
-      if (userData.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
-    } else {
-      currentUser.is_admin = false;
-    }
-
+  if (data.user) {
+    currentUser = data.user;
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
+    
+    // Para verificar se é admin, você pode usar os metadados do usuário no Supabase
+    // if(data.user.user_metadata?.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
+    
     initApp();
   }
 }
+        function logout() { location.reload(); }
 
-// --- LOGOUT À PROVA DE FALHAS ---
-async function logout() {
-  try {
-    await supabaseClient.auth.signOut();
-  } catch (error) {
-    console.error("Erro ao comunicar logout:", error);
-  } finally {
-    currentUser = null;
-    document.getElementById('app').style.display = 'none';
-    document.getElementById('login-overlay').style.display = 'flex';
-    if(document.getElementById('log-pass')) document.getElementById('log-pass').value = '';
+        // --- INICIALIZAÇÃO SUPABASE E DADOS ---
+        async function initApp() {
+            setOnlineStatus('Conectando...');
+            await fetchConfig();
+            await fetchProcessos();
+            subscribeRealtime();
+            setOnlineStatus('Online', true);
+            showPage('dashboard');
+        }
+
+        function setOnlineStatus(msg, isOk=false) {
+            const statusDiv = document.getElementById('db-status');
+            statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${isOk ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}"></div><span class="text-xs font-medium ${isOk ? 'text-green-700' : 'text-yellow-700'}">${msg}</span>`;
+            statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${isOk ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`;
+        }
+
+        async function fetchConfig() {
+            try {
+                const { data, error } = await supabaseClient.from('configuracoes').select('dados').eq('id', 'main').single();
+                if (data && data.dados) {
+                    config = data.dados;
+                }
+            } catch(e) { console.log('Tabela configuracoes não encontrada ou vazia. Usando padrão local.'); }
+            updateHeader();
+            loadConfigsToForm();
+        }
+
+        async function saveConfigsToSupabase() {
+            try {
+                const { error } = await supabaseClient.from('configuracoes').upsert([{ id: 'main', dados: config }]);
+                if(error) throw error;
+            } catch(e) { console.log('Não foi possível salvar config na nuvem. Apenas local foi atualizado.'); }
+        }
+
+        async function fetchProcessos() {
+            const { data, error } = await supabaseClient.from('processos').select('*');
+            if (error) {
+                console.error(error);
+                showToast("Erro ao carregar processos da nuvem.", "error");
+                return;
+            }
+            
+            // Tratamento do Array de Acusados que vem da nuvem
+            processos = data.map(p => {
+                if (typeof p.acusados === 'string') {
+                    try { p.acusados = JSON.parse(p.acusados); } catch (e) { p.acusados = []; }
+                }
+                return p;
+            });
+            refreshActivePage();
+        }
+
+        function subscribeRealtime() {
+            supabaseClient
+                .channel('public:processos')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, payload => {
+                    fetchProcessos(); // Atualiza toda a tela de todos automaticamente
+                })
+                .subscribe();
+        }
+
+         async function saveProcessToSupabase(data, isEditing = false) {
+            const dbData = Object.assign({}, data);
+
+            // Itera sobre todas as chaves do objeto
+            for (const key in dbData) {
+                // Se o valor for uma string vazia, converte para null
+                if (dbData[key] === '') {
+                    dbData[key] = null;
+                }
+            }
+
+            // Garante que o array de acusados seja um JSON ou null
+            // (Importante se sua coluna no Supabase for do tipo TEXT)
+            // Se for JSONB, pode enviar o array diretamente.
+            if (Array.isArray(dbData.acusados)) {
+                 dbData.acusados = dbData.acusados.length > 0 ? JSON.stringify(dbData.acusados) : null;
+            } else {
+                 dbData.acusados = null;
+            }
+
+            console.log("Enviando para o Supabase:", dbData); // Ótimo para depurar
+
+            const { error } = await supabaseClient.from('processos').upsert([dbData]);
+            
+            if (error) {
+                console.error("Erro Supabase:", error);
+                alert('Erro ao salvar no banco. Verifique o console para mais detalhes.');
+            } else {
+                showToast("Processo salvo na nuvem com sucesso!");
+                fetchProcessos();
+                showPage('processos');
+            }
+        }
     
-    for (let key in localStorage) {
-      if (key.startsWith('sb-') && key.endsWith('-auth-token')) localStorage.removeItem(key);
-    }
-    window.location.reload(true);
-  }
-}
+        //    async function saveProcessToSupabase(data) {
+      //      const dbData = { ...data };
+            // Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
+        //    dbData.acusados = JSON.stringify(data.acusados); 
+          //  
+          //  const { error } = await supabaseClient.from('processos').upsert([dbData]);
+          //  if (error) {
+          //      console.error("Erro Supabase:", error);
+          //      alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
+          //  } else {
+          //      showToast("Processo salvo na nuvem com sucesso!");
+          //      fetchProcessos();
+          //      showPage('processos');
+         //   }
+      //  }
 
-// --- NAVEGAÇÃO E CONTROLE DE TELAS ---
-function showPage(pageId) {
+        async function deleteProcessFromSupabase(id) {
+            const { error } = await supabaseClient.from('processos').delete().eq('id', id);
+            if (error) alert("Erro ao excluir.");
+            else fetchProcessos();
+        }
+
+
+        // --- LÓGICA DE NEGÓCIO E INTERFACE (Preservada Inteiramente) ---
+        function refreshActivePage() {
+            if(!document.getElementById('page-dashboard').classList.contains('hidden')) loadDashboard();
+            if(!document.getElementById('page-processos').classList.contains('hidden')) refreshProcessos();
+            if(!document.getElementById('page-relatorios').classList.contains('hidden')) populateAnalystFilters();
+        }
+
+        function saveConfigs() {
+            config.orgName = document.getElementById('conf-org-name').value;
+            config.subtitle = document.getElementById('conf-subtitle').value;
+            config.defaultUnit = document.getElementById('conf-default-unit').value;
+            config.itemsPerPage = parseInt(document.getElementById('conf-items-page').value) || 20;
+            config.pjYears = parseInt(document.getElementById('conf-pj-years').value) || 5;
+            config.pf.adv = parseInt(document.getElementById('conf-pf-adv').value) || 180;
+            config.pf.susp = parseInt(document.getElementById('conf-pf-susp').value) || 2;
+            config.pf.dem = parseInt(document.getElementById('conf-pf-dem').value) || 5;
+            config.alerts.crit = { task: parseInt(document.getElementById('conf-crit-task').value), adv: parseInt(document.getElementById('conf-crit-adv').value), susp: parseInt(document.getElementById('conf-crit-susp').value), dem: parseInt(document.getElementById('conf-crit-dem').value) };
+            config.alerts.high = { task: parseInt(document.getElementById('conf-high-task').value), adv: parseInt(document.getElementById('conf-high-adv').value), susp: parseInt(document.getElementById('conf-high-susp').value), dem: parseInt(document.getElementById('conf-high-dem').value) };
+            
+            saveConfigsToSupabase();
+            updateHeader();
+            showToast('Configurações salvas e sincronizadas!');
+        }
+
+          function submitProcessForm() {
+            const id = document.getElementById('process-id').value || Date.now().toString();
+            
+            // Coleta todos os dados do formulário
+            const data = { 
+                id: id,
+                sei: document.getElementById('process-sei').value,
+                data_ent: document.getElementById('process-data-entrada').value,
+                objeto: document.getElementById('process-objeto').value,
+                unidade_origem: document.getElementById('process-unidade-origem').value,
+                doc_origem: document.getElementById('process-doc-origem').value,
+                juntado: document.getElementById('process-juntado').value,
+                relacionados: document.getElementById('process-relacionados').value,
+                op_policial: document.getElementById('check-policial').checked,
+                op_policial_detalhes: document.getElementById('process-op-policial-detalhes').value,
+                possui_inquerito: document.getElementById('check-inquerito').checked,
+                inquerito_detalhes: document.getElementById('process-inquerito-detalhes').value,
+                cad_epad: document.getElementById('check-epad').checked,
+                epad_detalhes: document.getElementById('process-epad-detalhes').value,
+                prioritario: document.getElementById('process-prioritario').checked,
+                tipo_acusado: document.getElementById('process-tipo-acusado').value,
+                penalidades: document.getElementById('process-penalidades').value,
+                data_conhecimento: document.getElementById('process-data-conhecimento').value,
+                calc_advertencia: document.getElementById('calc-advertencia').value,
+                calc_suspensao: document.getElementById('calc-suspensao').value,
+                calc_demissao: document.getElementById('calc-demissao').value,
+                calc_pj: document.getElementById('calc-pj').value, 
+                analista: document.getElementById('process-analista').value,
+                data_distribuicao: document.getElementById('process-data-distribuicao').value,
+                prazo_nt_data: document.getElementById('process-prazo-data').value,
+                data_entrega_nt: document.getElementById('process-data-entrega-nt').value,
+                ips: document.getElementById('process-ips').value === '' ? null : document.getElementById('process-ips').value === 'true',
+                status_manual: document.getElementById('process-status-manual').value,
+                data_despacho: document.getElementById('process-data-despacho').value, // <-- Aqui o valor pode ser ""
+                acusados: currentAccused,
+                resultado: document.getElementById('process-resultado').value,
+                doc_resp: document.getElementById('process-doc-resposta').value,
+                tac_apto: document.getElementById('check-tac').checked,
+                tac_sit: document.getElementById('process-tac-situacao').value,
+                tac_obs: document.getElementById('process-tac-obs').value,
+                obs: document.getElementById('process-obs').value,
+            };
+
+            // Validação de campos obrigatórios
+            if(!data.sei || !data.data_conhecimento || !data.objeto || !data.tipo_acusado || currentAccused.length === 0) {
+                return alert('Preencha os campos obrigatórios (*):\n- Processo SEI\n- Data Conhecimento do Fato\n- Objeto\n- Acusado(s)\n- Tipo de Pessoa.');
+            }
+            
+            if (!document.getElementById('process-id').value && !data.status_manual) {
+                data.status_manual = 'Cadastrado';
+            }
+            // Chama a função de salvar, que fará a limpeza dos dados
+            saveProcessToSupabase(data);
+        }
+            
+         
+        function deleteProcess(id) {
+            if(confirm('Tem certeza que deseja excluir este processo?')) {
+                deleteProcessFromSupabase(id);
+                showToast("Processo excluído!");
+                if(currentView === 'list') document.getElementById('split-detail-view').innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div>';
+            }
+        }
+
+        function updateHeader() { document.getElementById('header-org-name').innerText = config.orgName; document.getElementById('header-subtitle').innerText = config.subtitle; }
+        function formatDate(str) { if(!str) return '—'; const d = new Date(str); return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
+        
+        function getStatusFromProcess(p) {
+            if (p.status_manual && p.status_manual !== "") return p.status_manual;
+            if (p.data_despacho) return 'Concluído';
+            if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
+            if (p.analista) return 'Em análise';
+            if (p.data_ent) return 'Cadastrado';
+            return 'Aguardando Distribuição';
+        }
+
+        function getStatusClass(status) {
+            const map = { 'Cadastrado': 'st-aguardando', 'Aguardando Distribuição': 'st-aguardando', 'Em análise': 'st-analise', 'Pendente de análise do(a) Corregedor(a)': 'st-pendente', 'Concluído': 'st-concluido' };
+            return map[status] || 'st-arquivado';
+        }
+
+        function showToast(msg, type = 'info') {
+            const colors = { info: 'bg-gray-800', error: 'bg-red-600', success: 'bg-green-600' };
+            const el = document.createElement('div');
+            el.className = `${colors[type]} text-white px-4 py-2 rounded shadow-lg animate-fadeIn`;
+            el.innerText = msg;
+            document.getElementById('toast-container').appendChild(el);
+            setTimeout(() => el.remove(), 3000);
+        }
+
+        function showPage(pageId) {
   if(pageId !== 'relatorios') closeReport();
+  
   document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-  const targetPage = document.getElementById(`page-${pageId}`);
-  if (!targetPage) {
-    console.warn(`Página não encontrada: page-${pageId}`);
-    return;
-  }
-  targetPage.classList.remove('hidden');
+  document.getElementById(`page-${pageId}`).classList.remove('hidden');
+  
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
   document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
   
@@ -916,23 +1087,23 @@ function showPage(pageId) {
   
   if(pageId === 'configuracoes') {
     loadConfigsToForm();
-    fetchUsers();
-    setupConfiguracoesView(); // Chama a função que esconde/mostra painéis
+    fetchUsers(); // Busca os usuários (se for admin, a tabela será preenchida)
+    setupConfiguracoesView(); // <--- ADICIONE ESTA LINHA AQUI
   }
   
+
   if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
 }
 
-// --- CONTROLE DE VISIBILIDADE (ADMIN VS USUÁRIO) ---
 function setupConfiguracoesView() {
   const isAdmin = !!currentUser?.is_admin;
-  
+
   const panelBackup = document.getElementById('panel-backup');
   const panelGerais = document.getElementById('panel-configs-gerais');
   const panelUsersTable = document.getElementById('panel-users-table');
   const btnNewUser = document.getElementById('btn-user-new');
   const checkAdminWrap = document.getElementById('user-admin-wrap');
-  
+
   if(panelBackup) panelBackup.classList.toggle('hidden', !isAdmin);
   if(panelGerais) panelGerais.classList.toggle('hidden', !isAdmin);
   if(panelUsersTable) panelUsersTable.classList.toggle('hidden', !isAdmin);
@@ -945,7 +1116,7 @@ function setupConfiguracoesView() {
   if (!isAdmin) {
     if(titleEl) titleEl.innerText = 'Meu Perfil';
     if(descEl) descEl.innerText = 'Atualize seus dados pessoais e altere sua senha.';
-    
+
     const userIdEl = document.getElementById('user-id');
     const userNameEl = document.getElementById('user-name');
     const userUsernameEl = document.getElementById('user-username');
@@ -957,6 +1128,7 @@ function setupConfiguracoesView() {
     if (userPasswordEl) {
       userPasswordEl.value = '';
       userPasswordEl.placeholder = 'Digite para alterar a senha';
+      userPasswordEl.required = false;
     }
     if (userSaveBtnEl) userSaveBtnEl.innerText = 'Atualizar meus dados';
   } else {
@@ -964,60 +1136,328 @@ function setupConfiguracoesView() {
     if(descEl) descEl.innerText = 'Administra contas de acesso do sistema.';
     const userSaveBtnEl = document.getElementById('btn-user-save');
     if (userSaveBtnEl) userSaveBtnEl.innerText = 'Salvar usuário';
-    if (typeof resetUserForm === 'function') resetUserForm();
+    resetUserForm();
   }
 }
+        //function showPage(pageId) {
+        //    if(pageId !== 'relatorios') closeReport();
+        //    document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+        //    document.getElementById(`page-${pageId}`).classList.remove('hidden');
+        //    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
+        //    document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
+        //    
+        //    if(pageId === 'dashboard') loadDashboard();
+        //    if(pageId === 'processos') refreshProcessos();
+        //    if(pageId === 'novo-processo') resetForm();
+        //    if(pageId === 'configuracoes') {
+        //        loadConfigsToForm();
+        //        fetchUsers();
+        //    }
+        //    if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
+       // }
+        function closeReport() { document.getElementById('report-output').classList.add('hidden'); }
 
-// --- SALVAR/EDITAR USUÁRIOS E SENHAS ---
-async function submitUserForm(e) {
-  e.preventDefault();
-  const isAdmin = !!currentUser?.is_admin;
-  const id = document.getElementById('user-id').value;
-  const nome = document.getElementById('user-name').value.trim();
-  const username = document.getElementById('user-username').value.trim();
-  const senha = document.getElementById('user-password').value;
-  const isUserAdmin = isAdmin ? document.getElementById('user-admin').checked : false;
+        function loadDashboard() {
+            document.getElementById('stat-total').innerText = processos.length;
+            document.getElementById('stat-aguardando').innerText = processos.filter(p => getStatusFromProcess(p) === 'Aguardando Distribuição').length;
+            document.getElementById('stat-analise').innerText = processos.filter(p => getStatusFromProcess(p) === 'Em análise').length;
+            document.getElementById('stat-concluidos').innerText = processos.filter(p => getStatusFromProcess(p) === 'Concluído').length;
+            
+            const today = new Date();
+            const tasks = [];
+            let ntOk=0, ntAlerta=0, ntVencido=0;
 
-  const payloadPerfil = { nome_completo: nome, username: username, is_admin: isUserAdmin };
+            processos.forEach(p => {
+                if(p.prazo_nt_data && !p.data_entrega_nt) {
+                    const days = diffDays(today, p.prazo_nt_data);
+                    if (days < 0) ntVencido++;
+                    else if (days <= config.alerts.high.task) ntAlerta++;
+                    else ntOk++;
+                    if(days <= config.alerts.high.task) { tasks.push({ p, days, crit: days <= config.alerts.crit.task }); }
+                }
+            });
 
-  let result;
-  if (id) {
-    result = await supabaseClient.from('usuarios').update(payloadPerfil).eq('id', id);
-  } else {
-    showToast('Novos usuários devem ser criados no painel do Supabase (Authentication).', 'error');
-    return;
-  }
+            document.getElementById('prazont-ok').innerText = ntOk; document.getElementById('prazont-alerta').innerText = ntAlerta; document.getElementById('prazont-vencido').innerText = ntVencido;
 
-  if (result.error) {
-    console.error(result.error);
-    showToast('Erro ao atualizar perfil.', 'error');
-    return;
-  }
+            tasks.sort((a, b) => a.days - b.days);
+            document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${t.p.sei}</span> <span class="text-gray-600 truncate block w-40">${t.p.objeto}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
 
-  if (senha) {
-    if (String(id) === String(currentUser.id)) {
-      const { error: passError } = await supabaseClient.auth.updateUser({ password: senha });
-      if (passError) {
-        showToast('Erro ao atualizar a senha: ' + passError.message, 'error');
-        return;
-      }
-    } else {
-      showToast('Perfil atualizado. Para mudar a senha de OUTRO usuário, use o painel do Supabase.', 'warning');
-      resetUserForm();
-      fetchUsers();
-      return;
-    }
-  }
+            const atRiskProcesses = [];
+            processos.forEach(p => {
+                const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
+                const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
+                const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
+                const isAtRisk = (daysAdv <= config.alerts.high.adv) || (daysSusp <= config.alerts.high.susp) || (daysDem <= config.alerts.high.dem);
+                if (isAtRisk) { atRiskProcesses.push({ p: p, minDays: Math.min(daysAdv, daysSusp, daysDem), days: { adv: daysAdv, susp: daysSusp, dem: daysDem } }); }
+            });
 
-  showToast('Dados atualizados com sucesso!', 'success');
-  
-  if (isAdmin) {
-    resetUserForm();
-    fetchUsers();
-  } else {
-    document.getElementById('user-password').value = ''; // Apenas limpa o campo de senha para o usuário comum
-  }
-} 
+            atRiskProcesses.sort((a, b) => a.minDays - b.minDays);
+            document.getElementById('presc-list-dashboard').innerHTML = atRiskProcesses.length ? atRiskProcesses.map(item => {
+                const p = item.p; const days = item.days;
+                const getStatusHtml = (label, date, daysLeft, critThreshold, highThreshold) => {
+                    if (!date || date === '—') return `<div class="text-gray-400">${label}: —</div>`;
+                    const isPrescribed = daysLeft < 0; const isCritical = daysLeft <= critThreshold; const isHigh = daysLeft <= highThreshold;
+                    let colorClass = 'text-gray-700';
+                    if (isPrescribed || isCritical) colorClass = 'text-red-600 font-bold'; else if (isHigh) colorClass = 'text-yellow-600';
+                    return `<div>${label}: <span class="${colorClass}">${formatDate(date)} (${isPrescribed ? `Prescrito (${-daysLeft}d)` : `${daysLeft} dias`})</span></div>`;
+                };
+                return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${p.sei}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${getStatusHtml('Advertência', p.calc_advertencia, days.adv, config.alerts.crit.adv, config.alerts.high.adv)}${getStatusHtml('Suspensão', p.calc_suspensao, days.susp, config.alerts.crit.susp, config.alerts.high.susp)}${getStatusHtml('Demissão', p.calc_demissao, days.dem, config.alerts.crit.dem, config.alerts.high.dem)}</div></div>`;
+            }).join('') : '<p class="text-gray-500 text-sm">Nenhum risco de prescrição iminente.</p>';
+
+            const statusCounts = { 'Aguardando Distribuição': 0, 'Em análise': 0, 'Pendente de análise do(a) Corregedor(a)': 0, 'Concluído': 0 };
+            processos.forEach(p => { const status = getStatusFromProcess(p); if (status in statusCounts) { statusCounts[status]++; } });
+            document.getElementById('chart-status').innerHTML = Object.keys(statusCounts).map(k => `<div class="flex items-center text-sm mb-1"><span class="w-40">${k}</span><div class="flex-1 bg-gray-100 rounded h-4"><div class="bg-blue-500 h-full" style="width: ${(processos.length ? (statusCounts[k]/processos.length)*100 : 0)}%"></div></div><span class="ml-2 font-bold">${statusCounts[k]}</span></div>`).join('');
+        }
+
+        function toggleAdvancedFilters() { document.getElementById('advanced-filters-panel').classList.toggle('hidden'); }
+        function togglePriorityFilter() {
+            isPriorityFilterActive = !isPriorityFilterActive;
+            const btn = document.getElementById('btn-filter-priority');
+            if(isPriorityFilterActive) { btn.classList.add('bg-yellow-400', 'text-yellow-900', 'font-bold'); btn.classList.remove('bg-yellow-50', 'text-yellow-700'); } 
+            else { btn.classList.remove('bg-yellow-400', 'text-yellow-900', 'font-bold'); btn.classList.add('bg-yellow-50', 'text-yellow-700'); }
+            refreshProcessos();
+        }
+        function clearAllFilters() {
+            document.getElementById('search-process').value = '';
+            document.querySelectorAll('#advanced-filters-panel input, #advanced-filters-panel select').forEach(el => el.value = '');
+            if(isPriorityFilterActive) togglePriorityFilter(); else refreshProcessos();
+        }
+
+        function setViewMode(mode) {
+            currentView = mode; localStorage.setItem('correg_view_mode', mode);
+            const activeClasses = ['bg-blue-100', 'text-blue-700'];
+            ['cards', 'table', 'list'].forEach(m => { const btn = document.getElementById(`btn-view-${m}`); btn.classList.remove(...activeClasses); if (m === mode) { btn.classList.add(...activeClasses); } });
+            refreshProcessos();
+        }
+
+        function refreshProcessos() {
+            const container = document.getElementById('process-view-container'); container.className = "w-full";
+            const search = document.getElementById('search-process').value.toLowerCase();
+            const getVal = (id) => document.getElementById(id)?.value; const getValLower = (id) => (document.getElementById(id)?.value || '').toLowerCase();
+            
+            const fpStatus = getVal('fp-status'), fpSei = getValLower('fp-sei'), fpObjeto = getValLower('fp-objeto'), fpAcusados = getValLower('fp-acusados'), fpAnalista = getValLower('fp-analista'), fpResultado = getVal('fp-resultado'), fpTipoAcusado = getVal('fp-tipo_acusado'), fpPenalidades = getVal('fp-penalidades');
+            const fpDataEnt = getVal('fp-data_ent'), fpDataConhecimento = getVal('fp-data_conhecimento'), fpDataDistribuicao = getVal('fp-data_distribuicao'), fpPrazoNtData = getVal('fp-prazo_nt_data'), fpDataEntregaNt = getVal('fp-data_entrega_nt'), fpDataDespacho = getVal('fp-data_despacho');
+            const fpUnidadeOrigem = getValLower('fp-unidade_origem'), fpDocOrigem = getValLower('fp-doc_origem'), fpJuntado = getValLower('fp-juntado'), fpRelacionados = getValLower('fp-relacionados'), fpDocResp = getValLower('fp-doc_resp');
+            const fpOpPolicial = getVal('fp-op_policial'), fpOpPolicialDetalhes = getValLower('fp-op_policial_detalhes'), fpPossuiInquerito = getVal('fp-possui_inquerito'), fpInqueritoDetalhes = getValLower('fp-inquerito_detalhes'), fpCadEpad = getVal('fp-cad_epad'), fpEpadDetalhes = getValLower('fp-epad_detalhes');
+            const fpTacApto = getVal('fp-tac_apto'), fpTacSit = getVal('fp-tac_sit'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips');
+
+            const filtered = processos.filter(p => {
+                if (search) { const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && val.toLowerCase().includes(search)) || (p.acusados && p.acusados.join(' ').toLowerCase().includes(search)); if (!matchGlobal) return false; }
+                if (isPriorityFilterActive && !p.prioritario) return false;
+                if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
+                if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (fpDataDespacho && p.data_despacho !== fpDataDespacho) return false;
+                if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false; if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false; if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false; if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
+                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false; if (fpTacApto && String(!!p.tac_apto) !== fpTacApto) return false;
+                if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
+                if (fpTacSit && p.tac_sit !== fpTacSit) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
+                if (fpIps && String(!!p.ips) !== fpIps) return false;
+                return true;
+            });
+
+            const sortBy = getVal('process-sort') || 'data_ent_desc';
+            filtered.sort((a, b) => {
+                if (sortBy === 'data_ent_asc') return (a.data_ent || '').localeCompare(b.data_ent || '');
+                if (sortBy === 'sei_asc') return (a.sei || '').localeCompare(b.sei || '');
+                if (sortBy === 'status_asc') return getStatusFromProcess(a).localeCompare(getStatusFromProcess(b));
+                if (sortBy === 'analista_asc') return (a.analista || '').localeCompare(b.analista || '');
+                return (b.data_ent || '').localeCompare(a.data_ent || '');
+            });
+            
+            container.innerHTML = '';
+            if (currentView === 'table') renderTableView(container, filtered); else if (currentView === 'list') renderListView(container, filtered); else renderCardsView(container, filtered);
+            lucide.createIcons();
+        }
+
+        function renderTableView(container, data) {
+            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
+            data.forEach(p => { 
+                const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`;
+                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`; 
+            });
+            html += `</tbody></table></div>`; container.innerHTML = html;
+        }
+
+        function renderCardsView(container, data) {
+            container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full";
+            data.forEach(p => {
+                const st = getStatusFromProcess(p); const card = document.createElement('div');
+                card.className = `bg-white p-5 rounded-lg shadow border flex flex-col justify-between ${p.prioritario ? 'priority-highlight border-yellow-400' : ''}`;
+                card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold truncate mb-2" title="${p.objeto}">${p.objeto}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="truncate">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Resultado:</b> ${p.resultado && p.resultado !== 'Não definida' ? p.resultado : '—'}</p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p></div><div class="flex items-center space-x-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
+                container.appendChild(card);
+            });
+        }
+        
+        function renderListView(container, data) {
+            container.innerHTML = `<div class="split-view resizable-view"><div class="split-list" id="split-list-items"></div><div class="split-detail" id="split-detail-view"><div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div></div></div>`;
+            const listContainer = document.getElementById('split-list-items');
+            data.forEach(p => {
+                const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
+                const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
+                item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div>`;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function showDetailInSplit(p, itemEl) {
+            document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active')); itemEl.classList.add('active');
+            const detailContainer = document.getElementById('split-detail-view');
+            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2"><div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>${p.calc_pj ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${p.resultado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(p.data_despacho)}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Apto a TAC:</b> <span class="font-bold">${p.tac_apto ? 'Sim' : 'Não'}</span>${p.tac_apto ? `<span class="ml-4"><b>Situação:</b> ${p.tac_sit || 'N/D'}</span>` : ''}${p.tac_apto && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
+        }
+
+        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; renderAccused(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details'].forEach(id => document.getElementById(id).classList.add('hidden')); }
+        function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); document.getElementById('input-acusado').value=''; renderAccused(); }}
+        function removeAcusado(idx) { currentAccused.splice(idx, 1); renderAccused(); }
+        function renderAccused() { document.getElementById('lista-acusados').innerHTML = currentAccused.map((a, i) => `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs inline-flex items-center">${a} <button type="button" onclick="removeAcusado(${i})" class="ml-1.5 text-blue-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
+        function toggleTacDetails() { document.getElementById('tac-details').classList.toggle('hidden', !document.getElementById('check-tac').checked); }
+        function toggleConditionalField(elementId, show) { document.getElementById(elementId).classList.toggle('hidden', !show); }
+        function toggleFilterDetail(elementId) { document.getElementById(elementId).classList.toggle('hidden'); }
+        
+        function editProcess(id) {
+            const p = processos.find(x=>x.id==id); if(!p)return; showPage('novo-processo'); resetForm(); document.getElementById('novo-processo-title').innerText = "Editar Processo";
+            Object.keys(p).forEach(key => { const el = document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`); if (el) { el.type === 'checkbox' ? el.checked = p[key] : el.value = p[key] || ''; } });
+            document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
+            toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad); toggleTacDetails();
+            currentAccused = p.acusados||[]; renderAccused(); calculatePrescription();
+        }
+
+        function calculatePrescription() { 
+            const d = document.getElementById('process-data-conhecimento').value; const tipo = document.getElementById('process-tipo-acusado').value;
+            document.getElementById('container-pf').classList.add('hidden'); document.getElementById('container-pj').classList.add('hidden');
+            if(!d) return; 
+            const dt = new Date(d); const adv = new Date(dt); adv.setDate(adv.getDate() + (config.pf?.adv || 180)); const sus = new Date(dt); sus.setFullYear(sus.getFullYear() + (config.pf?.susp || 2)); const dem = new Date(dt); dem.setFullYear(dem.getFullYear() + (config.pf?.dem || 5)); const pjDate = new Date(dt); pjDate.setFullYear(pjDate.getFullYear() + (config.pjYears || 5));
+            document.getElementById('calc-advertencia').value = adv.toISOString().split('T')[0]; document.getElementById('calc-suspensao').value = sus.toISOString().split('T')[0]; document.getElementById('calc-demissao').value = dem.toISOString().split('T')[0]; document.getElementById('calc-pj').value = pjDate.toISOString().split('T')[0];
+            if (tipo === 'Pessoa Física' || tipo === 'Pessoa Física + Jurídica') document.getElementById('container-pf').classList.remove('hidden');
+            if (tipo === 'Pessoa Jurídica' || tipo === 'Pessoa Física + Jurídica') document.getElementById('container-pj').classList.remove('hidden');
+        }
+
+        function setupPrazoHandlers() {
+            const diasEl = document.getElementById('process-prazo-dias'); const dataEl = document.getElementById('process-prazo-data'); const distEl = document.getElementById('process-data-distribuicao');
+            const updateData = () => { if(!diasEl.value) return; if(!distEl.value) { showToast('Preencha a Data de Distribuição.', 'error'); return; } const distDate = new Date(distEl.value); distDate.setDate(distDate.getDate() + parseInt(diasEl.value) + 1); dataEl.value = distDate.toISOString().split('T')[0]; };
+            const updateDias = () => { if (dataEl.value && distEl.value) { diasEl.value = diffDays(distEl.value, dataEl.value); } };
+            diasEl.addEventListener('input', updateData); distEl.addEventListener('change', updateData); dataEl.addEventListener('change', updateDias);
+        }
+        
+        function loadConfigsToForm() { 
+            document.getElementById('conf-org-name').value = config.orgName; document.getElementById('conf-subtitle').value = config.subtitle; document.getElementById('conf-default-unit').value = config.defaultUnit || ''; document.getElementById('conf-items-page').value = config.itemsPerPage || 20; document.getElementById('conf-pj-years').value = config.pjYears || 5; document.getElementById('conf-pf-adv').value = config.pf?.adv || 180; document.getElementById('conf-pf-susp').value = config.pf?.susp || 2; document.getElementById('conf-pf-dem').value = config.pf?.dem || 5; document.getElementById('conf-crit-task').value = config.alerts.crit.task; document.getElementById('conf-crit-adv').value = config.alerts.crit.adv; document.getElementById('conf-crit-susp').value = config.alerts.crit.susp; document.getElementById('conf-crit-dem').value = config.alerts.crit.dem; document.getElementById('conf-high-task').value = config.alerts.high.task; document.getElementById('conf-high-adv').value = config.alerts.high.adv; document.getElementById('conf-high-susp').value = config.alerts.high.susp; document.getElementById('conf-high-dem').value = config.alerts.high.dem;
+        }
+
+        async function fetchUsers() {
+            if (!currentUser) return;
+            const { data, error } = await supabaseClient
+                .from('usuarios')
+                .select('id, nome_completo, username, senha, is_admin')
+                .order('nome_completo', { ascending: true });
+
+            if (error) {
+                console.error(error);
+                showToast('Erro ao carregar usuários.', 'error');
+                return;
+            }
+
+            users = currentUser.is_admin ? data : data.filter(u => u.id === currentUser.id);
+            renderUsersManagement();
+            resetUserForm();
+        }
+
+        function renderUsersManagement() {
+            const description = document.getElementById('users-manage-description');
+            const table = document.getElementById('users-table-body');
+            const adminWrap = document.getElementById('user-admin-wrap');
+            const newBtn = document.getElementById('btn-user-new');
+
+            const isAdmin = !!currentUser?.is_admin;
+            description.innerText = isAdmin
+                ? 'Você pode visualizar e gerenciar todos os usuários cadastrados.'
+                : 'Você pode gerenciar somente o seu próprio cadastro.';
+            adminWrap.classList.toggle('hidden', !isAdmin);
+            newBtn.classList.toggle('hidden', !isAdmin);
+
+            if (!users.length) {
+                table.innerHTML = '<tr><td colspan="4" class="px-4 py-3 text-gray-500">Nenhum usuário encontrado.</td></tr>';
+                return;
+            }
+
+            table.innerHTML = users.map(u => `
+                <tr class="border-t">
+                    <td class="px-4 py-3">${u.nome_completo || '—'}</td>
+                    <td class="px-4 py-3 font-mono">${u.username || '—'}</td>
+                    <td class="px-4 py-3">${u.is_admin ? 'Administrador' : 'Usuário'}</td>
+                    <td class="px-4 py-3">
+                        <button onclick="startEditUser('${u.id}')" class="text-blue-600 hover:underline mr-3">Editar</button>
+                        ${isAdmin ? `<button onclick="deleteUser('${u.id}')" class="text-red-600 hover:underline">Excluir</button>` : ''}
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function resetUserForm() {
+            const isAdmin = !!currentUser?.is_admin;
+            document.getElementById('user-form').reset();
+            document.getElementById('user-id').value = '';
+            document.getElementById('user-admin').checked = false;
+            document.getElementById('user-password').required = isAdmin;
+            document.getElementById('btn-user-save').innerText = 'Salvar usuário';
+            if (!isAdmin && currentUser) {
+                startEditUser(currentUser.id);
+            }
+        }
+
+        function startEditUser(userId) {
+            const selected = users.find(u => String(u.id) === String(userId));
+            if (!selected) return;
+
+            document.getElementById('user-id').value = selected.id;
+            document.getElementById('user-name').value = selected.nome_completo || '';
+            document.getElementById('user-username').value = selected.username || '';
+            document.getElementById('user-password').value = '';
+            document.getElementById('user-password').required = false;
+            document.getElementById('user-admin').checked = !!selected.is_admin;
+            document.getElementById('btn-user-save').innerText = 'Atualizar usuário';
+        }
+
+        async function submitUserForm(e) {
+            e.preventDefault();
+
+            const isAdmin = !!currentUser?.is_admin;
+            const id = document.getElementById('user-id').value;
+            const nome = document.getElementById('user-name').value.trim();
+            const username = document.getElementById('user-username').value.trim();
+            const senha = document.getElementById('user-password').value;
+            const isUserAdmin = isAdmin ? document.getElementById('user-admin').checked : false;
+
+            if (!isAdmin && id && String(id) !== String(currentUser.id)) {
+                showToast('Você só pode editar o próprio cadastro.', 'error');
+                return;
+            }
+            if (!isAdmin && !id) {
+                showToast('Você não possui permissão para criar novos usuários.', 'error');
+                return;
+            }
+            if (!id && !senha) {
+                showToast('Informe uma senha para o novo usuário.', 'error');
+                return;
+            }
+
+            const payload = { nome_completo: nome, username, is_admin: isUserAdmin };
+            if (senha) payload.senha = senha;
+
+            let result;
+            if (id) {
+                result = await supabaseClient.from('usuarios').update(payload).eq('id', id);
+            } else {
+                result = await supabaseClient.from('usuarios').insert([payload]);
+            }
+
+            if (result.error) {
+                console.error(result.error);
+                showToast('Erro ao salvar usuário.', 'error');
+                return;
+            }
+
+            showToast(id ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!', 'success');
+            resetUserForm();
+            fetchUsers();
+        }
 
         async function deleteUser(userId) {
             if (!currentUser?.is_admin) {
@@ -1286,6 +1726,6 @@ async function submitUserForm(e) {
             initReportFieldSelector();
         });
 
-</script>
+    </script>
 </body>
 </html>
