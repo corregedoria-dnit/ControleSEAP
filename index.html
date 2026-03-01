@@ -756,10 +756,33 @@ let config = {
 };
 // 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
 
+async function loadCurrentUserProfile() {
+  if (!currentUser?.id) return;
+  const { data, error } = await supabaseClient
+    .from('usuarios')
+    .select('is_admin, nome_completo, username')
+    .eq('id', currentUser.id)
+    .single();
+
+  if (error) {
+    console.warn('Não foi possível carregar perfil do usuário:', error.message);
+    currentUser.is_admin = false;
+    return;
+  }
+
+  currentUser.is_admin = !!data?.is_admin;
+  currentUser.nome_completo = data?.nome_completo || currentUser.nome_completo || '';
+  currentUser.username = data?.username || currentUser.username || '';
+
+  const adminBadge = document.getElementById('admin-badge');
+  if (adminBadge) adminBadge.classList.toggle('hidden', !currentUser.is_admin);
+}
+
         // Verifica se já existe uma sessão ativa ao carregar a página
-supabaseClient.auth.getSession().then(({ data: { session } }) => {
+supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
   if (session) {
     currentUser = session.user;
+    await loadCurrentUserProfile();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
     initApp();
@@ -829,16 +852,12 @@ async function handleLogin(e) {
 
   if (data.user) {
     currentUser = data.user;
+    await loadCurrentUserProfile();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
-    
-    // Para verificar se é admin, você pode usar os metadados do usuário no Supabase
-    // if(data.user.user_metadata?.is_admin) document.getElementById('admin-badge').classList.remove('hidden');
-    
     initApp();
   }
 }
-        function logout() { location.reload(); }
 
         // --- INICIALIZAÇÃO SUPABASE E DADOS ---
         async function initApp() {
@@ -847,6 +866,7 @@ async function handleLogin(e) {
             await fetchProcessos();
             subscribeRealtime();
             setOnlineStatus('Online', true);
+            setupConfiguracoesView();
             showPage('dashboard');
         }
 
