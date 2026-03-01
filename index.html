@@ -20,6 +20,14 @@
             .shadow, .shadow-lg, .border { box-shadow: none !important; border: none !important; }
             .page-break { page-break-before: always; }
             .bg-gray-50, .bg-white { background-color: white !important; }
+
+            /* Garantir que todo o conteúdo de relatório apareça na impressão/PDF */
+            #report-output { display: block !important; box-shadow: none !important; margin: 0 !important; padding: 0 !important; }
+            #report-content, .report-section, .analytic-list { overflow: visible !important; max-height: none !important; height: auto !important; }
+            .overflow-auto, .overflow-x-auto, .overflow-y-auto, .scrollbar-thin { overflow: visible !important; max-height: none !important; }
+            table { width: 100% !important; table-layout: auto !important; }
+            th, td { white-space: normal !important; word-break: break-word !important; }
+            .report-section, .report-item, tr, td, th { page-break-inside: avoid !important; break-inside: avoid !important; }
         }
         
         .print-only { display: none; }
