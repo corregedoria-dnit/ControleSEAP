@@ -81,7 +81,7 @@
                     <div class="bg-blue-600 p-3 rounded-full"><i data-lucide="shield-check" class="text-white w-8 h-8"></i></div>
                 </div>
                 <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">Acesso ao Sistema</h2>
-                <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <form id="login-form" class="space-y-4">
                     <div>
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Usuário</label>
                         <input type="text" id="log-user" required class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
@@ -90,7 +90,7 @@
                         <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Senha</label>
                         <input type="password" id="log-pass" required class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
                     </div>
-                    <button type="submit" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition-colors">Entrar</button>
+                    <button type="button" onclick="handleLogin(event)" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-bold transition-colors">Entrar</button>
                 </form>
             </div>
             
@@ -1137,6 +1137,7 @@ async function submitUserForm(e) {
     </script>
 </body>
 </html>
+
 
 
 
