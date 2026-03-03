@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+    <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -247,13 +247,16 @@
                                 <option value="objeto_asc">Objeto (A-Z)</option>
                                 <option value="acusados_asc">Acusados (A-Z)</option>
                                 <option value="analista_asc">Analista (A-Z)</option>
+                                <option value="data_distribuicao_desc">Data de distribuição (mais recente)</option>
                                 <option value="data_distribuicao_asc">Data de distribuição (mais antiga)</option>
-                                <option value="prazo_nt_asc">Prazo NT (mais antigo)</option>
+                                <option value="prazo_nt_desc">Prazo nota técnica (mais recente)</option>
+                                <option value="prazo_nt_asc">Prazo nota técnica (mais antigo)</option>
+                                <option value="prescricao_desc">Prescrição (mais recente)</option>
                                 <option value="prescricao_asc">Prescrição (mais antiga)</option>
+                                <option value="data_entrega_nt_desc">Data entrega NT (mais recente)</option>
                                 <option value="data_entrega_nt_asc">Data entrega NT (mais antiga)</option>
                                 <option value="status_asc">Status (A-Z)</option>
-                                <option value="sei_asc">SEI (A-Z)</option>
-                                </select>
+                            </select>
                             </div>
                         <div class="flex bg-gray-100 p-1 rounded-lg">
                             <button onclick="setViewMode('cards')" class="view-btn p-2 rounded text-sm flex items-center space-x-1 hover:bg-white hover:shadow" id="btn-view-cards"><i data-lucide="grid" class="w-4 h-4"></i> <span>Cards</span></button>
@@ -1296,11 +1299,14 @@ filtered.sort((a, b) => {
     if (sortBy === 'acusados_asc') return (a.acusados || []).join(', ').localeCompare((b.acusados || []).join(', '));
     if (sortBy === 'analista_asc') return (a.analista || '').localeCompare(b.analista || '');
     if (sortBy === 'data_distribuicao_asc') return (a.data_distribuicao || '').localeCompare(b.data_distribuicao || '');
+    if (sortBy === 'data_distribuicao_desc') return (b.data_distribuicao || '').localeCompare(a.data_distribuicao || '');
     if (sortBy === 'prazo_nt_asc') return (a.prazo_nt_data || '').localeCompare(b.prazo_nt_data || '');
+    if (sortBy === 'prazo_nt_desc') return (b.prazo_nt_data || '').localeCompare(a.prazo_nt_data || '');
     if (sortBy === 'prescricao_asc') return getPrescricaoBase(a).localeCompare(getPrescricaoBase(b));
+    if (sortBy === 'prescricao_desc') return getPrescricaoBase(b).localeCompare(getPrescricaoBase(a));
     if (sortBy === 'data_entrega_nt_asc') return (a.data_entrega_nt || '').localeCompare(b.data_entrega_nt || '');
+    if (sortBy === 'data_entrega_nt_desc') return (b.data_entrega_nt || '').localeCompare(a.data_entrega_nt || '');
     if (sortBy === 'status_asc') return getStatusFromProcess(a).localeCompare(getStatusFromProcess(b));
-    if (sortBy === 'sei_asc') return (a.sei || '').localeCompare(b.sei || '');
     return (b.data_ent || '').localeCompare(a.data_ent || '');
             });
             
@@ -1796,6 +1802,7 @@ filtered.sort((a, b) => {
     </script>
 </body>
 </html>
+
 
 
 
