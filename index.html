@@ -1210,12 +1210,12 @@ function setupConfiguracoesView() {
             tasks.sort((a, b) => a.days - b.days);
             document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${t.p.sei}</span> <span class="text-gray-600 truncate block w-40">${t.p.objeto}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
 
-            const atRiskProcesses = [];
+           const atRiskProcesses = [];
             processos.forEach(p => {
+                if (getStatusFromProcess(p) === 'Concluído') return;
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
-                const isAtRisk = (daysAdv <= config.alerts.high.adv) || (daysSusp <= config.alerts.high.susp) || (daysDem <= config.alerts.high.dem);
                 if (isAtRisk) { atRiskProcesses.push({ p: p, minDays: Math.min(daysAdv, daysSusp, daysDem), days: { adv: daysAdv, susp: daysSusp, dem: daysDem } }); }
             });
 
@@ -1757,3 +1757,4 @@ function setupConfiguracoesView() {
     </script>
 </body>
 </html>
+
