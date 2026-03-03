@@ -240,13 +240,19 @@
                         
                         <div class="flex items-center gap-3">
                             <div>
-                                <label class="block text-xs font-bold text-gray-600">Ordenar por</label>
+                               <label class="block text-xs font-bold text-gray-600">Ordenar por</label>
                                 <select id="process-sort" onchange="refreshProcessos()" class="border rounded px-2 py-1 text-sm mt-1">
-                                    <option value="data_ent_desc">Data de entrada (mais recente)</option>
-                                    <option value="data_ent_asc">Data de entrada (mais antiga)</option>
-                                    <option value="sei_asc">SEI (A-Z)</option>
-                                    <option value="status_asc">Status (A-Z)</option>
-                                    <option value="analista_asc">Analista (A-Z)</option>
+                                <option value="data_ent_desc">Data de entrada (mais recente)</option>
+                                <option value="data_ent_asc">Data de entrada (mais antiga)</option>
+                                <option value="objeto_asc">Objeto (A-Z)</option>
+                                <option value="acusados_asc">Acusados (A-Z)</option>
+                                <option value="analista_asc">Analista (A-Z)</option>
+                                <option value="data_distribuicao_asc">Data de distribuição (mais antiga)</option>
+                                <option value="prazo_nt_asc">Prazo NT (mais antigo)</option>
+                                <option value="prescricao_asc">Prescrição (mais antiga)</option>
+                                <option value="data_entrega_nt_asc">Data entrega NT (mais antiga)</option>
+                                <option value="status_asc">Status (A-Z)</option>
+                                <option value="sei_asc">SEI (A-Z)</option>
                                 </select>
                             </div>
                         <div class="flex bg-gray-100 p-1 rounded-lg">
@@ -1282,13 +1288,20 @@ function setupConfiguracoesView() {
                 return true;
             });
 
-            const sortBy = getVal('process-sort') || 'data_ent_desc';
-            filtered.sort((a, b) => {
-                if (sortBy === 'data_ent_asc') return (a.data_ent || '').localeCompare(b.data_ent || '');
-                if (sortBy === 'sei_asc') return (a.sei || '').localeCompare(b.sei || '');
-                if (sortBy === 'status_asc') return getStatusFromProcess(a).localeCompare(getStatusFromProcess(b));
-                if (sortBy === 'analista_asc') return (a.analista || '').localeCompare(b.analista || '');
-                return (b.data_ent || '').localeCompare(a.data_ent || '');
+           const sortBy = getVal('process-sort') || 'data_ent_desc';
+const getPrescricaoBase = (proc) => proc.calc_advertencia || proc.calc_suspensao || proc.calc_demissao || proc.calc_pj || '';
+filtered.sort((a, b) => {
+    if (sortBy === 'data_ent_asc') return (a.data_ent || '').localeCompare(b.data_ent || '');
+    if (sortBy === 'objeto_asc') return (a.objeto || '').localeCompare(b.objeto || '');
+    if (sortBy === 'acusados_asc') return (a.acusados || []).join(', ').localeCompare((b.acusados || []).join(', '));
+    if (sortBy === 'analista_asc') return (a.analista || '').localeCompare(b.analista || '');
+    if (sortBy === 'data_distribuicao_asc') return (a.data_distribuicao || '').localeCompare(b.data_distribuicao || '');
+    if (sortBy === 'prazo_nt_asc') return (a.prazo_nt_data || '').localeCompare(b.prazo_nt_data || '');
+    if (sortBy === 'prescricao_asc') return getPrescricaoBase(a).localeCompare(getPrescricaoBase(b));
+    if (sortBy === 'data_entrega_nt_asc') return (a.data_entrega_nt || '').localeCompare(b.data_entrega_nt || '');
+    if (sortBy === 'status_asc') return getStatusFromProcess(a).localeCompare(getStatusFromProcess(b));
+    if (sortBy === 'sei_asc') return (a.sei || '').localeCompare(b.sei || '');
+    return (b.data_ent || '').localeCompare(a.data_ent || '');
             });
             
             container.innerHTML = '';
@@ -1783,6 +1796,7 @@ function setupConfiguracoesView() {
     </script>
 </body>
 </html>
+
 
 
 
