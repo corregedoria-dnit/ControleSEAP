@@ -1597,7 +1597,7 @@ function setupConfiguracoesView() {
             if (!container) return;
            const selectedFields = new Set(loadSavedReportFields());
             container.innerHTML = REPORT_FIELD_ORDER.map(key => {
-                const checked = selectedFields.has(key) ? 'checked' : '';
+                //const checked = selectedFields.has(key) ? 'checked' : '';
                 const checked = defaultFields.has(key) ? 'checked' : '';
                 return `<label class="flex items-center gap-2"><input type="checkbox" class="rep-field" value="${key}" ${checked}> ${REPORT_FIELDS[key].label}</label>`;
             }).join('');
@@ -1782,5 +1782,6 @@ function setupConfiguracoesView() {
     </script>
 </body>
 </html>
+
 
 
