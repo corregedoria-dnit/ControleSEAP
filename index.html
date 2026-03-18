@@ -877,30 +877,69 @@ async function handleLogin(e) {
 
         // --- INICIALIZAÇÃO SUPABASE E DADOS ---
         async function initApp() {
-            setOnlineStatus('Conectando...');
-            await fetchConfig();
-            await fetchProcessos();
+            setOnlineStatus('Conectando...', 'loading');
+            const [configOk, processosOk] = await Promise.all([fetchConfig(), fetchProcessos()]);
+
+            if (processosOk || configOk) {
+                setOnlineStatus('Online', 'online');
+            } else {
+                setOnlineStatus('Sem conexão com o banco', 'error');
+            }
+           
             subscribeRealtime();
-            setOnlineStatus('Online', true);
+            function setOnlineStatus(msg, state='loading') {
             setupConfiguracoesView();
             showPage('dashboard');
         }
 
-        function setOnlineStatus(msg, isOk=false) {
+      //  function setOnlineStatus(msg, isOk=false) {
             const statusDiv = document.getElementById('db-status');
-            statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${isOk ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}"></div><span class="text-xs font-medium ${isOk ? 'text-green-700' : 'text-yellow-700'}">${msg}</span>`;
-            statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${isOk ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`;
+        //    statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${isOk ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}"></div><span class="text-xs font-medium ${isOk ? 'text-green-700' : 'text-yellow-700'}">${msg}</span>`;
+        //    statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${isOk ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`;
+ const variants = {
+                online: {
+                    dot: 'bg-green-500',
+                    text: 'text-green-700',
+                    container: 'bg-green-50 border-green-200'
+                },
+                loading: {
+                    dot: 'bg-yellow-500 animate-pulse',
+                    text: 'text-yellow-700',
+                    container: 'bg-yellow-50 border-yellow-200'
+                },
+                warning: {
+                    dot: 'bg-amber-500',
+                    text: 'text-amber-700',
+                    container: 'bg-amber-50 border-amber-200'
+                },
+                error: {
+                    dot: 'bg-red-500',
+                    text: 'text-red-700',
+                    container: 'bg-red-50 border-red-200'
+                }
+            };
+            const current = variants[state] || variants.loading;
+            statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${current.dot}"></div><span class="text-xs font-medium ${current.text}">${msg}</span>`;
+            statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${current.container}`;
+            statusDiv.title = msg;
+            
         }
 
         async function fetchConfig() {
+             let isConnected = false;
             try {
                 const { data, error } = await supabaseClient.from('configuracoes').select('dados').eq('id', 'main').single();
+                 if (error && error.code !== 'PGRST116') throw error;
                 if (data && data.dados) {
                     config = data.dados;
                 }
-            } catch(e) { console.log('Tabela configuracoes não encontrada ou vazia. Usando padrão local.'); }
+          isConnected = true;
+            } catch(e) {
+                console.log('Tabela configuracoes não encontrada ou vazia. Usando padrão local.', e?.message || e);
+            }
             updateHeader();
             loadConfigsToForm();
+            return isConnected;
         }
 
         async function saveConfigsToSupabase() {
@@ -915,7 +954,7 @@ async function handleLogin(e) {
             if (error) {
                 console.error(error);
                 showToast("Erro ao carregar processos da nuvem.", "error");
-                return;
+               return false;
             }
             
             // Tratamento do Array de Acusados que vem da nuvem
@@ -926,15 +965,25 @@ async function handleLogin(e) {
                 return p;
             });
             refreshActivePage();
+            return true;
         }
 
         function subscribeRealtime() {
             supabaseClient
                 .channel('public:processos')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, payload => {
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, () => {
                     fetchProcessos(); // Atualiza toda a tela de todos automaticamente
                 })
-                .subscribe();
+            
+            .subscribe((status) => {
+                    if (status === 'SUBSCRIBED') {
+                        setOnlineStatus('Online', 'online');
+                    }
+
+                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                        setOnlineStatus('Online (tempo real indisponível)', 'warning');
+                    }
+                });
         }
 
          async function saveProcessToSupabase(data, isEditing = false) {
