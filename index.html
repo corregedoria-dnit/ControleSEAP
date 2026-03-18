@@ -940,7 +940,19 @@ async function handleLogin(e) {
 
          async function saveProcessToSupabase(data, isEditing = false) {
             const dbData = Object.assign({}, data);
+            const persistedBooleanFields = ['op_policial', 'possui_inquerito', 'cad_epad', 'prioritario', 'tac_apto'];
 
+            persistedBooleanFields.forEach(field => {
+                dbData[field] = !!dbData[field];
+            });
+
+            if (!dbData.op_policial) dbData.op_policial_detalhes = null;
+            if (!dbData.possui_inquerito) dbData.inquerito_detalhes = null;
+            if (!dbData.cad_epad) dbData.epad_detalhes = null;
+            if (!dbData.tac_apto) {
+                dbData.tac_sit = null;
+                dbData.tac_obs = null;
+            }
             // Itera sobre todas as chaves do objeto
             for (const key in dbData) {
                 // Se o valor for uma string vazia, converte para null
@@ -1270,6 +1282,15 @@ function setupConfiguracoesView() {
         function refreshProcessos() {
             const container = document.getElementById('process-view-container'); container.className = "w-full";
             const search = document.getElementById('search-process').value.toLowerCase();
+            const normalizeDigits = (value) => String(value || '').replace(/\D/g, '');
+            const matchesMaskedText = (fieldValue, query) => {
+                const normalizedField = String(fieldValue || '').toLowerCase();
+                const normalizedQuery = String(query || '').toLowerCase();
+                if (!normalizedQuery) return true;
+                if (normalizedField.includes(normalizedQuery)) return true;
+                const digitsOnlyQuery = normalizeDigits(normalizedQuery);
+                return digitsOnlyQuery.length > 0 && normalizeDigits(normalizedField).includes(digitsOnlyQuery);
+            };            
             const getVal = (id) => document.getElementById(id)?.value; const getValLower = (id) => (document.getElementById(id)?.value || '').toLowerCase();
             
             const fpStatus = getVal('fp-status'), fpSei = getValLower('fp-sei'), fpObjeto = getValLower('fp-objeto'), fpAcusados = getValLower('fp-acusados'), fpAnalista = getValLower('fp-analista'), fpResultado = getVal('fp-resultado'), fpTipoAcusado = getVal('fp-tipo_acusado'), fpPenalidades = getVal('fp-penalidades');
@@ -1279,13 +1300,21 @@ function setupConfiguracoesView() {
             const fpTacApto = getVal('fp-tac_apto'), fpTacSit = getVal('fp-tac_sit'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips');
 
             const filtered = processos.filter(p => {
-                if (search) { const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && val.toLowerCase().includes(search)) || (p.acusados && p.acusados.join(' ').toLowerCase().includes(search)); if (!matchGlobal) return false; }
+               // if (search) { const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && val.toLowerCase().includes(search)) || (p.acusados && p.acusados.join(' ').toLowerCase().includes(search)); if (!matchGlobal) return false; }
+                if (search) {
+                    const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && matchesMaskedText(val, search))
+                        || (p.acusados && matchesMaskedText(p.acusados.join(' '), search));
+                    if (!matchGlobal) return false;
+                }
                 if (isPriorityFilterActive && !p.prioritario) return false;
-                if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
+               // if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
+                if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && !matchesMaskedText(p.sei, fpSei)) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
                 if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (fpDataDespacho && p.data_despacho !== fpDataDespacho) return false;
-                if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false; if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false; if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false; if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
+                //if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false; if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false; if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false; if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
+                if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && !matchesMaskedText(p.doc_origem, fpDocOrigem)) return false; if (fpJuntado && !matchesMaskedText(p.juntado, fpJuntado)) return false; if (fpRelacionados && !matchesMaskedText(p.relacionados, fpRelacionados)) return false; if (fpDocResp && !matchesMaskedText(p.doc_resp, fpDocResp)) return false;
                 if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false; if (fpTacApto && String(!!p.tac_apto) !== fpTacApto) return false;
-                if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
+                //if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
+                if (fpOpPolicialDetalhes && !matchesMaskedText(p.op_policial_detalhes, fpOpPolicialDetalhes)) return false; if (fpInqueritoDetalhes && !matchesMaskedText(p.inquerito_detalhes, fpInqueritoDetalhes)) return false; if (fpEpadDetalhes && !matchesMaskedText(p.epad_detalhes, fpEpadDetalhes)) return false;
                 if (fpTacSit && p.tac_sit !== fpTacSit) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
                 if (fpIps && String(!!p.ips) !== fpIps) return false;
                 return true;
@@ -1363,7 +1392,20 @@ filtered.sort((a, b) => {
         
         function editProcess(id) {
             const p = processos.find(x=>x.id==id); if(!p)return; showPage('novo-processo'); resetForm(); document.getElementById('novo-processo-title').innerText = "Editar Processo";
-            Object.keys(p).forEach(key => { const el = document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`); if (el) { el.type === 'checkbox' ? el.checked = p[key] : el.value = p[key] || ''; } });
+            //Object.keys(p).forEach(key => { const el = document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`); if (el) { el.type === 'checkbox' ? el.checked = p[key] : el.value = p[key] || ''; } });
+            const customFieldMap = {
+                op_policial: 'check-policial',
+                possui_inquerito: 'check-inquerito',
+                cad_epad: 'check-epad',
+                prioritario: 'process-prioritario'
+            };
+            Object.keys(p).forEach(key => {
+                const customEl = customFieldMap[key] ? document.getElementById(customFieldMap[key]) : null;
+                const el = customEl || document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`);
+                if (el) {
+                    el.type === 'checkbox' ? el.checked = !!p[key] : el.value = p[key] || '';
+                }
+            });
             document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
             toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad); toggleTacDetails();
             currentAccused = p.acusados||[]; renderAccused(); calculatePrescription();
