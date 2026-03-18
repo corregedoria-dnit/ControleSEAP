@@ -1,4 +1,4 @@
-    <!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -878,25 +878,21 @@ async function handleLogin(e) {
         // --- INICIALIZAÇÃO SUPABASE E DADOS ---
         async function initApp() {
             setOnlineStatus('Conectando...', 'loading');
-            const [configOk, processosOk] = await Promise.all([fetchConfig(), fetchProcessos()]);
+            const results = await Promise.allSettled([fetchConfig(), fetchProcessos()]);
+            const hasConnection = results.some(result => result.status === 'fulfilled' && result.value === true);
 
-            if (processosOk || configOk) {
-                setOnlineStatus('Online', 'online');
-            } else {
+            if (!hasConnection) {
                 setOnlineStatus('Sem conexão com o banco', 'error');
             }
-           
+
             subscribeRealtime();
-            function setOnlineStatus(msg, state='loading') {
             setupConfiguracoesView();
             showPage('dashboard');
         }
 
-      //  function setOnlineStatus(msg, isOk=false) {
+        function setOnlineStatus(msg, state='loading') {
             const statusDiv = document.getElementById('db-status');
-        //    statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${isOk ? 'bg-green-500' : 'bg-yellow-500 animate-pulse'}"></div><span class="text-xs font-medium ${isOk ? 'text-green-700' : 'text-yellow-700'}">${msg}</span>`;
-        //    statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${isOk ? 'bg-green-50 border-green-200' : 'bg-yellow-50 border-yellow-200'}`;
- const variants = {
+            const variants = {
                 online: {
                     dot: 'bg-green-500',
                     text: 'text-green-700',
@@ -922,23 +918,29 @@ async function handleLogin(e) {
             statusDiv.innerHTML = `<div class="w-2 h-2 rounded-full ${current.dot}"></div><span class="text-xs font-medium ${current.text}">${msg}</span>`;
             statusDiv.className = `flex items-center space-x-2 px-3 py-1 rounded-full border ${current.container}`;
             statusDiv.title = msg;
-            
         }
 
         async function fetchConfig() {
-             let isConnected = false;
+            let isConnected = false;
             try {
                 const { data, error } = await supabaseClient.from('configuracoes').select('dados').eq('id', 'main').single();
-                 if (error && error.code !== 'PGRST116') throw error;
+                if (error && error.code !== 'PGRST116') throw error;
                 if (data && data.dados) {
                     config = data.dados;
                 }
-          isConnected = true;
+                isConnected = true;
+                setOnlineStatus('Online', 'online');
             } catch(e) {
                 console.log('Tabela configuracoes não encontrada ou vazia. Usando padrão local.', e?.message || e);
             }
-            updateHeader();
-            loadConfigsToForm();
+
+            try {
+                updateHeader();
+                loadConfigsToForm();
+            } catch (uiError) {
+                console.error('Erro ao atualizar a interface após carregar configurações:', uiError);
+            }
+
             return isConnected;
         }
 
@@ -954,7 +956,7 @@ async function handleLogin(e) {
             if (error) {
                 console.error(error);
                 showToast("Erro ao carregar processos da nuvem.", "error");
-               return false;
+                return false;
             }
             
             // Tratamento do Array de Acusados que vem da nuvem
@@ -964,7 +966,15 @@ async function handleLogin(e) {
                 }
                 return p;
             });
-            refreshActivePage();
+
+            setOnlineStatus('Online', 'online');
+
+            try {
+                refreshActivePage();
+            } catch (uiError) {
+                console.error('Erro ao atualizar a interface após carregar processos:', uiError);
+            }
+
             return true;
         }
 
@@ -974,8 +984,7 @@ async function handleLogin(e) {
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, () => {
                     fetchProcessos(); // Atualiza toda a tela de todos automaticamente
                 })
-            
-            .subscribe((status) => {
+                .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
                         setOnlineStatus('Online', 'online');
                     }
@@ -1892,10 +1901,3 @@ filtered.sort((a, b) => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
