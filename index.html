@@ -1320,7 +1320,7 @@ function setupConfiguracoesView() {
                     .replace(/[\u0300-\u036f]/g, '')
                     .trim()
                     .toLowerCase();
-                if (normalizedStatus.startsWith('conclu') || !!p.data_despacho) return;
+                if (normalizedStatus.startsWith('conclu') ) return; //|| !!p.data_despacho
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
