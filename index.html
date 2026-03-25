@@ -1315,9 +1315,12 @@ function setupConfiguracoesView() {
 
            const atRiskProcesses = [];
             processos.forEach(p => {
-                const statusAtual = (getStatusFromProcess(p) || '').trim();
-                const isConcluido = statusAtual === 'Concluído';
-                if (isConcluido) return;
+                const normalizedStatus = (getStatusFromProcess(p) || '')
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .trim()
+                    .toLowerCase();
+                if (normalizedStatus.startsWith('conclu') || !!p.data_despacho) return;
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
