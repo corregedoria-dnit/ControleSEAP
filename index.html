@@ -1,4 +1,4 @@
-  <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -1088,8 +1088,44 @@ async function handleLogin(e) {
             showToast('Configurações salvas e sincronizadas!');
         }
 
+        function suggestStatusChangeOnEdit(data, currentStatus) {
+            const hasDistributionData = !!(data.analista && data.data_distribuicao && data.prazo_nt_data);
+            const hasNtDelivery = !!data.data_entrega_nt;
+            const hasDecision = !!(data.data_despacho && data.resultado && data.resultado !== 'Não definida');
+
+            const suggestions = [
+                {
+                    condition: hasDecision,
+                    targetStatus: 'Concluído',
+                    question: 'Data de assinatura do despacho decisório e resultado estão preenchidos. Deseja alterar o status para "Concluído"?'
+                },
+                {
+                    condition: hasNtDelivery,
+                    targetStatus: 'Pendente de análise do(a) Corregedor(a)',
+                    question: 'Data de entrega da nota técnica está preenchida. Deseja alterar o status para "Pendente de análise do(a) Corregedor(a)"?'
+                },
+                {
+                    condition: hasDistributionData,
+                    targetStatus: 'Em análise',
+                    question: 'Analista responsável, data de distribuição e prazo para conclusão da nota técnica estão preenchidos. Deseja alterar o status para "Em análise"?'
+                }
+            ];
+
+            const suggestion = suggestions.find(item => item.condition && currentStatus !== item.targetStatus);
+            if (!suggestion) return;
+
+            const shouldChange = window.confirm(suggestion.question);
+            if (shouldChange) {
+                data.status_manual = suggestion.targetStatus;
+            }
+        }
+
           function submitProcessForm() {
-            const id = document.getElementById('process-id').value || Date.now().toString();
+            const originalId = document.getElementById('process-id').value;
+            const id = originalId || Date.now().toString();
+            const isEditing = !!originalId;
+            const currentProcess = isEditing ? processos.find(p => String(p.id) === String(originalId)) : null;
+            const currentStatus = currentProcess ? getStatusFromProcess(currentProcess) : '';
             
             // Coleta todos os dados do formulário
             const data = { 
@@ -1136,11 +1172,16 @@ async function handleLogin(e) {
                 return alert('Preencha os campos obrigatórios (*):\n- Processo SEI\n- Data Conhecimento do Fato\n- Objeto\n- Acusado(s)\n- Tipo de Pessoa.');
             }
             
-            if (!document.getElementById('process-id').value && !data.status_manual) {
+            if (!isEditing && !data.status_manual) {
                 data.status_manual = 'Cadastrado';
             }
+
+            if (isEditing) {
+                suggestStatusChangeOnEdit(data, currentStatus);
+            }
+
             // Chama a função de salvar, que fará a limpeza dos dados
-            saveProcessToSupabase(data);
+            saveProcessToSupabase(data, isEditing);
         }
             
          
@@ -1294,7 +1335,10 @@ function setupConfiguracoesView() {
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
-                if (isAtRisk) { atRiskProcesses.push({ p: p, minDays: Math.min(daysAdv, daysSusp, daysDem), days: { adv: daysAdv, susp: daysSusp, dem: daysDem } }); }
+                const hasPrescricao = Number.isFinite(daysAdv) || Number.isFinite(daysSusp) || Number.isFinite(daysDem);
+                const minDays = Math.min(daysAdv, daysSusp, daysDem);
+                const isAtRisk = hasPrescricao && minDays <= config.alerts.high.dem;
+                if (isAtRisk) { atRiskProcesses.push({ p: p, minDays, days: { adv: daysAdv, susp: daysSusp, dem: daysDem } }); }
             });
 
             atRiskProcesses.sort((a, b) => a.minDays - b.minDays);
@@ -1426,7 +1470,7 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
-                item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div>`;
+                item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>IPS:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div>`;
                 listContainer.appendChild(item);
             });
         }
@@ -1460,7 +1504,13 @@ filtered.sort((a, b) => {
                 const customEl = customFieldMap[key] ? document.getElementById(customFieldMap[key]) : null;
                 const el = customEl || document.getElementById(`process-${key.replace(/_/g, '-')}`) || document.getElementById(`check-${key.replace(/_/g, '-')}`);
                 if (el) {
-                    el.type === 'checkbox' ? el.checked = !!p[key] : el.value = p[key] || '';
+                    if (el.type === 'checkbox') {
+                        el.checked = !!p[key];
+                    } else if (key === 'ips') {
+                        el.value = p[key] === true ? 'true' : p[key] === false ? 'false' : '';
+                    } else {
+                        el.value = p[key] || '';
+                    }
                 }
             });
             document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
