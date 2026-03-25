@@ -258,7 +258,7 @@
                                 <option value="status_asc">Status (A-Z)</option>
                             </select>
                             </div>
-                        <div class="flex bg-gray-100 p-1 rounded-lg">
+                                                    <div class="flex bg-gray-100 p-1 rounded-lg">
                             <button onclick="setViewMode('cards')" class="view-btn p-2 rounded text-sm flex items-center space-x-1 hover:bg-white hover:shadow" id="btn-view-cards"><i data-lucide="grid" class="w-4 h-4"></i> <span>Cards</span></button>
                             <button onclick="setViewMode('table')" class="view-btn p-2 rounded text-sm flex items-center space-x-1 hover:bg-white hover:shadow" id="btn-view-table"><i data-lucide="table" class="w-4 h-4"></i> <span>Tabela</span></button>
                             <button onclick="setViewMode('list')" class="view-btn p-2 rounded text-sm flex items-center space-x-1 hover:bg-white hover:shadow" id="btn-view-list"><i data-lucide="layout-list" class="w-4 h-4"></i> <span>Lista</span></button>
@@ -518,7 +518,7 @@
                                     <input type="text" id="f-epad-det" class="hidden border rounded px-2 py-1 mt-1 text-xs w-full" placeholder="Detalhes (pesquisa)...">
                                 </div>
                                 <div class="flex flex-col">
-                                    <label class="text-sm flex items-center"><input type="checkbox" id="f-inquerito" class="mr-2" onchange="toggleFilterDetail('f-inq-det')">Com Inquérito</label>
+                                                                        <label class="text-sm flex items-center"><input type="checkbox" id="f-inquerito" class="mr-2" onchange="toggleFilterDetail('f-inq-det')">Com Inquérito</label>
                                     <input type="text" id="f-inq-det" class="hidden border rounded px-2 py-1 mt-1 text-xs w-full" placeholder="Detalhes (pesquisa)...">
                                 </div>
                                 <div class="flex flex-col">
@@ -778,7 +778,7 @@ async function loadCurrentUserProfile() {
     .from('usuarios')
     .select('is_admin, nome_completo, username')
     .eq('id', currentUser.id)
-    .single();
+        .single();
 
   if (error) {
     console.warn('Não foi possível carregar perfil do usuário:', error.message);
@@ -1038,7 +1038,7 @@ async function handleLogin(e) {
                 showToast("Processo salvo na nuvem com sucesso!");
                 fetchProcessos();
                 showPage('processos');
-            }
+                            }
         }
     
         //    async function saveProcessToSupabase(data) {
@@ -1286,22 +1286,6 @@ function setupConfiguracoesView() {
     resetUserForm();
   }
 }
-        //function showPage(pageId) {
-        //    if(pageId !== 'relatorios') closeReport();
-        //    document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
-        //    document.getElementById(`page-${pageId}`).classList.remove('hidden');
-        //    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('bg-blue-50', 'text-blue-700'));
-        //    document.getElementById(`nav-${pageId}`)?.classList.add('bg-blue-50', 'text-blue-700');
-        //    
-        //    if(pageId === 'dashboard') loadDashboard();
-        //    if(pageId === 'processos') refreshProcessos();
-        //    if(pageId === 'novo-processo') resetForm();
-        //    if(pageId === 'configuracoes') {
-        //        loadConfigsToForm();
-        //        fetchUsers();
-        //    }
-        //    if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
-       // }
         function closeReport() { document.getElementById('report-output').classList.add('hidden'); }
 
         function loadDashboard() {
@@ -1331,7 +1315,9 @@ function setupConfiguracoesView() {
 
            const atRiskProcesses = [];
             processos.forEach(p => {
-                if (getStatusFromProcess(p) === 'Concluído') return;
+                const statusAtual = (getStatusFromProcess(p) || '').trim();
+                const isConcluido = statusAtual === 'Concluído';
+                if (isConcluido) return;
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
@@ -1470,7 +1456,7 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
-                item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>IPS:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div>`;
+                item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>IPS?:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div>`;
                 listContainer.appendChild(item);
             });
         }
@@ -1556,7 +1542,7 @@ filtered.sort((a, b) => {
             renderUsersManagement();
             resetUserForm();
         }
-
+    
         function renderUsersManagement() {
             const description = document.getElementById('users-manage-description');
             const table = document.getElementById('users-table-body');
