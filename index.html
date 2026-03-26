@@ -1197,9 +1197,9 @@ async function handleLogin(e) {
         function formatDate(str) { if(!str) return '—'; const d = new Date(str); return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
         
        function getStatusFromProcess(p) {
-            if (p.status_manual && p.status_manual !== "") return p.status_manual;
-            if (p.data_despacho) return 'Concluído';
-            if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
+           if (p.data_despacho) return 'Concluído';
+           if (p.status_manual && p.status_manual !== "") return p.status_manual;
+           if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
             if (p.analista) return 'Em análise';
             if (p.data_ent) return 'Cadastrado';
             return 'Aguardando Distribuição';
@@ -1214,10 +1214,10 @@ async function handleLogin(e) {
             const normalizedDerivedStatus = normalizeStatus(getStatusFromProcess(p));
             const normalizedManualStatus = normalizeStatus(p.status_manual);
             const normalizedLegacyStatus = normalizeStatus(p.status);
+            const conclusionKeywords = ['conclu', 'finaliz', 'encerr', 'arquiv'];
+            const hasConclusionKeyword = (status) => conclusionKeywords.some(keyword => status.includes(keyword));
             return !!p.data_despacho
-                || normalizedDerivedStatus.includes('conclu')
-                || normalizedManualStatus.includes('conclu')
-                || normalizedLegacyStatus.includes('conclu');
+              
         }
 
         function getStatusClass(status) {
