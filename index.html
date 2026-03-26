@@ -1196,13 +1196,22 @@ async function handleLogin(e) {
         function updateHeader() { document.getElementById('header-org-name').innerText = config.orgName; document.getElementById('header-subtitle').innerText = config.subtitle; }
         function formatDate(str) { if(!str) return '—'; const d = new Date(str); return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
         
-        function getStatusFromProcess(p) {
+       function getStatusFromProcess(p) {
             if (p.status_manual && p.status_manual !== "") return p.status_manual;
             if (p.data_despacho) return 'Concluído';
             if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
             if (p.analista) return 'Em análise';
             if (p.data_ent) return 'Cadastrado';
             return 'Aguardando Distribuição';
+        }
+
+        function isConcludedProcess(p) {
+            const normalizedStatus = (getStatusFromProcess(p) || '')
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .toLowerCase();
+            return !!p.data_despacho || normalizedStatus.includes('conclu');
         }
 
         function getStatusClass(status) {
@@ -1315,12 +1324,7 @@ function setupConfiguracoesView() {
 
            const atRiskProcesses = [];
             processos.forEach(p => {
-                const normalizedStatus = (getStatusFromProcess(p) || '')
-                    .normalize('NFD')
-                    .replace(/[\u0300-\u036f]/g, '')
-                    .trim()
-                    .toLowerCase();
-                if (normalizedStatus.startsWith('conclu') ) return; //|| !!p.data_despacho
+                if (isConcludedProcess(p)) return;
                 const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
                 const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
                 const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
