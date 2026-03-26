@@ -2039,9 +2039,9 @@ filtered.sort((a, b) => {
         
         function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
 
-        function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true) {
-            const rows = [];
-            processList.forEach(p => {
+       function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true) {␊
+            const rows = [];␊
+            processList.forEach(p => {␊
                 const accused = Array.isArray(p.acusados) ? p.acusados : [];
                 const outcomes = normalizeAccusedOutcomes(accused, p.resultados_acusados || []);
                 const shouldSplitByAccused = splitMultiAccused && accused.length > 1;
@@ -2076,7 +2076,15 @@ filtered.sort((a, b) => {
                     }
                 }
             });
-            return rows;
+               return rows;
+        }
+
+        function buildTacRowsBySituation(processList, targetSituation) {
+            return buildOutcomeRowsByResult(
+                processList.filter(p => p.tac_sit === targetSituation),
+                'Para celebrar TAC',
+                true
+            );
         }
 
 
@@ -2130,7 +2138,7 @@ filtered.sort((a, b) => {
                 'min_transportes': buildOutcomeRowsByResult(filtered, 'Encaminhado para o Min. dos Transportes', true),
                 'instauracao_ips': buildOutcomeRowsByResult(filtered, 'Instauração de IPS', true)
             };
-            const tacMap = { 'negociacao': filtered.filter(p => p.tac_sit === 'Em negociação'), 'celebrados': filtered.filter(p => p.tac_sit === 'Celebrado'), 'recusados': filtered.filter(p => p.tac_sit === 'Recusado'), 'finalizados': filtered.filter(p => p.tac_sit === 'Finalizado') };
+             const tacMap = { 'negociacao': buildTacRowsBySituation(filtered, 'Em negociação'), 'celebrados': buildTacRowsBySituation(filtered, 'Celebrado'), 'recusados': buildTacRowsBySituation(filtered, 'Recusado'), 'finalizados': buildTacRowsBySituation(filtered, 'Finalizado') };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div><div class="report-section"><div class="report-header">Resumo Geral</div>${renderRow('Quantidade total de processos', filtered.length, filtered)}${renderRow('Quantidade de processos arquivados', archivedList.length, archivedList)}${renderRow('Processos aptos a celebração de TAC', aptTacList.length, aptTacList)}${renderRow('Tempo médio (em dias)', avgProcessTime, [])}</div><div class="report-section"><div class="report-header">Notícias de irregularidade</div><div class="report-sub-header">Análise preliminar</div>${renderRow('Quantidade de processos analisados', analyzedList.length, analyzedList)}${renderRow('Tempo médio de análise (em dias)', avgAnalysisTime, [])}<div class="report-sub-header">Resultados</div>${renderRow('Número de processos arquivados', resultadoMap.arquivados_preliminar.length, resultadoMap.arquivados_preliminar)}${renderRow('Encaminhados para juízo de admissibilidade', juizoList.length, juizoList)}${renderRow('Quantidade de juntados a processo existente', juntadoList.length, juntadoList)}</div><div class="report-section"><div class="report-header">Juízo de Admissibilidade</div><div class="report-sub-header">Processos Analisados – IPS</div>${renderRow('Número de Processos analisados', ipsList.length, ipsList)}${renderRow('Tempo médio de análise (em dias)', calculateAverageDays(ipsList, 'data_distribuicao', 'data_entrega_nt'), [])}<div class="report-sub-header">Resultados</div>${renderRow('Processos arquivados', resultadoMap.arquivados_admissibilidade.length, resultadoMap.arquivados_admissibilidade)}${renderRow('Celebração de TAC', resultadoMap.celebracao_tac.length, resultadoMap.celebracao_tac)}${renderRow('Instauração de PAD', resultadoMap.instauracao_pad.length, resultadoMap.instauracao_pad)}${renderRow('Instauração de PAR', resultadoMap.instauracao_par.length, resultadoMap.instauracao_par)}${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}${renderRow('Instauração de SINAC', resultadoMap.instauracao_sinac.length, resultadoMap.instauracao_sinac)}${renderRow('Instauração de SINVE', resultadoMap.instauracao_sinve.length, resultadoMap.instauracao_sinve)}${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}${renderRow('Instauração de IPS', resultadoMap.instauracao_ips.length, resultadoMap.instauracao_ips)}</div><div class="report-section"><div class="report-header">Termo de Ajustamento de Conduta – TAC</div>${renderRow('TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao)}${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados)}${renderRow('TACs Recusados', tacMap.recusados.length, tacMap.recusados)}${renderRow('TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados)}</div>`;
             setLastReport(filtered, true);
