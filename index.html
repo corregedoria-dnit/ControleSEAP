@@ -2117,17 +2117,18 @@ filtered.sort((a, b) => {
             const juntadoList = filtered.filter(p => p.juntado && p.juntado.length > 5); const juizoList = filtered.filter(p => getStatusFromProcess(p) === 'Em análise'); const ipsList = filtered.filter(p => getStatusFromProcess(p) === 'Pendente de análise do(a) Corregedor(a)' || p.ips === true);
             
             const resultadoMap = {
-                'arquivados_preliminar': filtered.filter(p => p.resultado === 'Arquivado após análise preliminar'),
-                'arquivados_admissibilidade': filtered.filter(p => p.resultado === 'Arquivado após juízo de admissibilidade'),
-                // Regra específica: para TAC, quando houver mais de um acusado, contabiliza por acusado.
+                // Regra de negócio: em processos com múltiplos acusados, cada bloco deve listar
+                // apenas o(s) acusado(s) cujo resultado individual corresponde ao bloco.
+                'arquivados_preliminar': buildOutcomeRowsByResult(filtered, 'Arquivado após análise preliminar', true),
+                'arquivados_admissibilidade': buildOutcomeRowsByResult(filtered, 'Arquivado após juízo de admissibilidade', true),
                 'celebracao_tac': buildOutcomeRowsByResult(filtered, 'Para celebrar TAC', true),
-                'instauracao_pad': filtered.filter(p => p.resultado === 'Instauração de PAD'),
-                'instauracao_par': filtered.filter(p => p.resultado === 'Instauração de PAR'),
-                'instauracao_sinpa': filtered.filter(p => p.resultado === 'Instauração de SINPA'),
-                'instauracao_sinac': filtered.filter(p => p.resultado === 'Instauração de SINAC'),
-                'instauracao_sinve': filtered.filter(p => p.resultado === 'Instauração de SINVE'),
-                'min_transportes': filtered.filter(p => p.resultado === 'Encaminhado para o Min. dos Transportes'),
-                'instauracao_ips': filtered.filter(p => p.resultado === 'Instauração de IPS')
+                'instauracao_pad': buildOutcomeRowsByResult(filtered, 'Instauração de PAD', true),
+                'instauracao_par': buildOutcomeRowsByResult(filtered, 'Instauração de PAR', true),
+                'instauracao_sinpa': buildOutcomeRowsByResult(filtered, 'Instauração de SINPA', true),
+                'instauracao_sinac': buildOutcomeRowsByResult(filtered, 'Instauração de SINAC', true),
+                'instauracao_sinve': buildOutcomeRowsByResult(filtered, 'Instauração de SINVE', true),
+                'min_transportes': buildOutcomeRowsByResult(filtered, 'Encaminhado para o Min. dos Transportes', true),
+                'instauracao_ips': buildOutcomeRowsByResult(filtered, 'Instauração de IPS', true)
             };
             const tacMap = { 'negociacao': filtered.filter(p => p.tac_sit === 'Em negociação'), 'celebrados': filtered.filter(p => p.tac_sit === 'Celebrado'), 'recusados': filtered.filter(p => p.tac_sit === 'Recusado'), 'finalizados': filtered.filter(p => p.tac_sit === 'Finalizado') };
 
