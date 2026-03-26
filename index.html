@@ -1314,6 +1314,17 @@ async function handleLogin(e) {
             if ((process.acusados || []).length <= 1) return filled[0].resultado;
             return `${filled.length} acusado(s) com resultado`;
         }
+        function formatAccusedOutcomes(process, separator = ' | ') {
+            const accused = Array.isArray(process.acusados) ? process.acusados : [];
+            if (!accused.length) return '—';
+            const outcomes = normalizeAccusedOutcomes(accused, process.resultados_acusados || []);
+            const details = outcomes.map(item => {
+                const result = item.resultado && item.resultado !== 'Não definida' ? item.resultado : (process.resultado || 'Não definida');
+                const date = item.data_despacho ? formatDate(item.data_despacho) : '—';
+                return `${item.acusado || 'Acusado'}: ${result} (${date})`;
+            });
+            return details.join(separator);
+        }
         function getDespachoDateForStatus(process) {
             const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
             const dates = outcomes.map(item => item.data_despacho).filter(Boolean).sort();
@@ -1905,6 +1916,7 @@ filtered.sort((a, b) => {
             data_despacho: { label: 'Data Assinatura Despacho', get: p => formatDate(p.data_despacho) },
             acusados: { label: 'Acusado(s)', get: p => Array.isArray(p.acusados) && p.acusados.length ? p.acusados.join(', ') : '—' },
             resultado: { label: 'Resultado', get: p => p.resultado || '—' },
+            resultados_acusados: { label: 'Resultados por acusado', get: p => formatAccusedOutcomes(p) },
             doc_resp: { label: 'Documento de Resposta', get: p => p.doc_resp || '—' },
             tac_apto: { label: 'Apto a TAC', get: p => p.tac_apto ? 'Sim' : 'Não' },
             tac_sit: { label: 'Situação TAC', get: p => p.tac_sit || '—' },
@@ -2032,8 +2044,20 @@ filtered.sort((a, b) => {
             if (!data || data.length === 0) return '';
             let html = '<div class="analytic-list border-t mt-2 pt-2"><div class="overflow-auto max-h-[60vh]"><table class="w-full min-w-max text-xs border"><thead class="bg-gray-100"><tr><th class="border p-1 whitespace-nowrap">Nº SEI</th><th class="border p-1 whitespace-nowrap">Objeto</th><th class="border p-1 whitespace-nowrap">Acusado</th><th class="border p-1 whitespace-nowrap">Data de conhecimento do fato</th><th class="border p-1 whitespace-nowrap">Resultado</th></tr></thead><tbody>';
             data.forEach(p => {
-                const acusado = Array.isArray(p.acusados) && p.acusados.length ? p.acusados.join(', ') : '—';
-                html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${acusado}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${p.resultado || '—'}</td></tr>`;
+                const accused = Array.isArray(p.acusados) ? p.acusados : [];
+                const outcomes = normalizeAccusedOutcomes(accused, p.resultados_acusados || []);
+                const shouldSplitByAccused = accused.length > 1;
+                const rows = shouldSplitByAccused ? outcomes : [{
+                    acusado: accused[0] || '—',
+                    resultado: outcomes[0]?.resultado || p.resultado || '—',
+                    data_despacho: outcomes[0]?.data_despacho || p.data_despacho || ''
+                }];
+
+                rows.forEach(row => {
+                    const result = row.resultado && row.resultado !== 'Não definida' ? row.resultado : (p.resultado || 'Não definida');
+                    const despacho = row.data_despacho ? ` (${formatDate(row.data_despacho)})` : '';
+                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${row.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${result}${despacho}</td></tr>`;
+                });
             });
             return html + '</tbody></table></div></div>';
         }
