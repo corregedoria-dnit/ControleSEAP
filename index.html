@@ -1298,6 +1298,41 @@ function setupConfiguracoesView() {
 }
         function closeReport() { document.getElementById('report-output').classList.add('hidden'); }
 
+        function getPrescriptionAlertData(process, today) {
+            const isOnlyPJ = process.tipo_acusado === 'Pessoa Jurídica';
+            if (isOnlyPJ) {
+                const daysPJ = process.calc_pj ? diffDays(today, process.calc_pj) : Infinity;
+                const hasPrescricao = Number.isFinite(daysPJ);
+                return {
+                    hasPrescricao,
+                    minDays: daysPJ,
+                    items: [
+                        {
+                            label: 'PJ',
+                            date: process.calc_pj,
+                            daysLeft: daysPJ,
+                            critThreshold: config.alerts.crit.dem,
+                            highThreshold: config.alerts.high.dem
+                        }
+                    ]
+                };
+            }
+
+            const daysAdv = process.calc_advertencia ? diffDays(today, process.calc_advertencia) : Infinity;
+            const daysSusp = process.calc_suspensao ? diffDays(today, process.calc_suspensao) : Infinity;
+            const daysDem = process.calc_demissao ? diffDays(today, process.calc_demissao) : Infinity;
+            const hasPrescricao = Number.isFinite(daysAdv) || Number.isFinite(daysSusp) || Number.isFinite(daysDem);
+            return {
+                hasPrescricao,
+                minDays: Math.min(daysAdv, daysSusp, daysDem),
+                items: [
+                    { label: 'Advertência', date: process.calc_advertencia, daysLeft: daysAdv, critThreshold: config.alerts.crit.adv, highThreshold: config.alerts.high.adv },
+                    { label: 'Suspensão', date: process.calc_suspensao, daysLeft: daysSusp, critThreshold: config.alerts.crit.susp, highThreshold: config.alerts.high.susp },
+                    { label: 'Demissão', date: process.calc_demissao, daysLeft: daysDem, critThreshold: config.alerts.crit.dem, highThreshold: config.alerts.high.dem }
+                ]
+            };
+        }
+
         function loadDashboard() {
             document.getElementById('stat-total').innerText = processos.length;
             document.getElementById('stat-aguardando').innerText = processos.filter(p => getStatusFromProcess(p) === 'Aguardando Distribuição').length;
@@ -1323,21 +1358,19 @@ function setupConfiguracoesView() {
             tasks.sort((a, b) => a.days - b.days);
             document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${t.p.sei}</span> <span class="text-gray-600 truncate block w-40">${t.p.objeto}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
 
-           const atRiskProcesses = [];
+          const atRiskProcesses = [];
             processos.forEach(p => {
                 if (isConcludedProcess(p)) return;
-                const daysAdv = p.calc_advertencia ? diffDays(today, p.calc_advertencia) : Infinity;
-                const daysSusp = p.calc_suspensao ? diffDays(today, p.calc_suspensao) : Infinity;
-                const daysDem = p.calc_demissao ? diffDays(today, p.calc_demissao) : Infinity;
-                const hasPrescricao = Number.isFinite(daysAdv) || Number.isFinite(daysSusp) || Number.isFinite(daysDem);
-                const minDays = Math.min(daysAdv, daysSusp, daysDem);
+                const alertData = getPrescriptionAlertData(p, today);
+                const hasPrescricao = alertData.hasPrescricao;
+                const minDays = alertData.minDays;
                 const isAtRisk = hasPrescricao && minDays <= config.alerts.high.dem;
-                if (isAtRisk) { atRiskProcesses.push({ p: p, minDays, days: { adv: daysAdv, susp: daysSusp, dem: daysDem } }); }
+                if (isAtRisk) { atRiskProcesses.push({ p: p, minDays, items: alertData.items }); }
             });
 
             atRiskProcesses.sort((a, b) => a.minDays - b.minDays);
             document.getElementById('presc-list-dashboard').innerHTML = atRiskProcesses.length ? atRiskProcesses.map(item => {
-                const p = item.p; const days = item.days;
+                const p = item.p;
                 const getStatusHtml = (label, date, daysLeft, critThreshold, highThreshold) => {
                     if (!date || date === '—') return `<div class="text-gray-400">${label}: —</div>`;
                     const isPrescribed = daysLeft < 0; const isCritical = daysLeft <= critThreshold; const isHigh = daysLeft <= highThreshold;
@@ -1345,7 +1378,10 @@ function setupConfiguracoesView() {
                     if (isPrescribed || isCritical) colorClass = 'text-red-600 font-bold'; else if (isHigh) colorClass = 'text-yellow-600';
                     return `<div>${label}: <span class="${colorClass}">${formatDate(date)} (${isPrescribed ? `Prescrito (${-daysLeft}d)` : `${daysLeft} dias`})</span></div>`;
                 };
-                return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${p.sei}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${getStatusHtml('Advertência', p.calc_advertencia, days.adv, config.alerts.crit.adv, config.alerts.high.adv)}${getStatusHtml('Suspensão', p.calc_suspensao, days.susp, config.alerts.crit.susp, config.alerts.high.susp)}${getStatusHtml('Demissão', p.calc_demissao, days.dem, config.alerts.crit.dem, config.alerts.high.dem)}</div></div>`;
+                const statusItemsHtml = item.items
+                    .map(entry => getStatusHtml(entry.label, entry.date, entry.daysLeft, entry.critThreshold, entry.highThreshold))
+                    .join('');
+                return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${p.sei}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${statusItemsHtml}</div></div>`;
             }).join('') : '<p class="text-gray-500 text-sm">Nenhum risco de prescrição iminente.</p>';
 
             const statusCounts = { 'Aguardando Distribuição': 0, 'Em análise': 0, 'Pendente de análise do(a) Corregedor(a)': 0, 'Concluído': 0 };
