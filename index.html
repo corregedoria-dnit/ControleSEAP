@@ -1212,12 +1212,7 @@ async function handleLogin(e) {
                 .trim()
                 .toLowerCase();
             const normalizedDerivedStatus = normalizeStatus(getStatusFromProcess(p));
-            const normalizedManualStatus = normalizeStatus(p.status_manual);
-            const normalizedLegacyStatus = normalizeStatus(p.status);
-            const conclusionKeywords = ['conclu', 'finaliz', 'encerr', 'arquiv'];
-            const hasConclusionKeyword = (status) => conclusionKeywords.some(keyword => status.includes(keyword));
-            return !!p.data_despacho
-              
+            return normalizedDerivedStatus === 'concluido';
         }
 
         function getStatusClass(status) {
