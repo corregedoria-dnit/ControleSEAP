@@ -431,8 +431,8 @@
                             <div>
                                 <label class="block text-sm font-medium">Data de Assinatura Despacho Decisório</label>
                                 <input type="date" id="process-data-despacho" class="w-full border rounded px-3 py-2 mt-1">
-                            </div>
-                            <div>
+                            </div>                          
+                               <div>
                                 <label class="block text-sm font-medium">Resultado</label>
                                 <select id="process-resultado" class="w-full border rounded px-3 py-2 mt-1">
                                     <option value="Não definida">Não definida</option>
@@ -444,8 +444,15 @@
                                     <option value="Instauração de IPS">Instauração de IPS</option>
                                     <option value="Encaminhado para o Min. dos Transportes">Min. Transportes</option>
                                     <option value="Para celebrar TAC">Para celebrar TAC</option>
-                                    <option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option>
+                                   <option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option>
                                 </select>
+                            </div>
+                            <div class="md:col-span-3">
+                                <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                                    <p class="text-sm font-semibold text-blue-900 mb-2">Resultado por acusado</p>
+                                    <p class="text-xs text-blue-700 mb-3">Quando houver mais de um acusado, preencha resultado e data de assinatura do despacho decisório individualmente.</p>
+                                    <div id="process-accused-results-container" class="space-y-3"></div>
+                                </div>
                             </div>
                             <div class="md:col-span-3">
                                 <label class="block text-sm font-medium">Documento de Resposta</label><input type="text" id="process-doc-resposta" class="w-full border rounded px-3 py-2 mt-1">
@@ -757,6 +764,7 @@ let currentUser = null;
 let users = [];
 let processos = []; // <-- O ERRO ESTÁ ACONTECENDO PORQUE ESTA LINHA SUMIU
 let currentAccused = [];
+let currentAccusedOutcomes = [];
 let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
@@ -964,6 +972,11 @@ async function handleLogin(e) {
                 if (typeof p.acusados === 'string') {
                     try { p.acusados = JSON.parse(p.acusados); } catch (e) { p.acusados = []; }
                 }
+                if (typeof p.resultados_acusados === 'string') {
+                    try { p.resultados_acusados = JSON.parse(p.resultados_acusados); } catch (e) { p.resultados_acusados = []; }
+                } else if (!Array.isArray(p.resultados_acusados)) {
+                    p.resultados_acusados = [];
+                }
                 return p;
             });
 
@@ -1025,6 +1038,11 @@ async function handleLogin(e) {
                  dbData.acusados = dbData.acusados.length > 0 ? JSON.stringify(dbData.acusados) : null;
             } else {
                  dbData.acusados = null;
+            }
+            if (Array.isArray(dbData.resultados_acusados)) {
+                dbData.resultados_acusados = dbData.resultados_acusados.length > 0 ? JSON.stringify(dbData.resultados_acusados) : null;
+            } else {
+                dbData.resultados_acusados = null;
             }
 
             console.log("Enviando para o Supabase:", dbData); // Ótimo para depurar
@@ -1091,7 +1109,7 @@ async function handleLogin(e) {
         function suggestStatusChangeOnEdit(data, currentStatus) {
             const hasDistributionData = !!(data.analista && data.data_distribuicao && data.prazo_nt_data);
             const hasNtDelivery = !!data.data_entrega_nt;
-            const hasDecision = !!(data.data_despacho && data.resultado && data.resultado !== 'Não definida');
+            const hasDecision = hasDecisionForAllAccused(data);
 
             const suggestions = [
                 {
@@ -1126,6 +1144,11 @@ async function handleLogin(e) {
             const isEditing = !!originalId;
             const currentProcess = isEditing ? processos.find(p => String(p.id) === String(originalId)) : null;
             const currentStatus = currentProcess ? getStatusFromProcess(currentProcess) : '';
+            currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, currentAccusedOutcomes);
+            if (currentAccused.length <= 1 && currentAccusedOutcomes[0]) {
+                currentAccusedOutcomes[0].resultado = document.getElementById('process-resultado').value || 'Não definida';
+                currentAccusedOutcomes[0].data_despacho = document.getElementById('process-data-despacho').value || '';
+            }
             
             // Coleta todos os dados do formulário
             const data = { 
@@ -1157,15 +1180,22 @@ async function handleLogin(e) {
                 data_entrega_nt: document.getElementById('process-data-entrega-nt').value,
                 ips: document.getElementById('process-ips').value === '' ? null : document.getElementById('process-ips').value === 'true',
                 status_manual: document.getElementById('process-status-manual').value,
-                data_despacho: document.getElementById('process-data-despacho').value, // <-- Aqui o valor pode ser ""
+                 data_despacho: document.getElementById('process-data-despacho').value, // <-- Aqui o valor pode ser ""
                 acusados: currentAccused,
+                resultados_acusados: currentAccusedOutcomes,
                 resultado: document.getElementById('process-resultado').value,
                 doc_resp: document.getElementById('process-doc-resposta').value,
                 tac_apto: document.getElementById('check-tac').checked,
                 tac_sit: document.getElementById('process-tac-situacao').value,
                 tac_obs: document.getElementById('process-tac-obs').value,
-                obs: document.getElementById('process-obs').value,
+               obs: document.getElementById('process-obs').value,
             };
+
+            if (currentAccused.length > 1) {
+                const despachoDates = currentAccusedOutcomes.map(item => item.data_despacho).filter(Boolean).sort();
+                data.data_despacho = despachoDates.length ? despachoDates[despachoDates.length - 1] : '';
+                data.resultado = 'Não definida';
+            }
 
             // Validação de campos obrigatórios
             if(!data.sei || !data.data_conhecimento || !data.objeto || !data.tipo_acusado || currentAccused.length === 0) {
@@ -1193,11 +1223,117 @@ async function handleLogin(e) {
             }
         }
 
-        function updateHeader() { document.getElementById('header-org-name').innerText = config.orgName; document.getElementById('header-subtitle').innerText = config.subtitle; }
+         function updateHeader() { document.getElementById('header-org-name').innerText = config.orgName; document.getElementById('header-subtitle').innerText = config.subtitle; }
         function formatDate(str) { if(!str) return '—'; const d = new Date(str); return d.toLocaleDateString('pt-BR', { timeZone: 'UTC' }); }
+        function getResultadoSelectOptionsHtml(selectedValue = 'Não definida') {
+            const options = ['Não definida', 'Instauração de PAD', 'Instauração de PAR', 'Instauração de SINPA', 'Instauração de SINAC', 'Instauração de SINVE', 'Instauração de IPS', 'Encaminhado para o Min. dos Transportes', 'Para celebrar TAC', 'Arquivado após análise preliminar', 'Arquivado após juízo de admissibilidade'];
+            return options.map(opt => `<option value="${opt}" ${selectedValue === opt ? 'selected' : ''}>${opt === 'Encaminhado para o Min. dos Transportes' ? 'Min. Transportes' : opt}</option>`).join('');
+        }
+        function normalizeAccusedOutcomes(accusedList, outcomes = []) {
+            return accusedList.map((acusado, idx) => {
+                const existing = outcomes[idx] || outcomes.find(item => item && item.acusado === acusado) || {};
+                return {
+                    acusado,
+                    resultado: existing.resultado || 'Não definida',
+                    data_despacho: existing.data_despacho || ''
+                };
+            });
+        }
+        function renderAccusedDecisionFields() {
+            const container = document.getElementById('process-accused-results-container');
+            if (!container) return;
+            currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, currentAccusedOutcomes);
+            if (!currentAccused.length) {
+                container.innerHTML = '<p class="text-xs text-gray-500">Adicione ao menos um acusado para informar os resultados individuais.</p>';
+                return;
+            }
+            container.innerHTML = currentAccusedOutcomes.map((item, idx) => `
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-2 items-end border rounded bg-white p-2">
+                    <div class="md:col-span-4">
+                        <label class="block text-xs font-bold text-gray-600">Acusado</label>
+                        <input type="text" class="w-full border rounded px-2 py-1 bg-gray-100" value="${item.acusado || ''}" readonly>
+                    </div>
+                    <div class="md:col-span-5">
+                        <label class="block text-xs font-bold text-gray-600">Resultado</label>
+                        <select class="w-full border rounded px-2 py-1 accused-resultado" data-idx="${idx}">
+                            ${getResultadoSelectOptionsHtml(item.resultado)}
+                        </select>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="block text-xs font-bold text-gray-600">Data Despacho</label>
+                        <input type="date" class="w-full border rounded px-2 py-1 accused-data-despacho" data-idx="${idx}" value="${item.data_despacho || ''}">
+                    </div>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.accused-resultado').forEach(el => {
+                el.addEventListener('change', (event) => {
+                    const idx = Number(event.target.dataset.idx);
+                    currentAccusedOutcomes[idx].resultado = event.target.value;
+                    syncGeneralDecisionFieldsFromAccused();
+                });
+            });
+            container.querySelectorAll('.accused-data-despacho').forEach(el => {
+                el.addEventListener('change', (event) => {
+                    const idx = Number(event.target.dataset.idx);
+                    currentAccusedOutcomes[idx].data_despacho = event.target.value;
+                    syncGeneralDecisionFieldsFromAccused();
+                });
+            });
+            syncGeneralDecisionFieldsFromAccused();
+        }
+        function syncGeneralDecisionFieldsFromAccused() {
+            const hasMultipleAccused = currentAccused.length > 1;
+            const resultadoEl = document.getElementById('process-resultado');
+            const despachoEl = document.getElementById('process-data-despacho');
+            if (!resultadoEl || !despachoEl) return;
+            resultadoEl.disabled = hasMultipleAccused;
+            despachoEl.disabled = hasMultipleAccused;
+            resultadoEl.classList.toggle('bg-gray-100', hasMultipleAccused);
+            despachoEl.classList.toggle('bg-gray-100', hasMultipleAccused);
+
+            if (hasMultipleAccused) {
+                const anyResult = currentAccusedOutcomes.some(item => item.resultado && item.resultado !== 'Não definida');
+                const dates = currentAccusedOutcomes.map(item => item.data_despacho).filter(Boolean).sort();
+                resultadoEl.value = anyResult ? 'Não definida' : 'Não definida';
+                despachoEl.value = dates.length ? dates[dates.length - 1] : '';
+            } else if (currentAccusedOutcomes[0]) {
+                resultadoEl.value = currentAccusedOutcomes[0].resultado || 'Não definida';
+                despachoEl.value = currentAccusedOutcomes[0].data_despacho || '';
+            }
+        }
+        function hasDecisionForAllAccused(data) {
+            if (!Array.isArray(data.acusados) || !data.acusados.length) return false;
+            const outcomes = normalizeAccusedOutcomes(data.acusados, data.resultados_acusados || []);
+            return outcomes.every(item => !!item.data_despacho && !!item.resultado && item.resultado !== 'Não definida');
+        }
+        function getOutcomeSummary(process) {
+            const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
+            const filled = outcomes.filter(item => item.resultado && item.resultado !== 'Não definida');
+            if (!filled.length) return process.resultado || '—';
+            if ((process.acusados || []).length <= 1) return filled[0].resultado;
+            return `${filled.length} acusado(s) com resultado`;
+        }
+        function getDespachoDateForStatus(process) {
+            const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
+            const dates = outcomes.map(item => item.data_despacho).filter(Boolean).sort();
+            return dates.length ? dates[dates.length - 1] : process.data_despacho;
+        }
+        function processHasResultado(process, resultado) {
+            if (!resultado) return true;
+            if (process.resultado === resultado) return true;
+            const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
+            return outcomes.some(item => item.resultado === resultado);
+        }
+        function processHasDespachoDate(process, despachoDate) {
+            if (!despachoDate) return true;
+            if (process.data_despacho === despachoDate) return true;
+            const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
+            return outcomes.some(item => item.data_despacho === despachoDate);
+        }
         
        function getStatusFromProcess(p) {
-           if (p.data_despacho) return 'Concluído';
+           if (getDespachoDateForStatus(p)) return 'Concluído';
            if (p.status_manual && p.status_manual !== "") return p.status_manual;
            if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
             if (p.analista) return 'Em análise';
@@ -1438,13 +1574,10 @@ function setupConfiguracoesView() {
                     if (!matchGlobal) return false;
                 }
                 if (isPriorityFilterActive && !p.prioritario) return false;
-               // if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
-                if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && !matchesMaskedText(p.sei, fpSei)) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
-                if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (fpDataDespacho && p.data_despacho !== fpDataDespacho) return false;
-                //if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false; if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false; if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false; if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
+              if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && !matchesMaskedText(p.sei, fpSei)) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (!processHasResultado(p, fpResultado)) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
+                if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (!processHasDespachoDate(p, fpDataDespacho)) return false;               
                 if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && !matchesMaskedText(p.doc_origem, fpDocOrigem)) return false; if (fpJuntado && !matchesMaskedText(p.juntado, fpJuntado)) return false; if (fpRelacionados && !matchesMaskedText(p.relacionados, fpRelacionados)) return false; if (fpDocResp && !matchesMaskedText(p.doc_resp, fpDocResp)) return false;
-                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false; if (fpTacApto && String(!!p.tac_apto) !== fpTacApto) return false;
-                //if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
+                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false; if (fpTacApto && String(!!p.tac_apto) !== fpTacApto) return false;                
                 if (fpOpPolicialDetalhes && !matchesMaskedText(p.op_policial_detalhes, fpOpPolicialDetalhes)) return false; if (fpInqueritoDetalhes && !matchesMaskedText(p.inquerito_detalhes, fpInqueritoDetalhes)) return false; if (fpEpadDetalhes && !matchesMaskedText(p.epad_detalhes, fpEpadDetalhes)) return false;
                 if (fpTacSit && p.tac_sit !== fpTacSit) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
                 if (fpIps && String(!!p.ips) !== fpIps) return false;
@@ -1495,7 +1628,7 @@ filtered.sort((a, b) => {
         }
         
         function renderListView(container, data) {
-            container.innerHTML = `<div class="split-view resizable-view"><div class="split-list" id="split-list-items"></div><div class="split-detail" id="split-detail-view"><div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div></div></div>`;
+            card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold truncate mb-2" title="${p.objeto}">${p.objeto}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="truncate">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Resultado:</b> ${getOutcomeSummary(p)}</p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p></div><div class="flex items-center space-x-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
             const listContainer = document.getElementById('split-list-items');
             data.forEach(p => {
                 const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
@@ -1510,13 +1643,13 @@ filtered.sort((a, b) => {
             const detailContainer = document.getElementById('split-detail-view');
             const isOnlyPJ = p.tipo_acusado === 'Pessoa Jurídica';
             const showPJ = (p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica') && p.calc_pj;
-            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${p.resultado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(p.data_despacho)}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Apto a TAC:</b> <span class="font-bold">${p.tac_apto ? 'Sim' : 'Não'}</span>${p.tac_apto ? `<span class="ml-4"><b>Situação:</b> ${p.tac_sit || 'N/D'}</span>` : ''}${p.tac_apto && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
+            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Apto a TAC:</b> <span class="font-bold">${p.tac_apto ? 'Sim' : 'Não'}</span>${p.tac_apto ? `<span class="ml-4"><b>Situação:</b> ${p.tac_sit || 'N/D'}</span>` : ''}${p.tac_apto && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
         //}
 
-        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; renderAccused(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details'].forEach(id => document.getElementById(id).classList.add('hidden')); }
-        function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); document.getElementById('input-acusado').value=''; renderAccused(); }}
-        function removeAcusado(idx) { currentAccused.splice(idx, 1); renderAccused(); }
+         function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; renderAccused(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details'].forEach(id => document.getElementById(id).classList.add('hidden')); renderAccusedDecisionFields(); }
+        function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); currentAccusedOutcomes.push({ acusado: v, resultado: 'Não definida', data_despacho: '' }); document.getElementById('input-acusado').value=''; renderAccused(); renderAccusedDecisionFields(); }}
+        function removeAcusado(idx) { currentAccused.splice(idx, 1); currentAccusedOutcomes.splice(idx, 1); renderAccused(); renderAccusedDecisionFields(); }
         function renderAccused() { document.getElementById('lista-acusados').innerHTML = currentAccused.map((a, i) => `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs inline-flex items-center">${a} <button type="button" onclick="removeAcusado(${i})" class="ml-1.5 text-blue-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
         function toggleTacDetails() { document.getElementById('tac-details').classList.toggle('hidden', !document.getElementById('check-tac').checked); }
         function toggleConditionalField(elementId, show) { document.getElementById(elementId).classList.toggle('hidden', !show); }
@@ -1546,7 +1679,14 @@ filtered.sort((a, b) => {
             });
             document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
             toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad); toggleTacDetails();
-            currentAccused = p.acusados||[]; renderAccused(); calculatePrescription();
+           currentAccused = p.acusados||[];
+            currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, p.resultados_acusados || []);
+            if ((!Array.isArray(p.resultados_acusados) || p.resultados_acusados.length === 0) && currentAccused.length) {
+                currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, currentAccused.map((acusado, idx) => ({ acusado, resultado: idx === 0 ? (p.resultado || 'Não definida') : 'Não definida', data_despacho: idx === 0 ? (p.data_despacho || '') : '' })));
+            }
+            renderAccused();
+            renderAccusedDecisionFields();
+            calculatePrescription();
         }
 
         function calculatePrescription() { 
@@ -1832,7 +1972,7 @@ filtered.sort((a, b) => {
 
         function generateGeneralReport() {
             closeReport(); let filtered = [...processos]; const v = id => document.getElementById(id).value.toLowerCase(); const c = id => document.getElementById(id).checked;
-            if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei'))); if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto'))); if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado'))); if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value); if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value); if (v('f-resultado')) filtered = filtered.filter(p => p.resultado === document.getElementById('f-resultado').value); if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física'); if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica'); if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade'))); if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem'))); if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado'))); if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value); if (c('f-concluido')) filtered = filtered.filter(p => p.data_despacho); if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
+             if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei'))); if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto'))); if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado'))); if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value); if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value); if (v('f-resultado')) filtered = filtered.filter(p => processHasResultado(p, document.getElementById('f-resultado').value)); if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física'); if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica'); if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade'))); if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem'))); if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado'))); if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value); if (c('f-concluido')) filtered = filtered.filter(p => getDespachoDateForStatus(p)); if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
             if (c('f-epad')) { filtered = filtered.filter(p => p.cad_epad); const d = v('f-epad-det'); if(d) filtered = filtered.filter(p => p.epad_detalhes && p.epad_detalhes.toLowerCase().includes(d)); } if (c('f-inquerito')) { filtered = filtered.filter(p => p.possui_inquerito); const d = v('f-inq-det'); if(d) filtered = filtered.filter(p => p.inquerito_detalhes && p.inquerito_detalhes.toLowerCase().includes(d)); } if (c('f-op-policial')) { filtered = filtered.filter(p => p.op_policial); const d = v('f-op-det'); if(d) filtered = filtered.filter(p => p.op_policial_detalhes && p.op_policial_detalhes.toLowerCase().includes(d)); } if (c('f-tac')) { filtered = filtered.filter(p => p.tac_apto); const d = v('f-tac-det'); if(d) filtered = filtered.filter(p => p.tac_obs && p.tac_obs.toLowerCase().includes(d)); }
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório Geral de Processos (${filtered.length})</h2>${renderAnalyticTable(filtered)}`;
             setLastReport(filtered, false);
@@ -1849,7 +1989,7 @@ filtered.sort((a, b) => {
 
         function generateProgressReport() {
             closeReport(); const tipo = document.getElementById('rep-andamento-tipo').value; const start = document.getElementById('rep-andamento-de').value; const end = document.getElementById('rep-andamento-ate').value;
-            let filtered = processos.filter(p => { let match = true; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; if (tipo === 'finalizado') match = match && (p.data_despacho != null && p.data_despacho !== ''); else if (tipo === 'andamento') match = match && (!p.data_despacho || p.data_despacho === ''); return match; });
+            let filtered = processos.filter(p => { let match = true; const despachoRef = getDespachoDateForStatus(p); if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; if (tipo === 'finalizado') match = match && (despachoRef != null && despachoRef !== ''); else if (tipo === 'andamento') match = match && (!despachoRef || despachoRef === ''); return match; });
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos - ${tipo === 'andamento' ? 'Em Andamento' : tipo === 'finalizado' ? 'Finalizados' : 'Todos'} (${filtered.length})</h2><p class="text-sm text-center mb-4">Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
             setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
