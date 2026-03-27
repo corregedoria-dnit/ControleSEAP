@@ -1308,6 +1308,7 @@ async function handleLogin(e) {
                 resultadoEl.value = currentAccusedOutcomes[0].resultado || 'Não definida';
                 despachoEl.value = currentAccusedOutcomes[0].data_despacho || '';
             }
+            toggleTacDetails();
         }
         function hasDecisionForAllAccused(data) {
             if (!Array.isArray(data.acusados) || !data.acusados.length) return false;
@@ -1687,9 +1688,13 @@ filtered.sort((a, b) => {
         function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); currentAccusedOutcomes.push({ acusado: v, resultado: 'Não definida', data_despacho: '' }); document.getElementById('input-acusado').value=''; renderAccused(); renderAccusedDecisionFields(); }}
         function removeAcusado(idx) { currentAccused.splice(idx, 1); currentAccusedOutcomes.splice(idx, 1); renderAccused(); renderAccusedDecisionFields(); }
         function renderAccused() { document.getElementById('lista-acusados').innerHTML = currentAccused.map((a, i) => `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs inline-flex items-center">${a} <button type="button" onclick="removeAcusado(${i})" class="ml-1.5 text-blue-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
-        function toggleTacDetails() {
-            const resultado = document.getElementById('process-resultado').value;
-            const mustShowTac = resultado === 'Para celebrar TAC';
+        function hasTacOutcomeInForm() {
+            const resultado = document.getElementById('process-resultado')?.value;
+            if (normalizeText(resultado) === normalizeText('Para celebrar TAC')) return true;
+            return (currentAccusedOutcomes || []).some(item => normalizeText(item?.resultado) === normalizeText('Para celebrar TAC'));
+        }
+        function toggleTacDetails(forceShow = null) {
+            const mustShowTac = typeof forceShow === 'boolean' ? forceShow : hasTacOutcomeInForm();
             const tacContainer = document.getElementById('tac-details');
             const tacStatusField = document.getElementById('process-tac-situacao');
             tacContainer.classList.toggle('hidden', !mustShowTac);
@@ -1724,7 +1729,7 @@ filtered.sort((a, b) => {
                 }
             });
             document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
-            toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad); toggleTacDetails();
+            toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad);
             currentAccused = p.acusados||[];
             currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, p.resultados_acusados || []);
             if ((!Array.isArray(p.resultados_acusados) || p.resultados_acusados.length === 0) && currentAccused.length) {
@@ -1732,6 +1737,7 @@ filtered.sort((a, b) => {
             }
             renderAccused();
             renderAccusedDecisionFields();
+            toggleTacDetails(processHasResultado(p, 'Para celebrar TAC'));
             calculatePrescription();
         }
 
