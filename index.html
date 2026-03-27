@@ -459,13 +459,16 @@
                         </div>
                         <div class="grid grid-cols-1 gap-4">
                             <div id="tac-details" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded border">
-                                <select id="process-tac-situacao" class="w-full border rounded px-3 py-2">
+                                <div>
+                                    <label class="block text-sm font-medium mb-1">Status do TAC</label>
+                                    <select id="process-tac-situacao" class="w-full border rounded px-3 py-2">
                                     <option value="">Status do TAC...</option>
                                     <option value="Em negociação">Em negociação</option>
                                     <option value="Celebrado">Celebrado</option>
                                     <option value="Recusado">Recusado</option>
                                     <option value="Finalizado">Finalizado</option>
-                                </select>
+                                    </select>
+                                </div>
                                 <textarea id="process-tac-obs" class="w-full border rounded px-3 py-2 md:col-span-2" placeholder="Observações sobre o TAC"></textarea>
                             </div>
                             <textarea id="process-obs" class="w-full border rounded px-3 py-2" rows="3" placeholder="Observações Gerais"></textarea>
@@ -1194,6 +1197,10 @@ async function handleLogin(e) {
                 data.resultado = 'Não definida';
             }
 
+            if (data.resultado === 'Para celebrar TAC' && !data.tac_sit) {
+                data.tac_sit = 'Em negociação';
+            }
+
             // Validação de campos obrigatórios
             if(!data.sei || !data.data_conhecimento || !data.objeto || !data.tipo_acusado || currentAccused.length === 0) {
                 return alert('Preencha os campos obrigatórios (*):\n- Processo SEI\n- Data Conhecimento do Fato\n- Objeto\n- Acusado(s)\n- Tipo de Pessoa.');
@@ -1341,6 +1348,7 @@ async function handleLogin(e) {
         }
         
        function getStatusFromProcess(p) {
+           if (processHasResultado(p, 'Para celebrar TAC')) return 'TAC';
            if (getDespachoDateForStatus(p)) return 'Concluído';
            if (p.status_manual && p.status_manual !== "") return p.status_manual;
            if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
@@ -1360,7 +1368,7 @@ async function handleLogin(e) {
         }
 
         function getStatusClass(status) {
-            const map = { 'Cadastrado': 'st-aguardando', 'Aguardando Distribuição': 'st-aguardando', 'Em análise': 'st-analise', 'Pendente de análise do(a) Corregedor(a)': 'st-pendente', 'Concluído': 'st-concluido' };
+            const map = { 'Cadastrado': 'st-aguardando', 'Aguardando Distribuição': 'st-aguardando', 'Em análise': 'st-analise', 'Pendente de análise do(a) Corregedor(a)': 'st-pendente', 'Concluído': 'st-concluido', 'TAC': 'st-analise' };
             return map[status] || 'st-arquivado';
         }
 
@@ -1666,7 +1674,12 @@ filtered.sort((a, b) => {
         function toggleTacDetails() {
             const resultado = document.getElementById('process-resultado').value;
             const mustShowTac = resultado === 'Para celebrar TAC';
-            document.getElementById('tac-details').classList.toggle('hidden', !mustShowTac);
+            const tacContainer = document.getElementById('tac-details');
+            const tacStatusField = document.getElementById('process-tac-situacao');
+            tacContainer.classList.toggle('hidden', !mustShowTac);
+            if (mustShowTac && !tacStatusField.value) {
+                tacStatusField.value = 'Em negociação';
+            }
         }
         function toggleConditionalField(elementId, show) { document.getElementById(elementId).classList.toggle('hidden', !show); }
         function toggleFilterDetail(elementId) { document.getElementById(elementId).classList.toggle('hidden'); }
