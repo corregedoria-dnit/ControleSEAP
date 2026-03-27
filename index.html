@@ -978,6 +978,9 @@ async function handleLogin(e) {
                 } else if (!Array.isArray(p.resultados_acusados)) {
                     p.resultados_acusados = [];
                 }
+                if (processHasResultado(p, 'Para celebrar TAC') && !p.tac_sit) {
+                    p.tac_sit = 'Em negociação';
+                }
                 return p;
             });
 
@@ -1334,11 +1337,24 @@ async function handleLogin(e) {
             const dates = outcomes.map(item => item.data_despacho).filter(Boolean).sort();
             return dates.length ? dates[dates.length - 1] : process.data_despacho;
         }
+        function normalizeText(value) {
+            return (value || '')
+                .toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .trim()
+                .toLowerCase();
+        }
         function processHasResultado(process, resultado) {
             if (!resultado) return true;
-            if (process.resultado === resultado) return true;
+            const normalizedResultado = normalizeText(resultado);
+            if (normalizeText(process.resultado) === normalizedResultado) return true;
             const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
-            return outcomes.some(item => item.resultado === resultado);
+            return outcomes.some(item => normalizeText(item.resultado) === normalizedResultado);
+        }
+        function getTacStatusFromProcess(process) {
+            if (!processHasResultado(process, 'Para celebrar TAC')) return 'Não aplicável';
+            return process.tac_sit || 'Em negociação';
         }
         function processHasDespachoDate(process, despachoDate) {
             if (!despachoDate) return true;
@@ -1599,7 +1615,7 @@ function setupConfiguracoesView() {
                 //if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
                 if (fpOpPolicialDetalhes && !matchesMaskedText(p.op_policial_detalhes, fpOpPolicialDetalhes)) return false; if (fpInqueritoDetalhes && !matchesMaskedText(p.inquerito_detalhes, fpInqueritoDetalhes)) return false; if (fpEpadDetalhes && !matchesMaskedText(p.epad_detalhes, fpEpadDetalhes)) return false;
                 if ((fpTacSit || fpTacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
-                if (fpTacSit && p.tac_sit !== fpTacSit) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
+                if (fpTacSit && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(fpTacSit)) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
                 if (fpIps && String(!!p.ips) !== fpIps) return false;
                 return true;
             });
@@ -1663,7 +1679,7 @@ filtered.sort((a, b) => {
             const detailContainer = document.getElementById('split-detail-view');
             const isOnlyPJ = p.tipo_acusado === 'Pessoa Jurídica';
             const showPJ = (p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica') && p.calc_pj;
-            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${processHasResultado(p, 'Para celebrar TAC') ? (p.tac_sit || 'N/D') : 'Não aplicável'}</span>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
+            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
         //}
 
@@ -1935,7 +1951,7 @@ filtered.sort((a, b) => {
             resultados_acusados: { label: 'Resultados por acusado', get: p => formatAccusedOutcomes(p) },
             doc_resp: { label: 'Documento de Resposta', get: p => p.doc_resp || '—' },
             tac_apto: { label: 'Para celebrar TAC', get: p => processHasResultado(p, 'Para celebrar TAC') ? 'Sim' : 'Não' },
-            tac_sit: { label: 'Situação TAC', get: p => p.tac_sit || '—' },
+            tac_sit: { label: 'Situação TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p) },
             tac_obs: { label: 'Observações TAC', get: p => p.tac_obs || '—' },
             obs: { label: 'Observações Gerais', get: p => p.obs || '—' }
         };
@@ -2071,7 +2087,7 @@ filtered.sort((a, b) => {
                                 acusado: item.acusado || '—',
                                 data_conhecimento: p.data_conhecimento || '',
                                 resultado: item.resultado,
-                                tac_sit: p.tac_sit || '',
+                                tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
                                 data_despacho: item.data_despacho || ''
                             });
                         }
@@ -2088,7 +2104,7 @@ filtered.sort((a, b) => {
                             acusado: accused[0] || '—',
                             data_conhecimento: p.data_conhecimento || '',
                             resultado: result,
-                            tac_sit: p.tac_sit || '',
+                            tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
                             data_despacho: singleOutcome.data_despacho || p.data_despacho || ''
                         });
                     }
@@ -2099,7 +2115,7 @@ filtered.sort((a, b) => {
 
         function buildTacRowsBySituation(processList, targetSituation) {
             return buildOutcomeRowsByResult(
-                processList.filter(p => p.tac_sit === targetSituation),
+                processList.filter(p => normalizeText(getTacStatusFromProcess(p)) === normalizeText(targetSituation)),
                 'Para celebrar TAC',
                 true
             );
@@ -2112,7 +2128,7 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 if (p && Object.prototype.hasOwnProperty.call(p, 'acusado') && !Object.prototype.hasOwnProperty.call(p, 'acusados')) {
                     const despacho = p.data_despacho ? ` (${formatDate(p.data_despacho)})` : '';
-                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${p.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${p.tac_sit || 'N/D'}${despacho}</td></tr>`;
+                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${p.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${getTacStatusFromProcess(p)}${despacho}</td></tr>`;
                     return;
                 }
                 const accused = Array.isArray(p.acusados) ? p.acusados : [];
@@ -2126,7 +2142,7 @@ filtered.sort((a, b) => {
 
                 rows.forEach(row => {
                     const despacho = row.data_despacho ? ` (${formatDate(row.data_despacho)})` : '';
-                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${row.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${p.tac_sit || 'N/D'}${despacho}</td></tr>`;
+                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${row.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${getTacStatusFromProcess(p)}${despacho}</td></tr>`;
                 });
             });
             return html + '</tbody></table></div></div>';
