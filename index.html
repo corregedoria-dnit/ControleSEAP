@@ -1383,10 +1383,10 @@ async function handleLogin(e) {
             return normalizedDerivedStatus === 'concluido';
         }
 
-        function getStatusClass(status) {␊
+        function getStatusClass(status) {
             const map = { 'Cadastrado': 'st-aguardando', 'Aguardando Distribuição': 'st-aguardando', 'Em análise': 'st-analise', 'Pendente de análise do(a) Corregedor(a)': 'st-pendente', 'Concluído': 'st-concluido' };
-            return map[status] || 'st-arquivado';␊
-        }␊
+            return map[status] || 'st-arquivado';
+        }
 
         function showToast(msg, type = 'info') {
             const colors = { info: 'bg-gray-800', error: 'bg-red-600', success: 'bg-green-600' };
