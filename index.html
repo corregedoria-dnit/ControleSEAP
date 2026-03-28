@@ -777,15 +777,70 @@ let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
 let lastReportIsManagerial = false;
-let config = {
-  orgName: 'Controle Correicional', 
-  subtitle: 'Sistema Institucional', 
-  defaultUnit: 'SEAP', 
+const DEFAULT_CONFIG = {
+  orgName: 'Controle Correicional',
+  subtitle: 'Sistema Institucional',
+  defaultUnit: 'SEAP',
   itemsPerPage: 20,
   pjYears: 5,
   pf: { adv: 180, susp: 2, dem: 5 },
   alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
 };
+let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+
+function readConfigNumber(value, fallback) {
+    const parsed = parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function normalizeConfig(rawConfig = {}) {
+    const merged = {
+        ...DEFAULT_CONFIG,
+        ...rawConfig,
+        pf: {
+            ...DEFAULT_CONFIG.pf,
+            ...(rawConfig?.pf || {})
+        },
+        alerts: {
+            crit: {
+                ...DEFAULT_CONFIG.alerts.crit,
+                ...(rawConfig?.alerts?.crit || {})
+            },
+            high: {
+                ...DEFAULT_CONFIG.alerts.high,
+                ...(rawConfig?.alerts?.high || {})
+            }
+        }
+    };
+
+    return {
+        ...merged,
+        orgName: merged.orgName || DEFAULT_CONFIG.orgName,
+        subtitle: merged.subtitle || DEFAULT_CONFIG.subtitle,
+        defaultUnit: merged.defaultUnit || DEFAULT_CONFIG.defaultUnit,
+        itemsPerPage: readConfigNumber(merged.itemsPerPage, DEFAULT_CONFIG.itemsPerPage),
+        pjYears: readConfigNumber(merged.pjYears, DEFAULT_CONFIG.pjYears),
+        pf: {
+            adv: readConfigNumber(merged.pf.adv, DEFAULT_CONFIG.pf.adv),
+            susp: readConfigNumber(merged.pf.susp, DEFAULT_CONFIG.pf.susp),
+            dem: readConfigNumber(merged.pf.dem, DEFAULT_CONFIG.pf.dem)
+        },
+        alerts: {
+            crit: {
+                adv: readConfigNumber(merged.alerts.crit.adv, DEFAULT_CONFIG.alerts.crit.adv),
+                susp: readConfigNumber(merged.alerts.crit.susp, DEFAULT_CONFIG.alerts.crit.susp),
+                dem: readConfigNumber(merged.alerts.crit.dem, DEFAULT_CONFIG.alerts.crit.dem),
+                task: readConfigNumber(merged.alerts.crit.task, DEFAULT_CONFIG.alerts.crit.task)
+            },
+            high: {
+                adv: readConfigNumber(merged.alerts.high.adv, DEFAULT_CONFIG.alerts.high.adv),
+                susp: readConfigNumber(merged.alerts.high.susp, DEFAULT_CONFIG.alerts.high.susp),
+                dem: readConfigNumber(merged.alerts.high.dem, DEFAULT_CONFIG.alerts.high.dem),
+                task: readConfigNumber(merged.alerts.high.task, DEFAULT_CONFIG.alerts.high.task)
+            }
+        }
+    };
+}
 // 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
 
 async function loadCurrentUserProfile() {
@@ -942,7 +997,7 @@ async function handleLogin(e) {
                 const { data, error } = await supabaseClient.from('configuracoes').select('dados').eq('id', 'main').single();
                 if (error && error.code !== 'PGRST116') throw error;
                 if (data && data.dados) {
-                    config = data.dados;
+                    config = normalizeConfig(data.dados);
                 }
                 isConnected = true;
                 setOnlineStatus('Online', 'online');
@@ -1103,19 +1158,31 @@ async function handleLogin(e) {
             if(!document.getElementById('page-relatorios').classList.contains('hidden')) populateAnalystFilters();
         }
 
-        function saveConfigs() {
+        async function saveConfigs() {
+            config = normalizeConfig(config);
             config.orgName = document.getElementById('conf-org-name').value;
             config.subtitle = document.getElementById('conf-subtitle').value;
             config.defaultUnit = document.getElementById('conf-default-unit').value;
-            config.itemsPerPage = parseInt(document.getElementById('conf-items-page').value) || 20;
-            config.pjYears = parseInt(document.getElementById('conf-pj-years').value) || 5;
-            config.pf.adv = parseInt(document.getElementById('conf-pf-adv').value) || 180;
-            config.pf.susp = parseInt(document.getElementById('conf-pf-susp').value) || 2;
-            config.pf.dem = parseInt(document.getElementById('conf-pf-dem').value) || 5;
-            config.alerts.crit = { task: parseInt(document.getElementById('conf-crit-task').value), adv: parseInt(document.getElementById('conf-crit-adv').value), susp: parseInt(document.getElementById('conf-crit-susp').value), dem: parseInt(document.getElementById('conf-crit-dem').value) };
-            config.alerts.high = { task: parseInt(document.getElementById('conf-high-task').value), adv: parseInt(document.getElementById('conf-high-adv').value), susp: parseInt(document.getElementById('conf-high-susp').value), dem: parseInt(document.getElementById('conf-high-dem').value) };
+            config.itemsPerPage = readConfigNumber(document.getElementById('conf-items-page').value, DEFAULT_CONFIG.itemsPerPage);
+            config.pjYears = readConfigNumber(document.getElementById('conf-pj-years').value, DEFAULT_CONFIG.pjYears);
+            config.pf.adv = readConfigNumber(document.getElementById('conf-pf-adv').value, DEFAULT_CONFIG.pf.adv);
+            config.pf.susp = readConfigNumber(document.getElementById('conf-pf-susp').value, DEFAULT_CONFIG.pf.susp);
+            config.pf.dem = readConfigNumber(document.getElementById('conf-pf-dem').value, DEFAULT_CONFIG.pf.dem);
+            config.alerts.crit = {
+                task: readConfigNumber(document.getElementById('conf-crit-task').value, DEFAULT_CONFIG.alerts.crit.task),
+                adv: readConfigNumber(document.getElementById('conf-crit-adv').value, DEFAULT_CONFIG.alerts.crit.adv),
+                susp: readConfigNumber(document.getElementById('conf-crit-susp').value, DEFAULT_CONFIG.alerts.crit.susp),
+                dem: readConfigNumber(document.getElementById('conf-crit-dem').value, DEFAULT_CONFIG.alerts.crit.dem)
+            };
+            config.alerts.high = {
+                task: readConfigNumber(document.getElementById('conf-high-task').value, DEFAULT_CONFIG.alerts.high.task),
+                adv: readConfigNumber(document.getElementById('conf-high-adv').value, DEFAULT_CONFIG.alerts.high.adv),
+                susp: readConfigNumber(document.getElementById('conf-high-susp').value, DEFAULT_CONFIG.alerts.high.susp),
+                dem: readConfigNumber(document.getElementById('conf-high-dem').value, DEFAULT_CONFIG.alerts.high.dem)
+            };
+            config = normalizeConfig(config);
             
-            saveConfigsToSupabase();
+            await saveConfigsToSupabase();
             updateHeader();
             showToast('Configurações salvas e sincronizadas!');
         }
@@ -1669,9 +1736,12 @@ filtered.sort((a, b) => {
 
         function renderTableView(container, data) {
             let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Status do TAC</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
+
             data.forEach(p => {
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`; const tacStatus = getTacStatusFromProcess(p);
+
                 html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-nowrap">${tacStatus === 'Não aplicável' ? '—' : tacStatus}</td><td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`; 
+
             });
             html += `</tbody></table></div>`; container.innerHTML = html;
         }
@@ -2156,7 +2226,8 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 if (p && Object.prototype.hasOwnProperty.call(p, 'acusado') && !Object.prototype.hasOwnProperty.call(p, 'acusados')) {
                     const despacho = p.data_despacho ? ` (${formatDate(p.data_despacho)})` : '';
-                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${p.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${getTacStatusFromProcess(p)}${despacho}</td></tr>`;
+                    const tacStatus = p.tac_sit || getTacStatusFromProcess(p);
+                    html += `<tr><td class="border p-1 whitespace-nowrap font-mono">${p.sei || '—'}</td><td class="border p-1 whitespace-nowrap">${p.objeto || '—'}</td><td class="border p-1 whitespace-nowrap">${p.acusado || '—'}</td><td class="border p-1 whitespace-nowrap">${formatDate(p.data_conhecimento)}</td><td class="border p-1 whitespace-nowrap">${tacStatus}${despacho}</td></tr>`;
                     return;
                 }
                 const accused = Array.isArray(p.acusados) ? p.acusados : [];
@@ -2254,7 +2325,7 @@ filtered.sort((a, b) => {
             reader.onload = async function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (importedData.config) { config = importedData.config; await saveConfigsToSupabase(); }
+                    if (importedData.config) { config = normalizeConfig(importedData.config); await saveConfigsToSupabase(); }
                     if (importedData.processos && Array.isArray(importedData.processos)) {
                         for(const p of importedData.processos) { await saveProcessToSupabase(p); }
                     }
