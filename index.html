@@ -771,6 +771,13 @@ const PROCESS_STATUS_OPTIONS = [
     'Pendente de análise do(a) Corregedor(a)',
     'Concluído'
 ];
+const PROCESS_STATUS_OPTIONS = [
+    'Cadastrado',
+    'Aguardando Distribuição',
+    'Em análise',
+    'Pendente de análise do(a) Corregedor(a)',
+    'Concluído'
+];
 let currentAccused = [];
 let currentAccusedOutcomes = [];
 let currentView = 'cards';
@@ -1667,14 +1674,14 @@ filtered.sort((a, b) => {
             lucide.createIcons();
         }
 
-        function renderTableView(container, data) {␊
-            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Status do TAC</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
-            data.forEach(p => { ␊
-                const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`; const tacStatus = getTacStatusFromProcess(p);
-                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-nowrap">${tacStatus === 'Não aplicável' ? '—' : tacStatus}</td><td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`; 
-            });␊
-            html += `</tbody></table></div>`; container.innerHTML = html;␊
-        }␊
+        function renderTableView(container, data) {
+            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Status do TAC</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;␊
+            data.forEach(p => {
+                const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`; const tacStatus = getTacStatusFromProcess(p);␊
+                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-nowrap">${tacStatus === 'Não aplicável' ? '—' : tacStatus}</td><td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`; ␊
+            });
+            html += `</tbody></table></div>`; container.innerHTML = html;
+        }
 
         function renderCardsView(container, data) {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full";
@@ -1682,9 +1689,9 @@ filtered.sort((a, b) => {
                 const st = getStatusFromProcess(p); const card = document.createElement('div');
                 card.className = `bg-white p-5 rounded-lg shadow border flex flex-col justify-between ${p.prioritario ? 'priority-highlight border-yellow-400' : ''}`;
                 card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold truncate mb-2" title="${p.objeto}">${p.objeto}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="truncate">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</p><p><b>Resultado:</b> ${getOutcomeSummary(p)}</p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p></div><div class="flex items-center space-x-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
-                container.appendChild(card);␊
-            });␊
-        }␊
+                  container.appendChild(card);
+            });
+        }
         
         function renderListView(container, data) {
             container.innerHTML = `<div class="split-view resizable-view"><div class="split-list" id="split-list-items"></div><div class="split-detail" id="split-detail-view"><div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div></div></div>`;
@@ -1693,9 +1700,9 @@ filtered.sort((a, b) => {
                 const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
                   item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>IPS?:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div><div class="text-xs text-gray-500 truncate"><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</div>`;
-                listContainer.appendChild(item);␊
-            });␊
-        }␊
+                listContainer.appendChild(item);
+            });
+        }
 
          function showDetailInSplit(p, itemEl) {
             document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active')); itemEl.classList.add('active');
