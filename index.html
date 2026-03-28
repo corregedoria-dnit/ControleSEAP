@@ -764,6 +764,13 @@ const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 let currentUser = null;
 let users = [];
 let processos = []; // <-- O ERRO ESTÁ ACONTECENDO PORQUE ESTA LINHA SUMIU
+const PROCESS_STATUS_OPTIONS = [
+    'Cadastrado',
+    'Aguardando Distribuição',
+    'Em análise',
+    'Pendente de análise do(a) Corregedor(a)',
+    'Concluído'
+];
 let currentAccused = [];
 let currentAccusedOutcomes = [];
 let currentView = 'cards';
@@ -977,6 +984,9 @@ async function handleLogin(e) {
                     try { p.resultados_acusados = JSON.parse(p.resultados_acusados); } catch (e) { p.resultados_acusados = []; }
                 } else if (!Array.isArray(p.resultados_acusados)) {
                     p.resultados_acusados = [];
+                }
+                if (!isValidProcessStatus(p.status_manual)) {
+                    p.status_manual = null;
                 }
                 if (processHasResultado(p, 'Para celebrar TAC') && !p.tac_sit) {
                     p.tac_sit = 'Em negociação';
@@ -1204,6 +1214,10 @@ async function handleLogin(e) {
                 data.tac_sit = 'Em negociação';
             }
 
+            if (!isValidProcessStatus(data.status_manual)) {
+                data.status_manual = '';
+            }
+
             // Validação de campos obrigatórios
             if(!data.sei || !data.data_conhecimento || !data.objeto || !data.tipo_acusado || currentAccused.length === 0) {
                 return alert('Preencha os campos obrigatórios (*):\n- Processo SEI\n- Data Conhecimento do Fato\n- Objeto\n- Acusado(s)\n- Tipo de Pessoa.');
@@ -1346,6 +1360,9 @@ async function handleLogin(e) {
                 .trim()
                 .toLowerCase();
         }
+        function isValidProcessStatus(status) {
+            return PROCESS_STATUS_OPTIONS.includes(status);
+        }
         function processHasResultado(process, resultado) {
             if (!resultado) return true;
             const normalizedResultado = normalizeText(resultado);
@@ -1366,7 +1383,7 @@ async function handleLogin(e) {
         
        function getStatusFromProcess(p) {
            if (getDespachoDateForStatus(p)) return 'Concluído';
-           if (p.status_manual && p.status_manual !== "") return p.status_manual;
+           if (isValidProcessStatus(p.status_manual)) return p.status_manual;
            if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
             if (p.analista) return 'Em análise';
             if (p.data_ent) return 'Cadastrado';
@@ -1733,7 +1750,7 @@ filtered.sort((a, b) => {
                     }
                 }
             });
-            document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = p.status_manual || '';
+            document.getElementById('process-id').value = p.id; document.getElementById('process-data-entrada').value = p.data_ent; document.getElementById('process-relacionados').value = p.relacionados; document.getElementById('process-doc-resposta').value = p.doc_resp; document.getElementById('process-prazo-data').value = p.prazo_nt_data; document.getElementById('process-data-despacho').value = p.data_despacho || ''; document.getElementById('process-status-manual').value = isValidProcessStatus(p.status_manual) ? p.status_manual : '';
             toggleConditionalField('policial-details', p.op_policial); toggleConditionalField('inquerito-details', p.possui_inquerito); toggleConditionalField('epad-details', p.cad_epad);
             currentAccused = p.acusados||[];
             currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, p.resultados_acusados || []);
