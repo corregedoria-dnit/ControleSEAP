@@ -277,7 +277,6 @@
                             <div><label class="block text-xs font-bold text-gray-600">Resultado</label><select id="fp-resultado" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="Não definida">Não definida</option><option value="Instauração de PAD">Instauração de PAD</option><option value="Instauração de PAR">Instauração de PAR</option><option value="Instauração de SINPA">Instauração de SINPA</option><option value="Instauração de SINAC">Instauração de SINAC</option><option value="Instauração de SINVE">Instauração de SINVE</option><option value="Instauração de IPS">Instauração de IPS</option><option value="Encaminhado para o Min. dos Transportes">Min. Transportes</option><option value="Para celebrar TAC">Para celebrar TAC</option><option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Tipo de Pessoa</label><select id="fp-tipo_acusado" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="Pessoa Física">Pessoa Física</option><option value="Pessoa Jurídica">Pessoa Jurídica</option><option value="Pessoa Física + Jurídica">Pessoa Física + Jurídica</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Penalidades Aplicáveis</label><select id="fp-penalidades" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Não se aplica">Não se aplica</option><option value="Advertência">Advertência</option><option value="Suspensão">Suspensão</option><option value="Demissão">Demissão</option><option value="Multa (PJ)">Multa (PJ)</option><option value="Outras">Outras</option></select></div>
-                            
                             <div><label class="block text-xs font-bold text-gray-600">Data de Entrada</label><input type="date" id="fp-data_ent" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Data Conhecimento Fato</label><input type="date" id="fp-data_conhecimento" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Data de Distribuição</label><input type="date" id="fp-data_distribuicao" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
@@ -777,6 +776,7 @@ let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
 let lastReportIsManagerial = false;
+const CONFIG_RECORD_ID = 'main';
 const DEFAULT_CONFIG = {
   orgName: 'Controle Correicional',
   subtitle: 'Sistema Institucional',
@@ -991,18 +991,46 @@ async function handleLogin(e) {
             statusDiv.title = msg;
         }
 
+        function extractStoredConfig(record) {
+            if (!record || typeof record !== 'object') return null;
+            const payload = Object.prototype.hasOwnProperty.call(record, 'dados') ? record.dados : record;
+            if (!payload) return null;
+
+            if (typeof payload === 'string') {
+                try {
+                    return JSON.parse(payload);
+                } catch (parseError) {
+                    console.warn('Configuração em formato de texto inválido.', parseError);
+                    return null;
+                }
+            }
+
+            return typeof payload === 'object' ? payload : null;
+        }
+
         async function fetchConfig() {
             let isConnected = false;
             try {
-                const { data, error } = await supabaseClient.from('configuracoes').select('dados').eq('id', 'main').single();
-                if (error && error.code !== 'PGRST116') throw error;
-                if (data && data.dados) {
-                    config = normalizeConfig(data.dados);
+                const { data, error } = await supabaseClient
+                    .from('configuracoes')
+                    .select('*')
+                    .eq('id', CONFIG_RECORD_ID)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (data) {
+                    const loadedConfig = extractStoredConfig(data);
+                    if (loadedConfig) {
+                        config = normalizeConfig(loadedConfig);
+                    }
                 }
+
                 isConnected = true;
                 setOnlineStatus('Online', 'online');
-            } catch(e) {
-                console.log('Tabela configuracoes não encontrada ou vazia. Usando padrão local.', e?.message || e);
+            } catch (e) {
+                console.error('Erro ao carregar configurações da nuvem. Usando padrão local.', e?.message || e);
+                showToast('Não foi possível carregar configurações da nuvem.', 'error');
             }
 
             try {
@@ -1016,10 +1044,18 @@ async function handleLogin(e) {
         }
 
         async function saveConfigsToSupabase() {
-            try {
-                const { error } = await supabaseClient.from('configuracoes').upsert([{ id: 'main', dados: config }]);
-                if(error) throw error;
-            } catch(e) { console.log('Não foi possível salvar config na nuvem. Apenas local foi atualizado.'); }
+            const payload = {
+                id: CONFIG_RECORD_ID,
+                dados: config
+            };
+
+            const { error } = await supabaseClient
+                .from('configuracoes')
+                .upsert([payload], { onConflict: 'id' });
+
+            if (error) {
+                throw error;
+            }
         }
 
         async function fetchProcessos() {
@@ -1080,7 +1116,6 @@ async function handleLogin(e) {
          async function saveProcessToSupabase(data, isEditing = false) {
             const dbData = Object.assign({}, data);
             const persistedBooleanFields = ['op_policial', 'possui_inquerito', 'cad_epad', 'prioritario'];
-
             persistedBooleanFields.forEach(field => {
                 dbData[field] = !!dbData[field];
             });
@@ -1182,9 +1217,14 @@ async function handleLogin(e) {
             };
             config = normalizeConfig(config);
             
-            await saveConfigsToSupabase();
-            updateHeader();
-            showToast('Configurações salvas e sincronizadas!');
+            try {
+                await saveConfigsToSupabase();
+                updateHeader();
+                showToast('Configurações salvas e sincronizadas!', 'success');
+            } catch (error) {
+                console.error('Erro ao salvar configurações:', error);
+                showToast('Erro ao salvar configurações no banco.', 'error');
+            }
         }
 
         function suggestStatusChangeOnEdit(data, currentStatus) {
