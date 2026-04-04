@@ -2271,7 +2271,7 @@ filtered.sort((a, b) => {
 
         function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
 
-         function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true, despachoDateFilter = null) {
+       function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true, despachoDateFilter = null) {
             const rows = [];
             processList.forEach(p => {
                 const accused = Array.isArray(p.acusados) ? p.acusados : [];
@@ -2394,7 +2394,7 @@ filtered.sort((a, b) => {
             const resultadoMap = {
                 'arquivados_preliminar': buildOutcomeRowsByResult(filtered.filter(byDespacho), 'Arquivado após análise preliminar', true, isWithinPeriod),
                 'arquivados_admissibilidade': buildOutcomeRowsByResult(admissibilidadeList, 'Arquivado após juízo de admissibilidade', true, isWithinPeriod),
-                'celebracao_tac': buildOutcomeRowsByResult(admissibilidadeList, 'Para celebrar TAC', true, isWithinPeriod),
+                'celebracao_tac': tacProcessList,
                 'instauracao_pad': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAD', true, isWithinPeriod),
                 'instauracao_par': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAR', true, isWithinPeriod),
                 'instauracao_sinpa': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINPA', true, isWithinPeriod),
@@ -2433,7 +2433,7 @@ filtered.sort((a, b) => {
                 + `${renderRow('Celebração de TAC', resultadoMap.celebracao_tac.length, resultadoMap.celebracao_tac)}`
                 + `${renderRow('Instauração de PAD', resultadoMap.instauracao_pad.length, resultadoMap.instauracao_pad)}`
                 + `${renderRow('Instauração de PAR', resultadoMap.instauracao_par.length, resultadoMap.instauracao_par)}`
-                + `${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}`
+               + `${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}`
                 + `${renderRow('Instauração de SINAC', resultadoMap.instauracao_sinac.length, resultadoMap.instauracao_sinac)}`
                 + `${renderRow('Instauração de SINVE', resultadoMap.instauracao_sinve.length, resultadoMap.instauracao_sinve)}`
                 + `${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}</div>`
