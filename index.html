@@ -2271,7 +2271,7 @@ filtered.sort((a, b) => {
 
         function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
 
-        function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true) {
+         function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true, despachoDateFilter = null) {
             const rows = [];
             processList.forEach(p => {
                 const accused = Array.isArray(p.acusados) ? p.acusados : [];
@@ -2281,6 +2281,8 @@ filtered.sort((a, b) => {
                 if (shouldSplitByAccused) {
                     outcomes.forEach(item => {
                         if (item.resultado === targetResult) {
+                            const despachoDate = item.data_despacho || p.data_despacho || '';
+                            if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
                             rows.push({
                                 sei: p.sei || '—',
                                 objeto: p.objeto || '—',
@@ -2288,7 +2290,7 @@ filtered.sort((a, b) => {
                                 data_conhecimento: p.data_conhecimento || '',
                                 resultado: item.resultado,
                                 tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
-                                data_despacho: item.data_despacho || ''
+                                data_despacho: despachoDate
                             });
                         }
                     });
@@ -2298,6 +2300,8 @@ filtered.sort((a, b) => {
                         ? singleOutcome.resultado
                         : (p.resultado || 'Não definida');
                     if (result === targetResult) {
+                        const despachoDate = singleOutcome.data_despacho || p.data_despacho || '';
+                        if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
                         rows.push({
                             sei: p.sei || '—',
                             objeto: p.objeto || '—',
@@ -2305,7 +2309,7 @@ filtered.sort((a, b) => {
                             data_conhecimento: p.data_conhecimento || '',
                             resultado: result,
                             tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
-                            data_despacho: singleOutcome.data_despacho || p.data_despacho || ''
+                            data_despacho: despachoDate
                         });
                     }
                 }
@@ -2388,16 +2392,15 @@ filtered.sort((a, b) => {
             const tacProcessList = processos.filter(p => getStatusFromProcess(p) === 'TAC' && byDespacho(p));
 
             const resultadoMap = {
-                'arquivados_preliminar': buildOutcomeRowsByResult(filtered.filter(byDespacho), 'Arquivado após análise preliminar', true),
-                'arquivados_admissibilidade': buildOutcomeRowsByResult(admissibilidadeList, 'Arquivado após juízo de admissibilidade', true),
-                'celebracao_tac': buildOutcomeRowsByResult(admissibilidadeList, 'Para celebrar TAC', true),
-                'instauracao_pad': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAD', true),
-                'instauracao_par': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAR', true),
-                'instauracao_sinpa': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINPA', true),
-                'instauracao_sinac': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINAC', true),
-                'instauracao_sinve': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINVE', true),
-                'min_transportes': buildOutcomeRowsByResult(admissibilidadeList, 'Encaminhado para o Min. dos Transportes', true),
-                'instauracao_ips': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de IPS', true)
+                'arquivados_preliminar': buildOutcomeRowsByResult(filtered.filter(byDespacho), 'Arquivado após análise preliminar', true, isWithinPeriod),
+                'arquivados_admissibilidade': buildOutcomeRowsByResult(admissibilidadeList, 'Arquivado após juízo de admissibilidade', true, isWithinPeriod),
+                'celebracao_tac': buildOutcomeRowsByResult(admissibilidadeList, 'Para celebrar TAC', true, isWithinPeriod),
+                'instauracao_pad': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAD', true, isWithinPeriod),
+                'instauracao_par': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAR', true, isWithinPeriod),
+                'instauracao_sinpa': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINPA', true, isWithinPeriod),
+                'instauracao_sinac': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINAC', true, isWithinPeriod),
+                'instauracao_sinve': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINVE', true, isWithinPeriod),
+                'min_transportes': buildOutcomeRowsByResult(admissibilidadeList, 'Encaminhado para o Min. dos Transportes', true, isWithinPeriod)
             };
             const tacMap = {
                 'negociacao': buildTacRowsBySituation(tacProcessList, 'Em negociação'),
@@ -2433,8 +2436,7 @@ filtered.sort((a, b) => {
                 + `${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, resultadoMap.instauracao_sinpa)}`
                 + `${renderRow('Instauração de SINAC', resultadoMap.instauracao_sinac.length, resultadoMap.instauracao_sinac)}`
                 + `${renderRow('Instauração de SINVE', resultadoMap.instauracao_sinve.length, resultadoMap.instauracao_sinve)}`
-                + `${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}`
-                + `${renderRow('Instauração de IPS', resultadoMap.instauracao_ips.length, resultadoMap.instauracao_ips)}</div>`
+                + `${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, resultadoMap.min_transportes)}</div>`
                 + `<div class="report-section"><div class="report-header">Termo de Ajustamento de Conduta – TAC</div>`
                 + `${renderRow('TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao)}`
                 + `${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados)}`
