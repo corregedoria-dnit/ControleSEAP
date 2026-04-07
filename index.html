@@ -2411,16 +2411,25 @@ filtered.sort((a, b) => {
             const filtered = processos.filter(byConhecimento);
             const renderRow = (label, data, analyticList, mode = 'statusResultado') => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderManagerialFixedTable(analyticList, mode) : '');
 
-            const archivedList = filtered.filter(p => (getStatusFromProcess(p) === 'Arquivado após análise preliminar' || processHasResultado(p, 'Arquivado após análise preliminar')) && byDespacho(p));
-            const aptTacList = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC'));
+           const archivedList = filtered.filter(p => (
+                processHasResultado(p, 'Arquivado após análise preliminar')
+                || processHasResultado(p, 'Arquivado após juízo de admissibilidade')
+            ) && byDespacho(p));
+            const aptTacList = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC') && byDespacho(p));
             const analyzedStatusSet = new Set(['TAC', 'Concluído']);
             const analyzedList = filtered.filter(p => analyzedStatusSet.has(getStatusFromProcess(p)) && byDespacho(p));
             const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
             const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
 
             const juntadoList = filtered.filter(p => p.juntado && p.juntado.length > 5);
-            const juizoList = processos.filter(p => ['Aguardando Distribuição', 'Em análise'].includes(getStatusFromProcess(p)));
-            const admissibilidadeList = processos.filter(p => ['Pendente de análise do(a) Corregedor(a)', 'Concluído'].includes(getStatusFromProcess(p)) && byDespacho(p));
+            const juizoList = processos.filter(p =>
+                ['Aguardando Distribuição', 'Em análise'].includes(getStatusFromProcess(p))
+                && isWithinPeriod(p.data_analise_preliminar)
+            );
+            const admissibilidadeList = processos.filter(p =>
+                ['Pendente de análise do(a) Corregedor(a)', 'Concluído', 'TAC'].includes(getStatusFromProcess(p))
+                && byDespacho(p)
+            );
             const admissibilidadeIps = admissibilidadeList.filter(p => p.ips === true);
             const admissibilidadeNaoIps = admissibilidadeList.filter(p => p.ips !== true);
             const tacProcessList = processos.filter(p => getStatusFromProcess(p) === 'TAC' && byDespacho(p));
