@@ -2405,13 +2405,12 @@ filtered.sort((a, b) => {
             const filtered = processos.filter(byConhecimento);
             const renderRow = (label, data, analyticList, mode = 'statusResultado') => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderManagerialFixedTable(analyticList, mode) : '');
 
-           const archivedList = filtered.filter(p => (
+           const archivedList = processos.filter(p => (
                 processHasResultado(p, 'Arquivado após análise preliminar')
                 || processHasResultado(p, 'Arquivado após juízo de admissibilidade')
             ) && byDespacho(p));
             const aptTacList = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC') && byDespacho(p));
-            const analyzedStatusSet = new Set(['TAC', 'Concluído']);
-            const analyzedList = filtered.filter(p => analyzedStatusSet.has(getStatusFromProcess(p)) && byDespacho(p));
+            const analyzedList = processos.filter(p => !!p.data_entrega_nt && byEntregaNt(p));
             const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
             const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
 
