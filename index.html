@@ -390,32 +390,49 @@
 
                     <div class="border-b pb-6">
                         <h3 class="text-lg font-semibold text-gray-700 mb-4 flex items-center"><i data-lucide="users" class="w-5 h-5 mr-2 text-blue-600"></i>BLOCO 2 – DISTRIBUIÇÃO E ANÁLISE</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                             <div><label class="block text-sm font-medium">Analista Responsável</label><input type="text" id="process-analista" class="w-full border rounded px-3 py-2 mt-1" list="analistas-list"></div>
-                             <div><label class="block text-sm font-medium">Data de Distribuição</label><input type="date" id="process-data-distribuicao" class="w-full border rounded px-3 py-2 mt-1"></div>
-                             <div>
-                                <label class="block text-sm font-medium">Prazo para Conclusão da NT</label>
-                                <div class="flex items-center mt-1">
-                                    <input type="number" id="process-prazo-dias" class="w-20 border rounded-l px-3 py-2" placeholder="Dias">
-                                    <input type="date" id="process-prazo-data" class="flex-1 border-t border-b border-r rounded-r px-3 py-2">
+                        <div class="space-y-6">
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">Análise Preliminar de Admissibilidade pelo SEAP</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium">Data de Análise Preliminar - SEAP</label>
+                                        <input type="date" id="process-data-analise-preliminar" class="w-full border rounded px-3 py-2 mt-1">
+                                    </div>
                                 </div>
-                             </div>
-                             <div>
-                                <label class="block text-sm font-medium">Data de Entrega da NT</label>
-                                <input type="date" id="process-data-entrega-nt" class="w-full border rounded px-3 py-2 mt-1">
-                             </div>
-                             <div>
-                                <label class="block text-sm font-medium">Data de Análise preliminar</label>
-                                <input type="date" id="process-data-analise-preliminar" class="w-full border rounded px-3 py-2 mt-1">
-                             </div>
-                             <div>
-                                <label class="block text-sm font-medium">IPS?</label>
-                                <select id="process-ips" class="w-full border rounded px-3 py-2 mt-1">
-                                    <option value="">Não informado</option>
-                                    <option value="true">Sim</option>
-                                    <option value="false">Não</option>
-                                </select>
-                             </div>
+                            </div>
+
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                    <div><label class="block text-sm font-medium">Analista Responsável</label><input type="text" id="process-analista" class="w-full border rounded px-3 py-2 mt-1" list="analistas-list"></div>
+                                    <div><label class="block text-sm font-medium">Data de Distribuição</label><input type="date" id="process-data-distribuicao" class="w-full border rounded px-3 py-2 mt-1"></div>
+                                    <div>
+                                        <label class="block text-sm font-medium">Prazo para Conclusão da NT</label>
+                                        <div class="flex items-center mt-1">
+                                            <input type="number" id="process-prazo-dias" class="w-20 border rounded-l px-3 py-2" placeholder="Dias">
+                                            <input type="date" id="process-prazo-data" class="flex-1 border-t border-b border-r rounded-r px-3 py-2">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium">Data de Entrega da NT</label>
+                                        <input type="date" id="process-data-entrega-nt" class="w-full border rounded px-3 py-2 mt-1">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="p-4 border rounded-lg bg-gray-50">
+                                <h4 class="text-sm font-semibold text-gray-700 mb-3">IPS?</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    <div>
+                                        <label class="block text-sm font-medium">IPS?</label>
+                                        <select id="process-ips" class="w-full border rounded px-3 py-2 mt-1">
+                                            <option value="">Não informado</option>
+                                            <option value="true">Sim</option>
+                                            <option value="false">Não</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <datalist id="analistas-list"></datalist>
                     </div>
@@ -1243,6 +1260,7 @@ async function handleLogin(e) {
         }
 
         function suggestStatusChangeOnEdit(data, currentStatus) {
+            if (currentStatus === 'Concluído') return;
             const hasDistributionData = !!(data.analista && data.data_distribuicao && data.prazo_nt_data);
             const hasNtDelivery = !!data.data_entrega_nt;
             const hasDecision = hasDecisionForAllAccused(data);
@@ -1280,7 +1298,7 @@ async function handleLogin(e) {
             if (!data.data_analise_preliminar) return;
             const allowedStatuses = ['Aguardando Distribuição', 'Concluído'];
             if (allowedStatuses.includes(data.status_manual)) return;
-            showToast('Data de Análise preliminar preenchida. Ajuste manualmente o status para "Aguardando Distribuição" ou "Concluído".', 'warning');
+            showToast('Data de Análise Preliminar - SEAP preenchida. Ajuste manualmente o status para "Aguardando Distribuição" ou "Concluído".', 'warning');
         }
 
           function submitProcessForm() {
@@ -1342,7 +1360,7 @@ async function handleLogin(e) {
                 data.resultado = 'Não definida';
             }
 
-            if (processHasResultado(data, 'Para celebrar TAC')) {
+            if (processHasResultado(data, 'Para celebrar TAC') && !(isEditing && currentStatus === 'Concluído')) {
                 if (!data.tac_sit) data.tac_sit = 'Em negociação';
                 data.status_manual = 'TAC';
             }
@@ -1826,12 +1844,12 @@ filtered.sort((a, b) => {
         }
 
         function renderTableView(container, data) {
-            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Status do TAC</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
+            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Data Análise Preliminar - SEAP</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição (A/S/D)</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Status do TAC</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
 
             data.forEach(p => {
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = `${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}`; const tacStatus = getTacStatusFromProcess(p);
 
-                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${p.objeto}">${p.objeto}</td><td class="px-2 py-2 truncate max-w-[200px]" title="${acusadosStr}">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-nowrap text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-nowrap">${tacStatus === 'Não aplicável' ? '—' : tacStatus}</td><td class="px-2 py-2"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 whitespace-normal break-words max-w-[260px]">${p.objeto || '—'}</td><td class="px-2 py-2 whitespace-normal break-words max-w-[240px]">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_analise_preliminar)}</td><td class="px-2 py-2 whitespace-normal break-words">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-normal break-words text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-normal break-words">${tacStatus === 'Não aplicável' ? '—' : tacStatus}</td><td class="px-2 py-2 whitespace-nowrap"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
 
             });
             html += `</tbody></table></div>`; container.innerHTML = html;
@@ -1841,8 +1859,8 @@ filtered.sort((a, b) => {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full";
             data.forEach(p => {
                 const st = getStatusFromProcess(p); const card = document.createElement('div');
-                card.className = `bg-white p-5 rounded-lg shadow border flex flex-col justify-between ${p.prioritario ? 'priority-highlight border-yellow-400' : ''}`;
-                card.innerHTML = `<div><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold truncate mb-2" title="${p.objeto}">${p.objeto}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="truncate">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</p><p><b>Resultado:</b> ${getOutcomeSummary(p)}</p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p></div><div class="flex items-center space-x-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
+                card.className = `bg-white p-5 rounded-lg shadow border flex flex-col min-h-[360px] max-h-[460px] ${p.prioritario ? 'priority-highlight border-yellow-400' : ''}`;
+                card.innerHTML = `<div class="overflow-y-auto pr-1"><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold mb-2 whitespace-normal break-words">${p.objeto || '—'}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="whitespace-normal break-words">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Data de Análise Preliminar - SEAP:</b> ${formatDate(p.data_analise_preliminar)}</p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</p><p><b>Resultado:</b> <span class="whitespace-normal break-words">${getOutcomeSummary(p)}</span></p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição (A/S/D):</b> ${formatDate(p.calc_advertencia)} / ${formatDate(p.calc_suspensao)} / ${formatDate(p.calc_demissao)}</p></div><div class="flex items-center flex-wrap gap-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
                   container.appendChild(card);
             });
         }
@@ -1853,7 +1871,7 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
-                  item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold truncate" title="${p.objeto}">${p.objeto}</div><div class="text-xs text-gray-600 truncate mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500 truncate"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500 truncate"><b>IPS?:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500 truncate"><b>Status:</b> ${getStatusFromProcess(p)}</div><div class="text-xs text-gray-500 truncate"><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</div>`;
+                  item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold whitespace-normal break-words">${p.objeto || '—'}</div><div class="text-xs text-gray-600 whitespace-normal break-words mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500"><b>Análise Preliminar - SEAP:</b> ${formatDate(p.data_analise_preliminar)}</div><div class="text-xs text-gray-500"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500"><b>IPS?:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500"><b>Status:</b> ${getStatusFromProcess(p)}</div><div class="text-xs text-gray-500 whitespace-normal break-words"><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</div>`;
                 listContainer.appendChild(item);
             });
         }
@@ -1863,7 +1881,7 @@ filtered.sort((a, b) => {
             const detailContainer = document.getElementById('split-detail-view');
             const isOnlyPJ = p.tipo_acusado === 'Pessoa Jurídica';
             const showPJ = (p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica') && p.calc_pj;
-            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Análise preliminar</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
+            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${p.relacionados || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
         //}
 
@@ -2143,7 +2161,7 @@ filtered.sort((a, b) => {
             data_distribuicao: { label: 'Data de Distribuição', get: p => formatDate(p.data_distribuicao) },
             prazo_nt_data: { label: 'Prazo NT', get: p => formatDate(p.prazo_nt_data) },
             data_entrega_nt: { label: 'Data Entrega NT', get: p => formatDate(p.data_entrega_nt) },
-            data_analise_preliminar: { label: 'Data de Análise preliminar', get: p => formatDate(p.data_analise_preliminar) },
+            data_analise_preliminar: { label: 'Data de Análise Preliminar - SEAP', get: p => formatDate(p.data_analise_preliminar) },
             ips: { label: 'IPS?', get: p => p.ips === true ? 'Sim' : p.ips === false ? 'Não' : '—' },
             status: { label: 'Status', get: p => getStatusFromProcess(p) },
             status_manual: { label: 'Status Manual', get: p => p.status_manual || '—' },
@@ -2395,14 +2413,14 @@ filtered.sort((a, b) => {
 
             const archivedList = filtered.filter(p => (getStatusFromProcess(p) === 'Arquivado após análise preliminar' || processHasResultado(p, 'Arquivado após análise preliminar')) && byDespacho(p));
             const aptTacList = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC'));
-            const analyzedStatusSet = new Set(['TAC', 'Pendente de análise do(a) Corregedor(a)', 'Concluído']);
-            const analyzedList = filtered.filter(p => analyzedStatusSet.has(getStatusFromProcess(p)));
+            const analyzedStatusSet = new Set(['TAC', 'Concluído']);
+            const analyzedList = filtered.filter(p => analyzedStatusSet.has(getStatusFromProcess(p)) && byDespacho(p));
             const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
             const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
 
             const juntadoList = filtered.filter(p => p.juntado && p.juntado.length > 5);
             const juizoList = processos.filter(p => ['Aguardando Distribuição', 'Em análise'].includes(getStatusFromProcess(p)));
-            const admissibilidadeList = processos.filter(p => ['Pendente de análise do(a) Corregedor(a)', 'Concluído'].includes(getStatusFromProcess(p)) && byEntregaNt(p));
+            const admissibilidadeList = processos.filter(p => ['Pendente de análise do(a) Corregedor(a)', 'Concluído'].includes(getStatusFromProcess(p)) && byDespacho(p));
             const admissibilidadeIps = admissibilidadeList.filter(p => p.ips === true);
             const admissibilidadeNaoIps = admissibilidadeList.filter(p => p.ips !== true);
             const tacProcessList = processos.filter(p => getStatusFromProcess(p) === 'TAC' && byDespacho(p));
