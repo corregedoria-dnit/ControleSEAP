@@ -424,7 +424,7 @@
                                 <h4 class="text-sm font-semibold text-gray-700 mb-3">IPS?</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     <div>
-                                        <label class="block text-sm font-medium">IPS?</label>
+                                          <label class="block text-sm font-medium">Seleção de IPS</label>
                                         <select id="process-ips" class="w-full border rounded px-3 py-2 mt-1">
                                             <option value="">Não informado</option>
                                             <option value="true">Sim</option>
@@ -1356,8 +1356,9 @@ async function handleLogin(e) {
 
             if (currentAccused.length > 1) {
                 const despachoDates = currentAccusedOutcomes.map(item => item.data_despacho).filter(Boolean).sort();
-                data.data_despacho = despachoDates.length ? despachoDates[despachoDates.length - 1] : '';
-                data.resultado = 'Não definida';
+                if (!data.data_despacho && despachoDates.length) {
+                    data.data_despacho = despachoDates[despachoDates.length - 1];
+                }
             }
 
             if (processHasResultado(data, 'Para celebrar TAC') && !(isEditing && currentStatus === 'Concluído')) {
@@ -1470,22 +1471,15 @@ async function handleLogin(e) {
             const hasMultipleAccused = currentAccused.length > 1;
             const resultadoEl = document.getElementById('process-resultado');
             const despachoEl = document.getElementById('process-data-despacho');
-            if (!resultadoEl || !despachoEl) return;
-            resultadoEl.disabled = hasMultipleAccused;
-            despachoEl.disabled = hasMultipleAccused;
+            if (!resultadoEl || !despachoEl) return;           
+            resultadoEl.disabled = false;
+            despachoEl.disabled = false;
             resultadoEl.readOnly = false;
             despachoEl.readOnly = false;
-            resultadoEl.classList.toggle('bg-gray-100', hasMultipleAccused);
-            despachoEl.classList.toggle('bg-gray-100', hasMultipleAccused);
-            resultadoEl.classList.toggle('cursor-not-allowed', hasMultipleAccused);
-            despachoEl.classList.toggle('cursor-not-allowed', hasMultipleAccused);
+            resultadoEl.classList.remove('bg-gray-100', 'cursor-not-allowed');
+            despachoEl.classList.remove('bg-gray-100', 'cursor-not-allowed');
 
-            if (hasMultipleAccused) {
-                const anyResult = currentAccusedOutcomes.some(item => item.resultado && item.resultado !== 'Não definida');
-                const dates = currentAccusedOutcomes.map(item => item.data_despacho).filter(Boolean).sort();
-                resultadoEl.value = anyResult ? 'Não definida' : 'Não definida';
-                despachoEl.value = dates.length ? dates[dates.length - 1] : '';
-            } else if (currentAccusedOutcomes[0]) {
+            if (!hasMultipleAccused && currentAccusedOutcomes[0]) {
                 resultadoEl.value = currentAccusedOutcomes[0].resultado || 'Não definida';
                 despachoEl.value = currentAccusedOutcomes[0].data_despacho || '';
             }
