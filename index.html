@@ -2480,7 +2480,7 @@ filtered.sort((a, b) => {
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
                 + `<div class="report-section"><div class="report-header">Acervo Geral</div>`
-                + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`
+                 + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`
                 + `<div class="report-sub-header">Análise Preliminar</div>`
                 + `${renderRow('Processos', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
                 + `<div class="report-sub-header">Juízo de Admissibilidade</div>`
