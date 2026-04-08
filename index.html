@@ -2399,80 +2399,116 @@ filtered.sort((a, b) => {
                 return true;
             };
             const byConhecimento = (p) => isWithinPeriod(p.data_conhecimento);
+            const byEntrada = (p) => isWithinPeriod(p.data_ent);
+            const byPreliminar = (p) => isWithinPeriod(p.data_analise_preliminar);
             const byDespacho = (p) => isWithinPeriod(getDespachoDateForStatus(p));
-            const byEntregaNt = (p) => isWithinPeriod(p.data_entrega_nt);
 
             const filtered = processos.filter(byConhecimento);
             const renderRow = (label, data, analyticList, mode = 'statusResultado') => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderManagerialFixedTable(analyticList, mode) : '');
 
-           const archivedList = processos.filter(p => (
-                processHasResultado(p, 'Arquivado após análise preliminar')
-                || processHasResultado(p, 'Arquivado após juízo de admissibilidade')
-            ) && byDespacho(p));
-            const aptTacList = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC') && byDespacho(p));
-            const analyzedList = processos.filter(p => !!p.data_entrega_nt && byEntregaNt(p));
-            const avgProcessTime = calculateAverageDays(filtered, 'data_ent', 'data_despacho');
-            const avgAnalysisTime = calculateAverageDays(analyzedList, 'data_distribuicao', 'data_entrega_nt');
-
-            const juntadoList = filtered.filter(p => p.juntado && p.juntado.length > 5);
-            const juizoList = processos.filter(p =>
-                ['Aguardando Distribuição', 'Em análise'].includes(getStatusFromProcess(p))
-                && isWithinPeriod(p.data_analise_preliminar)
+            const acervoAnalisePreliminarList = processos.filter(p =>
+                normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
+                && byEntrada(p)
             );
-            const admissibilidadeList = processos.filter(p =>
-                ['Pendente de análise do(a) Corregedor(a)', 'Concluído', 'TAC'].includes(getStatusFromProcess(p))
+            const acervoJuizoAdmissibilidadeList = processos.filter(p =>
+                ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
+                && byPreliminar(p)
+            );
+            const acervoTotal = acervoAnalisePreliminarList.length + acervoJuizoAdmissibilidadeList.length;
+
+            const noticiasAnalisePreliminarList = processos.filter(p =>
+                normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
+                && byPreliminar(p)
+            );
+            const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasAnalisePreliminarList, 'data_ent', 'data_analise_preliminar');
+            const noticiasArquivadosPreliminarList = processos.filter(p =>
+                processHasResultado(p, 'Arquivado após análise preliminar')
+                && byPreliminar(p)
+            );
+            const noticiasEncaminhadosJuizoList = processos.filter(p =>
+                ['Aguardando Distribuição', 'Em análise'].includes(getStatusFromProcess(p))
+                && byPreliminar(p)
+            );
+            const noticiasEncaminhadosJuizoJuntadoList = processos.filter(p =>
+                p.juntado && p.juntado.trim().length > 0
+                && byPreliminar(p)
+            );
+
+            const juizoAnalisadosList = processos.filter(p =>
+                ['Concluído', 'TAC'].includes(getStatusFromProcess(p))
                 && byDespacho(p)
             );
-            const admissibilidadeIps = admissibilidadeList.filter(p => p.ips === true);
-            const admissibilidadeNaoIps = admissibilidadeList.filter(p => p.ips !== true);
-            const tacProcessList = processos.filter(p => getStatusFromProcess(p) === 'TAC' && byDespacho(p));
+            const juizoAnalisadosIps = juizoAnalisadosList.filter(p => p.ips === true);
+            const juizoAnalisadosNaoIps = juizoAnalisadosList.filter(p => p.ips === false);
+            const juizoArquivadosList = processos.filter(p =>
+                processHasResultado(p, 'Arquivado após juízo de admissibilidade')
+                && byDespacho(p)
+            );
+            const juizoTacList = processos.filter(p =>
+                getStatusFromProcess(p) === 'TAC'
+                && byDespacho(p)
+            );
+            const juizoPadList = processos.filter(p =>
+                processHasResultado(p, 'Instauração de PAD')
+                && byDespacho(p)
+            );
+            const juizoParList = processos.filter(p =>
+                processHasResultado(p, 'Instauração de PAR')
+                && byDespacho(p)
+            );
+            const juizoSinpaList = processos.filter(p =>
+                processHasResultado(p, 'Instauração de SINPA')
+                && byDespacho(p)
+            );
+            const juizoSinacList = processos.filter(p =>
+                processHasResultado(p, 'Instauração de SINAC')
+                && byDespacho(p)
+            );
+            const juizoSinveList = processos.filter(p =>
+                processHasResultado(p, 'Instauração de SINVE')
+                && byDespacho(p)
+            );
+            const juizoMinTransportesList = processos.filter(p =>
+                processHasResultado(p, 'Encaminhado para o Min. dos Transportes')
+                && byPreliminar(p)
+            );
 
-            const resultadoMap = {
-                'arquivados_preliminar': buildOutcomeRowsByResult(filtered.filter(byDespacho), 'Arquivado após análise preliminar', true, isWithinPeriod),
-                'arquivados_admissibilidade': buildOutcomeRowsByResult(admissibilidadeList, 'Arquivado após juízo de admissibilidade', true, isWithinPeriod),
-                'celebracao_tac': tacProcessList,
-                'instauracao_pad': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAD', true, isWithinPeriod),
-                'instauracao_par': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de PAR', true, isWithinPeriod),
-                'instauracao_sinpa': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINPA', true, isWithinPeriod),
-                'instauracao_sinac': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINAC', true, isWithinPeriod),
-                'instauracao_sinve': buildOutcomeRowsByResult(admissibilidadeList, 'Instauração de SINVE', true, isWithinPeriod),
-                'min_transportes': buildOutcomeRowsByResult(admissibilidadeList, 'Encaminhado para o Min. dos Transportes', true, isWithinPeriod)
-            };
+            const avgJuizoAnalysis = calculateAverageDays(juizoAnalisadosList, 'data_analise_preliminar', 'data_despacho');
             const tacMap = {
-                'negociacao': buildTacRowsBySituation(tacProcessList, 'Em negociação'),
-                'celebrados': buildTacRowsBySituation(tacProcessList, 'Celebrado'),
-                'recusados': buildTacRowsBySituation(tacProcessList, 'Recusado'),
-                'finalizados': buildTacRowsBySituation(tacProcessList, 'Finalizado')
+                'negociacao': buildTacRowsBySituation(juizoTacList, 'Em negociação'),
+                'celebrados': buildTacRowsBySituation(juizoTacList, 'Celebrado'),
+                'recusados': buildTacRowsBySituation(juizoTacList, 'Recusado'),
+                'finalizados': buildTacRowsBySituation(juizoTacList, 'Finalizado')
             };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
-                + `<div class="report-section"><div class="report-header">Resumo Geral</div>`
-                + `${renderRow('Quantidade de processos cadastrados', filtered.length, filtered, 'statusResultado')}`
-                + `${renderRow('Quantidade de processos arquivados', archivedList.length, archivedList, 'statusResultado')}`
-                + `${renderRow('Processos para celebração de TAC', aptTacList.length, aptTacList, 'statusResultado')}`
-                + `${renderRow('Quantidade de processos analisados', analyzedList.length, analyzedList, 'statusResultado')}`
-                + `${renderRow('Tempo médio (em dias)', avgProcessTime, [])}</div>`
-                + `<div class="report-section"><div class="report-header">Notícias de irregularidade</div><div class="report-sub-header">Análise preliminar</div>`
-                + `${renderRow('Quantidade de processos analisados', analyzedList.length, analyzedList, 'statusResultado')}`
-                + `${renderRow('Tempo médio de análise (em dias)', avgAnalysisTime, [])}`
+                + `<div class="report-section"><div class="report-header">Acervo Geral</div>`
+                + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`
+                + `<div class="report-sub-header">Análise Preliminar</div>`
+                + `${renderRow('Processos com status Cadastrado (data de entrada no período)', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
+                + `<div class="report-sub-header">Juízo de Admissibilidade</div>`
+                + `${renderRow('Processos aguardando distribuição / em análise / aguardando assinatura do corregedor', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
+                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
+                + `${renderRow('Processos com status Cadastrado e data de análise preliminar no período', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
+                + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
-                + `${renderRow('Número de processos arquivados', resultadoMap.arquivados_preliminar.length, filtered.filter(p => processHasResultado(p, 'Arquivado após análise preliminar')), 'statusResultado')}`
-                + `${renderRow('Encaminhados para juízo de admissibilidade', juizoList.length, juizoList, 'statusResultado')}`
-                + `${renderRow('Quantidade de juntados a processo existente', juntadoList.length, juntadoList, 'statusResultado')}</div>`
+                + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
+                + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
+                + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div><div class="report-sub-header">Processos Analisados</div>`
-                + `${renderRow('Número de processos analisados', admissibilidadeList.length, admissibilidadeList, 'statusResultado')}`
-                + `${renderRow('Processos analisados - IPS', admissibilidadeIps.length, admissibilidadeIps, 'statusResultado')}`
-                + `${renderRow('Processos analisados - Não IPS', admissibilidadeNaoIps.length, admissibilidadeNaoIps, 'statusResultado')}`
-                + `${renderRow('Tempo médio de análise (em dias)', calculateAverageDays(admissibilidadeList, 'data_distribuicao', 'data_entrega_nt'), [])}`
+                + `${renderRow('Processos analisados', juizoAnalisadosList.length, juizoAnalisadosList, 'statusResultado')}`
+                + `${renderRow('Processos analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
+                + `${renderRow('Processos analisados - Não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
+                + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
-                + `${renderRow('Processos arquivados', resultadoMap.arquivados_admissibilidade.length, admissibilidadeList.filter(p => processHasResultado(p, 'Arquivado após juízo de admissibilidade')), 'statusResultado')}`
-                + `${renderRow('Celebração de TAC', resultadoMap.celebracao_tac.length, resultadoMap.celebracao_tac, 'statusResultado')}`
-                + `${renderRow('Instauração de PAD', resultadoMap.instauracao_pad.length, admissibilidadeList.filter(p => processHasResultado(p, 'Instauração de PAD')), 'statusResultado')}`
-                + `${renderRow('Instauração de PAR', resultadoMap.instauracao_par.length, admissibilidadeList.filter(p => processHasResultado(p, 'Instauração de PAR')), 'statusResultado')}`
-               + `${renderRow('Instauração de SINPA', resultadoMap.instauracao_sinpa.length, admissibilidadeList.filter(p => processHasResultado(p, 'Instauração de SINPA')), 'statusResultado')}`
-                + `${renderRow('Instauração de SINAC', resultadoMap.instauracao_sinac.length, admissibilidadeList.filter(p => processHasResultado(p, 'Instauração de SINAC')), 'statusResultado')}`
-                + `${renderRow('Instauração de SINVE', resultadoMap.instauracao_sinve.length, admissibilidadeList.filter(p => processHasResultado(p, 'Instauração de SINVE')), 'statusResultado')}`
-                + `${renderRow('Min. Dos Transportes', resultadoMap.min_transportes.length, admissibilidadeList.filter(p => processHasResultado(p, 'Encaminhado para o Min. dos Transportes')), 'statusResultado')}</div>`
+                + `${renderRow('Processos arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
+                + `${renderRow('Processos para negociação de Termo de Ajustamento de Conduta (TAC)', juizoTacList.length, juizoTacList, 'statusResultado')}`
+                + `${renderRow('Instauração de Processo Administrativo Disciplinar (PAD)', juizoPadList.length, juizoPadList, 'statusResultado')}`
+                + `${renderRow('Instauração de Procedimento Administrativo de Responsabilização (PAR)', juizoParList.length, juizoParList, 'statusResultado')}`
+               + `${renderRow('Instauração de Sindicâncias Patrimoniais (SINPA)', juizoSinpaList.length, juizoSinpaList, 'statusResultado')}`
+                + `${renderRow('Instauração de Sindicâncias Acusatórias (SINAC)', juizoSinacList.length, juizoSinacList, 'statusResultado')}`
+                + `${renderRow('Instauração de Sindicâncias Investigativas (SINVE)', juizoSinveList.length, juizoSinveList, 'statusResultado')}`
+                + `${renderRow('Ministério dos Transportes', juizoMinTransportesList.length, juizoMinTransportesList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Termo de Ajustamento de Conduta – TAC</div>`
                 + `${renderRow('TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao, 'tac')}`
                 + `${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados, 'tac')}`
@@ -2481,12 +2517,11 @@ filtered.sort((a, b) => {
 
             setLastReport(filtered, true);
             lastManagerialSections = {
-                resumo_geral: filtered,
-                noticias_irregularidade: Array.from(new Set([...analyzedList, ...juizoList, ...juntadoList])),
-                juizo_admissibilidade: admissibilidadeList,
-                termo_ajustamento_conduta: tacProcessList
-            };
-            document.getElementById('report-content').innerHTML = html;
+                acervo_geral: Array.from(new Set([...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList])),
+                noticias_irregularidade: Array.from(new Set([...noticiasAnalisePreliminarList, ...noticiasArquivadosPreliminarList, ...noticiasEncaminhadosJuizoList, ...noticiasEncaminhadosJuizoJuntadoList])),
+                juizo_admissibilidade: juizoAnalisadosList,
+                termo_ajustamento_conduta: juizoTacList
+            };            document.getElementById('report-content').innerHTML = html;
             document.getElementById('report-output').classList.remove('hidden');
         }
 
