@@ -2483,13 +2483,11 @@ filtered.sort((a, b) => {
             };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
-                  + `<div class="report-section"><div class="report-header">Acervo Geral de Processos</div>`
-                + `<div class="report-sub-header">Análise Preliminar</div>`
-                + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
-                + `<div class="report-sub-header">Juízo de Admissibilidade</div>`
+                  + `<div class="report-section"><div class="report-header">Acervo Geral de Processos</div>`               
+                + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`                
                 + `${renderRow('Juízo de Admissibilidade', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
-               + `${renderRow('Análise Preliminar', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
+                + `${renderRow('Processos Analisados', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
