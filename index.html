@@ -2417,9 +2417,7 @@ filtered.sort((a, b) => {
             const acervoJuizoAdmissibilidadeList = processos.filter(p =>
                 ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
             );
-            const acervoTotal = acervoAnalisePreliminarList.length + acervoJuizoAdmissibilidadeList.length;
-
-           const noticiasAnalisePreliminarList = processos.filter(p =>
+             const noticiasAnalisePreliminarList = processos.filter(p =>
                 normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
                 && byPreliminar(p)
             );
@@ -2486,26 +2484,24 @@ filtered.sort((a, b) => {
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
                   + `<div class="report-section"><div class="report-header">Acervo Geral de Processos</div>`
-                + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`
                 + `<div class="report-sub-header">Análise Preliminar</div>`
-                + `${renderRow('Processos com status cadastrado e data de entrada no período', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
+                + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
                 + `<div class="report-sub-header">Juízo de Admissibilidade</div>`
-                + `${renderRow('Processos aguardando distribuição / em análise / aguardando assinatura do corregedor', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
+                + `${renderRow('Juízo de Admissibilidade', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
-               + `${renderRow('Processos com status cadastrado e data de análise preliminar no período', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
+               + `${renderRow('Análise Preliminar', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
                 + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
-                + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
+                 + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
                    + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
                 + `<div class="report-sub-header">Processos Analisados</div>`
-                + `${renderRow('Processos analisados', juizoAnalisadosList.length, juizoAnalisadosList, 'statusResultado')}`
-                + `${renderRow('Processos analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
-               + `${renderRow('Processos analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
+                + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
+               + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
-                + `${renderRow('Processos arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
+                + `${renderRow('Processos Arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
                 + `${renderRow('Processos para negociação de Termo de Ajustamento de Conduta (TAC)', juizoTacList.length, juizoTacList, 'statusResultado')}`
                 + `${renderRow('Instauração de Processo Administrativo Disciplinar (PAD)', juizoPadList.length, juizoPadList, 'statusResultado')}`
                 + `${renderRow('Instauração de Procedimento Administrativo de Responsabilização (PAR)', juizoParList.length, juizoParList, 'statusResultado')}`
