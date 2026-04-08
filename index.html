@@ -68,6 +68,7 @@
         .st-pendente { background-color: #ffedd5; color: #9a3412; }
         .st-concluido { background-color: #d1fae5; color: #065f46; }
         .st-tac { background-color: #ede9fe; color: #5b21b6; }
+        .st-suspenso { background-color: #fee2e2; color: #991b1b; }
 
         /* Tabela */
         .table-container { width: 100%; overflow-x: auto; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
@@ -272,7 +273,7 @@
                     <div id="advanced-filters-panel" class="hidden border-t mt-4 pt-4">
                         <h4 class="text-sm font-bold text-gray-700 mb-3">Filtros Detalhados</h4>
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin pb-2">
-                            <div><label class="block text-xs font-bold text-gray-600">Status</label><select id="fp-status" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option><option value="Em análise">Em análise</option><option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option><option value="TAC">TAC</option><option value="Concluído">Concluído</option></select></div>
+                            <div><label class="block text-xs font-bold text-gray-600">Status</label><select id="fp-status" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option><option value="Em análise">Em análise</option><option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option><option value="TAC">TAC</option><option value="Suspenso">Suspenso</option><option value="Concluído">Concluído</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Processo SEI</label><input type="text" id="fp-sei" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Objeto</label><input type="text" id="fp-objeto" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Acusado(s)</label><input type="text" id="fp-acusados" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
@@ -448,6 +449,7 @@
                                     <option value="Em análise">Em análise</option>
                                     <option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option>
                                     <option value="TAC">TAC</option>
+                                    <option value="Suspenso">Suspenso</option>
                                     <option value="Concluído">Concluído</option>
                                 </select>
                             </div>
@@ -581,6 +583,7 @@
                                     <option value="Em análise">Em análise</option>
                                     <option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option>
                                     <option value="TAC">TAC</option>
+                                    <option value="Suspenso">Suspenso</option>
                                     <option value="Concluído">Concluído</option>
                                 </select>
                             </div>
@@ -800,6 +803,7 @@ const PROCESS_STATUS_OPTIONS = [
     'Em análise',
     'Pendente de análise do(a) Corregedor(a)',
     'TAC',
+    'Suspenso',
     'Concluído'
 ];
 let currentAccused = [];
@@ -1576,6 +1580,7 @@ async function handleLogin(e) {
         'Em análise': 'st-analise',
         'Pendente de análise do(a) Corregedor(a)': 'st-pendente',
         'TAC': 'st-tac',
+        'Suspenso': 'st-suspenso',
         'Concluído': 'st-concluido'
     };
     return map[status] || 'st-arquivado';
@@ -1745,7 +1750,7 @@ function setupConfiguracoesView() {
                 return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${p.sei}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${statusItemsHtml}</div></div>`;
             }).join('') : '<p class="text-gray-500 text-sm">Nenhum risco de prescrição iminente.</p>';
 
-            const statusCounts = { 'Aguardando Distribuição': 0, 'Em análise': 0, 'Pendente de análise do(a) Corregedor(a)': 0, 'TAC': 0, 'Concluído': 0 };
+            const statusCounts = { 'Aguardando Distribuição': 0, 'Em análise': 0, 'Pendente de análise do(a) Corregedor(a)': 0, 'TAC': 0, 'Suspenso': 0, 'Concluído': 0 };
             processos.forEach(p => { const status = getStatusFromProcess(p); if (status in statusCounts) { statusCounts[status]++; } });
             document.getElementById('chart-status').innerHTML = Object.keys(statusCounts).map(k => `<div class="flex items-center text-sm mb-1"><span class="w-40">${k}</span><div class="flex-1 bg-gray-100 rounded h-4"><div class="bg-blue-500 h-full" style="width: ${(processos.length ? (statusCounts[k]/processos.length)*100 : 0)}%"></div></div><span class="ml-2 font-bold">${statusCounts[k]}</span></div>`).join('');
         }
@@ -2479,23 +2484,23 @@ filtered.sort((a, b) => {
             };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
-                + `<div class="report-section"><div class="report-header">Acervo Geral</div>`
-                 + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`
-                + `<div class="report-sub-header">Análise Preliminar</div>`
+                + `<div class="report-section"><div class="report-header">Acervo Geral</div>`␊
+                + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`␊
+                + `<div class="report-sub-header">Análise Preliminar</div>`␊
                 + `${renderRow('Processos', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
-                + `<div class="report-sub-header">Juízo de Admissibilidade</div>`
+                + `<div class="report-sub-header">Juízo de Admissibilidade</div>`␊
                 + `${renderRow('Processos aguardando distribuição / em análise / pendente de análise do corregedor', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
-                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
+                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`␊
                 + `${renderRow('Processos Analisados', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
-                + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
-                + `<div class="report-sub-header">Resultados</div>`
-                + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
-                + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
-                + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
+                + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`␊
+                + `<div class="report-sub-header">Resultados</div>`␊
+                + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`␊
+                + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`␊
+                + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`␊
                 + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
-                + `${renderRow('Processos analisados', juizoAnalisadosList.length, juizoAnalisadosList, 'statusResultado')}`
-                + `${renderRow('Processos analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
-                + `${renderRow('Processos analisados - Não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
+                + `${renderRow('Processos analisados', juizoAnalisadosList.length, juizoAnalisadosList, 'statusResultado')}`␊
+                + `${renderRow('Processos analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`␊
+                + `${renderRow('Processos analisados - Não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`␊
                 + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
