@@ -2484,23 +2484,23 @@ filtered.sort((a, b) => {
             };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
-                + `<div class="report-section"><div class="report-header">Acervo Geral</div>`␊
-                + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`␊
-                + `<div class="report-sub-header">Análise Preliminar</div>`␊
+                + `<div class="report-section"><div class="report-header">Acervo Geral</div>`
+                + `${renderRow('Total de processos no acervo geral', acervoTotal, [...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList], 'statusResultado')}`
+                + `<div class="report-sub-header">Análise Preliminar</div>`
                 + `${renderRow('Processos', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
-                + `<div class="report-sub-header">Juízo de Admissibilidade</div>`␊
+                + `<div class="report-sub-header">Juízo de Admissibilidade</div>`
                 + `${renderRow('Processos aguardando distribuição / em análise / pendente de análise do corregedor', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
-                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`␊
+                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
                 + `${renderRow('Processos Analisados', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
-                + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`␊
-                + `<div class="report-sub-header">Resultados</div>`␊
-                + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`␊
-                + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`␊
-                + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`␊
+                + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
+                + `<div class="report-sub-header">Resultados</div>`
+                + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
+                + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
+                + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
-                + `${renderRow('Processos analisados', juizoAnalisadosList.length, juizoAnalisadosList, 'statusResultado')}`␊
-                + `${renderRow('Processos analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`␊
-                + `${renderRow('Processos analisados - Não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`␊
+                + `${renderRow('Processos analisados', juizoAnalisadosList.length, juizoAnalisadosList, 'statusResultado')}`
+                + `${renderRow('Processos analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
+                + `${renderRow('Processos analisados - Não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
