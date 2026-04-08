@@ -1367,7 +1367,7 @@ async function handleLogin(e) {
 
             if (processHasResultado(data, 'Para celebrar TAC') && !(isEditing && currentStatus === 'Concluído')) {
                 if (!data.tac_sit) data.tac_sit = 'Em negociação';
-                data.status_manual = 'TAC';
+               
             }
 
             if (!isValidProcessStatus(data.status_manual)) {
@@ -1554,12 +1554,12 @@ async function handleLogin(e) {
         }
 
        function getStatusFromProcess(p) {
+           if (isValidProcessStatus(p.status_manual)) return p.status_manual;
            if (shouldSetTacStatus(p)) return 'TAC';
            if (getDespachoDateForStatus(p)) return 'Concluído';
-           if (isValidProcessStatus(p.status_manual)) return p.status_manual;
            if (p.data_entrega_nt) return 'Pendente de análise do(a) Corregedor(a)';
-            if (p.analista) return 'Em análise';
-            if (p.data_ent) return 'Cadastrado';
+           if (p.analista) return 'Em análise';
+           if (p.data_ent) return 'Cadastrado';
             return 'Aguardando Distribuição';
         }
 
