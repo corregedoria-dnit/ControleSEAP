@@ -2528,7 +2528,7 @@ filtered.sort((a, b) => {
                 + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`                
                 + `${renderRow('Juízo de Admissibilidade', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
-                + `${renderRow('Processos Analisados', noticiasProcessosAnalisadosList.length, noticiasProcessosAnalisadosList, 'seiOnly')}`
+                 + `${renderRow('Processos Analisados', noticiasProcessosAnalisadosList.length, [], 'seiOnly')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
