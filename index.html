@@ -2551,6 +2551,7 @@ filtered.sort((a, b) => {
             );
             const juizoAnalisadosIps = juizoAnalisadosList.filter(p => p.ips === true);
             const juizoAnalisadosNaoIps = juizoAnalisadosList.filter(p => p.ips === false);
+            const juizoAnalisadosTotal = juizoAnalisadosIps.length + juizoAnalisadosNaoIps.length;
             const juizoArquivadosList = processos.filter(p =>
                 processHasResultado(p, 'Arquivado após juízo de admissibilidade')
                 && byDespacho(p)
@@ -2604,8 +2605,8 @@ filtered.sort((a, b) => {
                 + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
                  + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
                    + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
-               + `<div class="report-sub-header">Processos Analisados</div>`
-               + `${renderRow('Total de Processos Analisados (IPS e não IPS)', juizoAnalisadosList.length, [])}`
+                + `<div class="report-sub-header">Processos Analisados</div>`
+               + `${renderRow('Total de Processos Analisados (IPS e não IPS)', juizoAnalisadosTotal, [])}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
                 + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
                + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
