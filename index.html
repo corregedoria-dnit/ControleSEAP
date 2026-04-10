@@ -2228,7 +2228,7 @@ filtered.sort((a, b) => {
             return REPORT_FIELDS[fieldKey]?.get(process) ?? '—';
         }
 
-        const renderAnalyticTable = (data) => {␊
+        const renderAnalyticTable = (data) => {
             if (!data || data.length === 0) return '<p class="text-sm text-gray-500">Nenhum registro encontrado.</p>';
             const fields = getSelectedReportFields();
             const head = fields.map(f => `<th class="border p-1">${REPORT_FIELDS[f].label}</th>`).join('');
@@ -2527,7 +2527,7 @@ filtered.sort((a, b) => {
                   + `<div class="report-section"><div class="report-header">Acervo Geral de Processos</div>`               
                 + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`                
                 + `${renderRow('Juízo de Admissibilidade', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
-                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`␊
+                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
                 + `${renderRow('Processos Analisados', noticiasProcessosAnalisadosList.length, noticiasProcessosAnalisadosList, 'seiOnly')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
