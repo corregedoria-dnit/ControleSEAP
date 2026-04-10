@@ -1562,7 +1562,24 @@ async function handleLogin(e) {
             return dates.length ? dates[dates.length - 1] : process.data_despacho;
         }
         function getRelatedProcesses(process) {
-            if (Array.isArray(process?.relacionados)) return process.relacionados;
+            if (Array.isArray(process?.relacionados)) {
+                return process.relacionados
+                    .map(item => {
+                        if (typeof item === 'string' || typeof item === 'number') return String(item).trim();
+                        if (item && typeof item === 'object') {
+                            return String(
+                                item.sei ||
+                                item.processo ||
+                                item.numero ||
+                                item.value ||
+                                item.id ||
+                                ''
+                            ).trim();
+                        }
+                        return '';
+                    })
+                    .filter(Boolean);
+            }
             if (typeof process?.relacionados === 'string' && process.relacionados.trim()) {
                 return process.relacionados.split(',').map(item => item.trim()).filter(Boolean);
             }
@@ -1852,10 +1869,10 @@ function setupConfiguracoesView() {
             const fpTacSit = getVal('fp-tac_sit'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips');
 
             const filtered = processos.filter(p => {
-               // if (search) { const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && val.toLowerCase().includes(search)) || (p.acusados && p.acusados.join(' ').toLowerCase().includes(search)); if (!matchGlobal) return false; }
-                if (search) {
+               if (search) {
                     const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && matchesMaskedText(val, search))
-                        || (p.acusados && matchesMaskedText(p.acusados.join(' '), search));
+                        || (p.acusados && matchesMaskedText(p.acusados.join(' '), search))
+                        || matchesMaskedText(getRelatedProcessesDisplay(p), search);
                     if (!matchGlobal) return false;
                 }
                 if (isPriorityFilterActive && !p.prioritario) return false;
