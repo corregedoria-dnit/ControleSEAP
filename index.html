@@ -2228,7 +2228,7 @@ filtered.sort((a, b) => {
             return REPORT_FIELDS[fieldKey]?.get(process) ?? '—';
         }
 
-        const renderAnalyticTable = (data) => {
+        const renderAnalyticTable = (data) => {␊
             if (!data || data.length === 0) return '<p class="text-sm text-gray-500">Nenhum registro encontrado.</p>';
             const fields = getSelectedReportFields();
             const head = fields.map(f => `<th class="border p-1">${REPORT_FIELDS[f].label}</th>`).join('');
@@ -2236,10 +2236,20 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 table += '<tr>' + fields.map(f => `<td class="border p-1">${formatFieldValueForExport(f, p)}</td>`).join('') + '</tr>';
             });
-            return table + '</tbody></table></div></div>';
+             return table + '</tbody></table></div></div>';
         }
 
-        function generateGeneralReport() {
+        async function refreshProcessosForReportGeneration() {
+            const loaded = await fetchProcessos();
+            if (!loaded) {
+                showToast('Não foi possível recarregar processos antes de gerar o relatório.', 'error');
+            }
+            return loaded;
+        }
+
+        async function generateGeneralReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport(); let filtered = [...processos]; const v = id => document.getElementById(id).value.toLowerCase(); const c = id => document.getElementById(id).checked;
             if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei'))); if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto'))); if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado'))); if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value); if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value); if (v('f-resultado')) filtered = filtered.filter(p => processHasResultado(p, document.getElementById('f-resultado').value)); if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física'); if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica'); if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade'))); if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem'))); if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado'))); if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value); if (c('f-concluido')) filtered = filtered.filter(p => getStatusFromProcess(p) === 'Concluído'); if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
             if (c('f-epad')) { filtered = filtered.filter(p => p.cad_epad); const d = v('f-epad-det'); if(d) filtered = filtered.filter(p => p.epad_detalhes && p.epad_detalhes.toLowerCase().includes(d)); } if (c('f-inquerito')) { filtered = filtered.filter(p => p.possui_inquerito); const d = v('f-inq-det'); if(d) filtered = filtered.filter(p => p.inquerito_detalhes && p.inquerito_detalhes.toLowerCase().includes(d)); } if (c('f-op-policial')) { filtered = filtered.filter(p => p.op_policial); const d = v('f-op-det'); if(d) filtered = filtered.filter(p => p.op_policial_detalhes && p.op_policial_detalhes.toLowerCase().includes(d)); } if (c('f-tac')) { filtered = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC')); const d = v('f-tac-det'); if(d) filtered = filtered.filter(p => p.tac_obs && p.tac_obs.toLowerCase().includes(d)); }
@@ -2248,7 +2258,9 @@ filtered.sort((a, b) => {
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function generateStatusReport() {
+        async function generateStatusReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport(); const statusTarget = document.getElementById('rep-status-val').value; const start = document.getElementById('rep-status-de').value; const end = document.getElementById('rep-status-ate').value;
             let filtered = processos.filter(p => { let match = true; if (statusTarget) match = match && getStatusFromProcess(p) === statusTarget; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; return match; });
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos por Status (${filtered.length})</h2><p class="text-sm text-center mb-4">Status: ${statusTarget || 'Todos'} | Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
@@ -2256,7 +2268,9 @@ filtered.sort((a, b) => {
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function generateProgressReport() {
+       async function generateProgressReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport(); const tipo = document.getElementById('rep-andamento-tipo').value; const start = document.getElementById('rep-andamento-de').value; const end = document.getElementById('rep-andamento-ate').value;
             let filtered = processos.filter(p => { let match = true; const despachoRef = getDespachoDateForStatus(p); if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; if (tipo === 'finalizado') match = match && getStatusFromProcess(p) === 'Concluído'; else if (tipo === 'andamento') match = match && getStatusFromProcess(p) !== 'Concluído'; return match; });
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos - ${tipo === 'andamento' ? 'Em Andamento' : tipo === 'finalizado' ? 'Finalizados' : 'Todos'} (${filtered.length})</h2><p class="text-sm text-center mb-4">Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
@@ -2264,7 +2278,9 @@ filtered.sort((a, b) => {
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function generateDistributionReport() {
+        async function generateDistributionReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport(); const analista = document.getElementById('rep-dist-analista').value; const start = document.getElementById('rep-dist-start').value, end = document.getElementById('rep-dist-end').value; const isAnalytic = document.querySelector('input[name="rep-dist-type"]:checked').value === 'analitico';
             let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end));
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Distribuição de Processos</h2><p class="text-center text-sm mb-4">Total: ${filtered.length} processos</p>`; if (isAnalytic) html += renderAnalyticTable(filtered);
@@ -2272,16 +2288,19 @@ filtered.sort((a, b) => {
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function generatePrescriptionReport() {
+       async function generatePrescriptionReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport(); const tipo = document.getElementById('rep-presc-tipo').value; const incluirVencidos = document.getElementById('rep-presc-vencidos').checked; const isAnalytic = document.querySelector('input[name="rep-presc-type"]:checked').value === 'analitico'; const hoje = new Date().toISOString().split('T')[0]; const key = `calc_${tipo}`;
-            let filtered = processos.filter(p => p[key] && (incluirVencidos || p[key] >= hoje)); filtered.sort((a,b) => (a[key] > b[key]) ? 1 : -1);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Controle Prescricional - ${tipo.charAt(0).toUpperCase() + tipo.slice(1)} (${filtered.length})</h2>`;
             if (isAnalytic) { html += `<table class="w-full text-xs text-left border-collapse border border-gray-300"><thead class="bg-gray-100"><tr><th class="border p-1">Processo SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Data Conhecimento</th><th class="border p-1">Data Prescrição</th><th class="border p-1">Dias Restantes</th></tr></thead><tbody>`; filtered.forEach(p => { const diasRestantes = diffDays(hoje, p[key]); const cor = diasRestantes < 0 ? 'text-red-600' : diasRestantes < config.alerts.crit.adv ? 'text-red-600' : 'text-gray-800'; html += `<tr><td class="border p-1 font-mono">${p.sei}</td><td class="border p-1">${p.objeto}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1 font-bold ${cor}">${formatDate(p[key])}</td><td class="border p-1 font-bold ${cor}">${diasRestantes < 0 ? 'PRESCRITO' : diasRestantes}</td></tr>`; }); html += `</tbody></table>`; }
             setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function generateDeliveredPendingReport() {
+        async function generateDeliveredPendingReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport(); const analista = document.getElementById('rep-ent-analista').value; const start = document.getElementById('rep-ent-start').value, end = document.getElementById('rep-ent-end').value; const isAnalytic = document.querySelector('input[name="rep-ent-type"]:checked').value === 'analitico';
             let filtered = processos.filter(p => p.analista && (!analista || p.analista === analista) && (!start || p.data_distribuicao >= start) && (!end || p.data_distribuicao <= end)); const entregues = filtered.filter(p => p.data_entrega_nt), pendentes = filtered.filter(p => !p.data_entrega_nt);
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Entregues vs. Pendentes</h2><p class="text-center text-sm mb-6">Filtros: Analista (${analista || 'Todos'}), Período (${formatDate(start)} a ${formatDate(end)})</p><div class="report-item"><span class="font-medium">Entregues</span><span>${entregues.length}</span></div>`; if (isAnalytic) html += renderAnalyticTable(entregues); html += `<div class="report-item mt-4"><span class="font-medium">Pendentes</span><span>${pendentes.length}</span></div>`; if (isAnalytic) html += renderAnalyticTable(pendentes);
@@ -2291,7 +2310,17 @@ filtered.sort((a, b) => {
 
         function diffDays(d1, d2) { if(!d1 || !d2) return 0; return Math.ceil((new Date(d2) - new Date(d1)) / (1000 * 3600 * 24)); }
 
-        function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
+         function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
+
+        function uniqueProcessesByIdentity(list) {
+            const map = new Map();
+            list.forEach((p) => {
+                if (!p) return;
+                const key = (p.sei && p.sei.trim()) || p.id || JSON.stringify([p.objeto, p.data_ent, p.data_analise_preliminar]);
+                if (!map.has(key)) map.set(key, p);
+            });
+            return Array.from(map.values());
+        }
 
        function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true, despachoDateFilter = null) {
             const rows = [];
@@ -2371,6 +2400,11 @@ filtered.sort((a, b) => {
 
         function renderManagerialFixedTable(data, mode = 'statusResultado') {
             if (!data || data.length === 0) return '';
+            if (mode === 'seiOnly') {
+                const uniqueSeis = Array.from(new Set(data.map(p => (p?.sei || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
+                if (!uniqueSeis.length) return '';
+                return `<div class="analytic-list border-t mt-2 pt-2"><ul class="list-disc pl-5 space-y-1 text-xs">${uniqueSeis.map(sei => `<li class="font-mono">${sei}</li>`).join('')}</ul></div>`;
+            }
             const statusHeader = mode === 'tac' ? 'Status do TAC' : 'Status do processo';
             const resultHeader = mode === 'tac' ? '' : '<th class="border p-1">Resultado</th>';
             let html = `<div class="analytic-list border-t mt-2 pt-2"><div class="overflow-auto max-h-[60vh]"><table class="report-table w-full min-w-max text-xs border"><thead class="bg-gray-100"><tr><th class="border p-1">Nº SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Acusado</th><th class="border p-1">Data de conhecimento do fato</th><th class="border p-1">${statusHeader}</th>${resultHeader}</tr></thead><tbody>`;
@@ -2390,7 +2424,9 @@ filtered.sort((a, b) => {
             return html + '</tbody></table></div></div>';
         }
 
-        function generateManagerialReport() {
+         async function generateManagerialReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             closeReport();
             const startStr = document.getElementById('rep-man-start').value;
             const endStr = document.getElementById('rep-man-end').value;
@@ -2421,19 +2457,24 @@ filtered.sort((a, b) => {
                 normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
                 && byPreliminar(p)
             );
-            const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasAnalisePreliminarList, 'data_ent', 'data_analise_preliminar');
             const noticiasArquivadosPreliminarList = processos.filter(p =>
                 processHasResultado(p, 'Arquivado após análise preliminar')
                 && byPreliminar(p)
             );
             const noticiasEncaminhadosJuizoList = processos.filter(p =>
-                ['Aguardando Distribuição', 'Em análise'].includes(getStatusFromProcess(p))
+                ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
                 && byPreliminar(p)
             );
             const noticiasEncaminhadosJuizoJuntadoList = processos.filter(p =>
                 p.juntado && p.juntado.trim().length > 0
                 && byPreliminar(p)
             );
+            const noticiasProcessosAnalisadosList = uniqueProcessesByIdentity([
+                ...noticiasArquivadosPreliminarList,
+                ...noticiasEncaminhadosJuizoList,
+                ...noticiasEncaminhadosJuizoJuntadoList
+            ]);
+            const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasProcessosAnalisadosList, 'data_ent', 'data_analise_preliminar');
 
             const juizoAnalisadosList = processos.filter(p =>
                 ['Concluído', 'TAC'].includes(getStatusFromProcess(p))
@@ -2486,17 +2527,18 @@ filtered.sort((a, b) => {
                   + `<div class="report-section"><div class="report-header">Acervo Geral de Processos</div>`               
                 + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`                
                 + `${renderRow('Juízo de Admissibilidade', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
-                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
-                + `${renderRow('Processos Analisados', noticiasAnalisePreliminarList.length, noticiasAnalisePreliminarList, 'statusResultado')}`
+                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`␊
+                + `${renderRow('Processos Analisados', noticiasProcessosAnalisadosList.length, noticiasProcessosAnalisadosList, 'seiOnly')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
                 + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
                  + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
                    + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
-                + `<div class="report-sub-header">Processos Analisados</div>`
+               + `<div class="report-sub-header">Processos Analisados</div>`
                 + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
                + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
+               + `${renderRow('Total de Processos Analisados (IPS e não IPS)', juizoAnalisadosList.length, [])}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos Arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
@@ -2513,10 +2555,10 @@ filtered.sort((a, b) => {
                 + `${renderRow('TACs Recusados', tacMap.recusados.length, tacMap.recusados, 'tac')}`
                 + `${renderRow('TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados, 'tac')}</div>`;
 
-            setLastReport(filtered, true);
+             setLastReport(filtered, true);
             lastManagerialSections = {
-                acervo_geral: Array.from(new Set([...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList])),
-                noticias_irregularidade: Array.from(new Set([...noticiasAnalisePreliminarList, ...noticiasArquivadosPreliminarList, ...noticiasEncaminhadosJuizoList, ...noticiasEncaminhadosJuizoJuntadoList])),
+                acervo_geral: uniqueProcessesByIdentity([...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList]),
+                noticias_irregularidade: uniqueProcessesByIdentity([...noticiasAnalisePreliminarList, ...noticiasProcessosAnalisadosList, ...noticiasArquivadosPreliminarList, ...noticiasEncaminhadosJuizoList, ...noticiasEncaminhadosJuizoJuntadoList]),
                 juizo_admissibilidade: juizoAnalisadosList,
                 termo_ajustamento_conduta: juizoTacList
             };            document.getElementById('report-content').innerHTML = html;
