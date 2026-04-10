@@ -2534,12 +2534,12 @@ filtered.sort((a, b) => {
                 + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
                 + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
                  + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
-                   + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
-               + `<div class="report-sub-header">Processos Analisados</div>`
-                + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
-               + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
+                   + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`␊
+               + `<div class="report-sub-header">Processos Analisados</div>`␊
                + `${renderRow('Total de Processos Analisados (IPS e não IPS)', juizoAnalisadosList.length, [])}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
+                + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
+               + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
                 + `<div class="report-sub-header">Resultados</div>`
                 + `${renderRow('Processos Arquivados', juizoArquivadosList.length, juizoArquivadosList, 'statusResultado')}`
                 + `${renderRow('Processos para negociação de Termo de Ajustamento de Conduta (TAC)', juizoTacList.length, juizoTacList, 'statusResultado')}`
