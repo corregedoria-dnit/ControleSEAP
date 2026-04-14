@@ -301,7 +301,7 @@
                             <div><label class="block text-xs font-bold text-gray-600">Cadastro ePAD?</label><select id="fp-cad_epad" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="fp-epad_detalhes" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
-                            <div><label class="block text-xs font-bold text-gray-600">Status do TAC</label><select id="fp-tac_sit" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Em negociação">Em negociação</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
+                            <div><label class="block text-xs font-bold text-gray-600">Status do TAC</label><select id="fp-tac_sit" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
                             <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-600">Observações do TAC</label><input type="text" id="fp-tac_obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
                             <div class="md:col-span-3 lg:col-span-4"><label class="block text-xs font-bold text-gray-600">Observações Gerais</label><input type="text" id="fp-obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
@@ -491,22 +491,33 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-1 gap-4">
-                            <div id="tac-details" class="hidden grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded border">
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Status do TAC</label>
-                                    <select id="process-tac-situacao" class="w-full border rounded px-3 py-2">
-                                    <option value="">Status do TAC...</option>
-                                    <option value="Em negociação">Em negociação</option>
-                                    <option value="Celebrado">Celebrado</option>
-                                    <option value="Recusado">Recusado</option>
-                                    <option value="Finalizado">Finalizado</option>
-                                    </select>
+                            <div id="tac-details" class="hidden bg-gray-50 p-4 rounded border">
+                                <h4 class="text-base font-semibold text-gray-700 mb-3">BLOCO 4 – TAC</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Status do TAC</label>
+                                        <select id="process-tac-situacao" onchange="toggleTacDeadlineField()" class="w-full border rounded px-3 py-2">
+                                        <option value="">Status do TAC...</option>
+                                        <option value="Em negociação">Em negociação</option>
+                                        <option value="TAC proposto e aceito">TAC proposto e aceito</option>
+                                        <option value="Celebrado">Celebrado</option>
+                                        <option value="Recusado">Recusado</option>
+                                        <option value="Finalizado">Finalizado</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium mb-1">Data do status do TAC</label>
+                                        <input type="date" id="process-tac-status-data" class="w-full border rounded px-3 py-2">
+                                    </div>
+                                    <div id="tac-deadline-wrap" class="hidden md:col-span-2">
+                                        <label class="block text-sm font-medium mb-1">Data limite para cumprimento do TAC</label>
+                                        <input type="date" id="process-tac-data-limite" class="w-full border rounded px-3 py-2">
+                                    </div>
+                                    <div class="md:col-span-2">
+                                        <label class="block text-sm font-medium mb-1">Observações do TAC</label>
+                                        <textarea id="process-tac-obs" class="w-full border rounded px-3 py-2" placeholder="Observações sobre o TAC"></textarea>
+                                    </div>
                                 </div>
-                                <div>
-                                    <label class="block text-sm font-medium mb-1">Data do status do TAC</label>
-                                    <input type="date" id="process-tac-status-data" class="w-full border rounded px-3 py-2">
-                                </div>
-                                <textarea id="process-tac-obs" class="w-full border rounded px-3 py-2 md:col-span-2" placeholder="Observações sobre o TAC"></textarea>
                             </div>
                             <textarea id="process-obs" class="w-full border rounded px-3 py-2" rows="3" placeholder="Observações Gerais"></textarea>
                         </div>
@@ -524,8 +535,6 @@
                     <h2 class="text-xl font-bold mb-4">Central de Relatórios</h2>
                     <div class="flex space-x-2 border-b mb-4 flex-wrap">
                         <button onclick="switchReportTab('geral')" id="tab-rep-geral" class="pb-2 px-2 border-b-2 report-tab-btn">Relatório Geral</button>
-                        <button onclick="switchReportTab('status')" id="tab-rep-status" class="pb-2 px-2 border-b-2 report-tab-btn">Por Status</button>
-                        <button onclick="switchReportTab('andamento')" id="tab-rep-andamento" class="pb-2 px-2 border-b-2 report-tab-btn">Andamento / Finalizados</button>
                         <button onclick="switchReportTab('distribuicao')" id="tab-rep-distribuicao" class="pb-2 px-2 border-b-2 report-tab-btn">Distribuição por Analista</button>
                         <button onclick="switchReportTab('prescricao')" id="tab-rep-prescricao" class="pb-2 px-2 border-b-2 report-tab-btn">Controle Prescricional</button>
                         <button onclick="switchReportTab('entregues')" id="tab-rep-entregues" class="pb-2 px-2 border-b-2 report-tab-btn">Entregues vs Pendentes</button>
@@ -545,79 +554,38 @@
                     <div id="filters-geral" class="report-filters hidden animate-fadeIn">
                         <h3 class="font-semibold mb-2">Filtros do Relatório Geral</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 border rounded bg-gray-50 mb-4">
+                            <div><label class="text-xs font-bold text-gray-600">Status</label><select id="f-status" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option><option value="Em análise">Em análise</option><option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option><option value="TAC">TAC</option><option value="Suspenso">Suspenso</option><option value="Concluído">Concluído</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Processo SEI</label><input type="text" id="f-sei" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Objeto</label><input type="text" id="f-objeto" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Acusado</label><input type="text" id="f-acusado" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Analista Responsável</label><input type="text" id="f-analista" class="border rounded px-2 py-1 w-full mt-1 text-sm" list="analistas-list"></div>
                             <div><label class="text-xs font-bold text-gray-600">Tipo de Pessoa</label><select id="f-tipo-pessoa" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="PF">Pessoa Física</option><option value="PJ">Envolve Pessoa Jurídica</option></select></div>
-
                             <div><label class="text-xs font-bold text-gray-600">Data Entrada (De)</label><input type="date" id="f-data-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Data Entrada (Até)</label><input type="date" id="f-data-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Resultado</label><select id="f-resultado" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Não definida">Não definida</option><option value="Instauração de PAD">Instauração de PAD</option><option value="Instauração de PAR">Instauração de PAR</option><option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Conhecimento (De)</label><input type="date" id="f-data-conhecimento-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Conhecimento (Até)</label><input type="date" id="f-data-conhecimento-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Distribuição (De)</label><input type="date" id="f-data-dist-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Distribuição (Até)</label><input type="date" id="f-data-dist-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Prazo NT (De)</label><input type="date" id="f-prazo-nt-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Prazo NT (Até)</label><input type="date" id="f-prazo-nt-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Entrega NT (De)</label><input type="date" id="f-data-entrega-nt-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Entrega NT (Até)</label><input type="date" id="f-data-entrega-nt-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Assinatura Despacho (De)</label><input type="date" id="f-data-despacho-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Assinatura Despacho (Até)</label><input type="date" id="f-data-despacho-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Resultado</label><select id="f-resultado" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Não definida">Não definida</option><option value="Instauração de PAD">Instauração de PAD</option><option value="Instauração de PAR">Instauração de PAR</option><option value="Instauração de SINPA">Instauração de SINPA</option><option value="Instauração de SINAC">Instauração de SINAC</option><option value="Instauração de SINVE">Instauração de SINVE</option><option value="Instauração de IPS">Instauração de IPS</option><option value="Encaminhado para o Min. dos Transportes">Min. Transportes</option><option value="Para celebrar TAC">Para celebrar TAC</option><option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Penalidade Aplicável</label><select id="f-penalidade" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todas</option><option value="Advertência">Advertência</option><option value="Suspensão">Suspensão</option><option value="Demissão">Demissão</option><option value="Multa (PJ)">Multa (PJ)</option></select></div>
-
-                            <div><label class="text-xs font-bold text-gray-600">Unidade Origem</label><input type="text" id="f-unidade" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Doc. Origem</label><input type="text" id="f-doc-origem" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div class="lg:col-span-2"><label class="text-xs font-bold text-gray-600">Juntado a Processo</label><input type="text" id="f-juntado" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-
-                            <div class="lg:col-span-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-4 gap-y-3 pt-2 border-t mt-2">
-                                <div class="flex items-center"><label class="text-sm flex items-center"><input type="checkbox" id="f-concluido" class="mr-2">Concluídos</label></div>
-                                <div class="flex items-center"><label class="text-sm flex items-center"><input type="checkbox" id="f-prioritario" class="mr-2">Prioritários</label></div>
-
-                                <div class="flex flex-col">
-                                    <label class="text-sm flex items-center"><input type="checkbox" id="f-epad" class="mr-2" onchange="toggleFilterDetail('f-epad-det')">Com ePAD</label>
-                                    <input type="text" id="f-epad-det" class="hidden border rounded px-2 py-1 mt-1 text-xs w-full" placeholder="Detalhes (pesquisa)...">
-                                </div>
-                                <div class="flex flex-col">
-                                                                        <label class="text-sm flex items-center"><input type="checkbox" id="f-inquerito" class="mr-2" onchange="toggleFilterDetail('f-inq-det')">Com Inquérito</label>
-                                    <input type="text" id="f-inq-det" class="hidden border rounded px-2 py-1 mt-1 text-xs w-full" placeholder="Detalhes (pesquisa)...">
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-sm flex items-center"><input type="checkbox" id="f-op-policial" class="mr-2" onchange="toggleFilterDetail('f-op-det')">Op. Policial</label>
-                                    <input type="text" id="f-op-det" class="hidden border rounded px-2 py-1 mt-1 text-xs w-full" placeholder="Detalhes (pesquisa)...">
-                                </div>
-                                <div class="flex flex-col">
-                                    <label class="text-sm flex items-center"><input type="checkbox" id="f-tac" class="mr-2" onchange="toggleFilterDetail('f-tac-det')">Para celebrar TAC</label>
-                                    <input type="text" id="f-tac-det" class="hidden border rounded px-2 py-1 mt-1 text-xs w-full" placeholder="Detalhes (pesquisa)...">
-                                </div>
-                            </div>
+                            <div><label class="text-xs font-bold text-gray-600">Operação Policial</label><select id="f-op-policial" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Detalhes Op. Policial</label><input type="text" id="f-op-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Possui Inquérito</label><select id="f-inquerito" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Detalhes Inquérito</label><input type="text" id="f-inq-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Cadastrado no ePAD</label><select id="f-epad" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Status do TAC</label><select id="f-tac-status" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data status TAC (De)</label><input type="date" id="f-tac-status-data-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data status TAC (Até)</label><input type="date" id="f-tac-status-data-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data limite TAC (De)</label><input type="date" id="f-tac-limite-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data limite TAC (Até)</label><input type="date" id="f-tac-limite-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                         </div>
                         <button onclick="generateGeneralReport()" class="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto">Gerar Relatório Geral</button>
-                    </div>
-
-                    <div id="filters-status" class="report-filters hidden animate-fadeIn">
-                        <h3 class="font-semibold mb-2">Relatório por Status</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div><label class="text-xs font-bold text-gray-600">Status:</label>
-                                <select id="rep-status-val" class="border rounded px-3 py-2 w-full mt-1">
-                                    <option value="">Todos os Status</option>
-                                    <option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option>
-                                    <option value="Em análise">Em análise</option>
-                                    <option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option>
-                                    <option value="TAC">TAC</option>
-                                    <option value="Suspenso">Suspenso</option>
-                                    <option value="Concluído">Concluído</option>
-                                </select>
-                            </div>
-                            <div><label class="text-xs font-bold text-gray-600">Data de Entrada (De):</label><input type="date" id="rep-status-de" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data de Entrada (Até):</label><input type="date" id="rep-status-ate" class="border rounded px-3 py-2 w-full mt-1"></div>
-                        </div>
-                        <button onclick="generateStatusReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório</button>
-                    </div>
-
-                    <div id="filters-andamento" class="report-filters hidden animate-fadeIn">
-                        <h3 class="font-semibold mb-2">Processos em Andamento ou Finalizados</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div><label class="text-xs font-bold text-gray-600">Fase do Processo:</label>
-                                <select id="rep-andamento-tipo" class="border rounded px-3 py-2 w-full mt-1">
-                                    <option value="andamento">Em Andamento</option>
-                                    <option value="finalizado">Finalizados</option>
-                                    <option value="todos">Todos</option>
-                                </select>
-                            </div>
-                            <div><label class="text-xs font-bold text-gray-600">Data de Entrada (De):</label><input type="date" id="rep-andamento-de" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data de Entrada (Até):</label><input type="date" id="rep-andamento-ate" class="border rounded px-3 py-2 w-full mt-1"></div>
-                        </div>
-                        <button onclick="generateProgressReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório</button>
                     </div>
 
                     <div id="filters-gerencial" class="report-filters hidden animate-fadeIn">
@@ -1187,6 +1155,10 @@ async function handleLogin(e) {
                 dbData.tac_sit = null;
                 dbData.tac_obs = null;
                 dbData.tac_status_data = null;
+                dbData.tac_data_limite = null;
+            }
+            if (normalizeText(dbData.tac_sit) !== normalizeText('TAC proposto e aceito')) {
+                dbData.tac_data_limite = null;
             }
             // Itera sobre todas as chaves do objeto
             for (const key in dbData) {
@@ -1385,6 +1357,7 @@ async function handleLogin(e) {
                 doc_resp: document.getElementById('process-doc-resposta').value,
                 tac_sit: document.getElementById('process-tac-situacao').value,
                 tac_status_data: document.getElementById('process-tac-status-data').value,
+                tac_data_limite: document.getElementById('process-tac-data-limite').value,
                 tac_obs: document.getElementById('process-tac-obs').value,
                 obs: document.getElementById('process-obs').value,
             };
@@ -1939,9 +1912,9 @@ filtered.sort((a, b) => {
             const detailContainer = document.getElementById('split-detail-view');
             const isOnlyPJ = p.tipo_acusado === 'Pessoa Jurídica';
             const showPJ = (p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica') && p.calc_pj;
-            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${getRelatedProcessesDisplay(p)}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span><p><b>Data do status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</p>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
+            detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${getRelatedProcessesDisplay(p)}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid grid-cols-3 gap-2">${!isOnlyPJ ? `<div><b>Advertência:</b> ${formatDate(p.calc_advertencia)}</div><div><b>Suspensão:</b> ${formatDate(p.calc_suspensao)}</div><div><b>Demissão:</b> ${formatDate(p.calc_demissao)}</div>` : ''}${showPJ ? `<div><b>PJ:</b> ${formatDate(p.calc_pj)}</div>` : ''}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span><p><b>Data do status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</p><p><b>Data limite para cumprimento do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite)}</p>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
-        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; renderAccused(); renderProcessosRelacionados(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details'].forEach(id => document.getElementById(id).classList.add('hidden')); renderAccusedDecisionFields(); }
+        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; renderAccused(); renderProcessosRelacionados(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details', 'tac-deadline-wrap'].forEach(id => document.getElementById(id)?.classList.add('hidden')); renderAccusedDecisionFields(); }
         function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); currentAccusedOutcomes.push({ acusado: v, resultado: 'Não definida', data_despacho: '' }); document.getElementById('input-acusado').value=''; renderAccused(); renderAccusedDecisionFields(); }}
         function removeAcusado(idx) { currentAccused.splice(idx, 1); currentAccusedOutcomes.splice(idx, 1); renderAccused(); renderAccusedDecisionFields(); }
         function renderAccused() { document.getElementById('lista-acusados').innerHTML = currentAccused.map((a, i) => `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs inline-flex items-center">${a} <button type="button" onclick="removeAcusado(${i})" class="ml-1.5 text-blue-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
@@ -1961,6 +1934,15 @@ filtered.sort((a, b) => {
             if (mustShowTac && !tacStatusField.value) {
                 tacStatusField.value = 'Em negociação';
             }
+            toggleTacDeadlineField();
+        }
+        function toggleTacDeadlineField() {
+            const tacStatus = document.getElementById('process-tac-situacao')?.value || '';
+            const deadlineWrap = document.getElementById('tac-deadline-wrap');
+            const deadlineInput = document.getElementById('process-tac-data-limite');
+            const shouldShow = normalizeText(tacStatus) === normalizeText('TAC proposto e aceito');
+            if (deadlineWrap) deadlineWrap.classList.toggle('hidden', !shouldShow);
+            if (!shouldShow && deadlineInput) deadlineInput.value = '';
         }
         function toggleConditionalField(elementId, show) { document.getElementById(elementId).classList.toggle('hidden', !show); }
         function toggleFilterDetail(elementId) { document.getElementById(elementId).classList.toggle('hidden'); }
@@ -2234,6 +2216,7 @@ filtered.sort((a, b) => {
             tac_apto: { label: 'Para celebrar TAC', get: p => processHasResultado(p, 'Para celebrar TAC') ? 'Sim' : 'Não' },
             tac_sit: { label: 'Situação TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p) },
             tac_status_data: { label: 'Data do status TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data) },
+            tac_data_limite: { label: 'Data limite TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite) },
             tac_obs: { label: 'Observações TAC', get: p => p.tac_obs || '—' },
             obs: { label: 'Observações Gerais', get: p => p.obs || '—' }
         };
@@ -2313,30 +2296,97 @@ filtered.sort((a, b) => {
         async function generateGeneralReport() {
             const loaded = await refreshProcessosForReportGeneration();
             if (!loaded) return;
-            closeReport(); let filtered = [...processos]; const v = id => document.getElementById(id).value.toLowerCase(); const c = id => document.getElementById(id).checked;
-            if (v('f-sei')) filtered = filtered.filter(p => p.sei && p.sei.toLowerCase().includes(v('f-sei'))); if (v('f-objeto')) filtered = filtered.filter(p => p.objeto && p.objeto.toLowerCase().includes(v('f-objeto'))); if (v('f-acusado')) filtered = filtered.filter(p => p.acusados && p.acusados.join(' ').toLowerCase().includes(v('f-acusado'))); if (v('f-data-de')) filtered = filtered.filter(p => p.data_ent >= document.getElementById('f-data-de').value); if (v('f-data-ate')) filtered = filtered.filter(p => p.data_ent <= document.getElementById('f-data-ate').value); if (v('f-resultado')) filtered = filtered.filter(p => processHasResultado(p, document.getElementById('f-resultado').value)); if (v('f-tipo-pessoa') === 'PF') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Física'); if (v('f-tipo-pessoa') === 'PJ') filtered = filtered.filter(p => p.tipo_acusado === 'Pessoa Jurídica' || p.tipo_acusado === 'Pessoa Física + Jurídica'); if (v('f-unidade')) filtered = filtered.filter(p => p.unidade_origem && p.unidade_origem.toLowerCase().includes(v('f-unidade'))); if (v('f-doc-origem')) filtered = filtered.filter(p => p.doc_origem && p.doc_origem.toLowerCase().includes(v('f-doc-origem'))); if (v('f-juntado')) filtered = filtered.filter(p => p.juntado && p.juntado.toLowerCase().includes(v('f-juntado'))); if (v('f-penalidade')) filtered = filtered.filter(p => p.penalidades === document.getElementById('f-penalidade').value); if (c('f-concluido')) filtered = filtered.filter(p => getStatusFromProcess(p) === 'Concluído'); if (c('f-prioritario')) filtered = filtered.filter(p => p.prioritario);
-            if (c('f-epad')) { filtered = filtered.filter(p => p.cad_epad); const d = v('f-epad-det'); if(d) filtered = filtered.filter(p => p.epad_detalhes && p.epad_detalhes.toLowerCase().includes(d)); } if (c('f-inquerito')) { filtered = filtered.filter(p => p.possui_inquerito); const d = v('f-inq-det'); if(d) filtered = filtered.filter(p => p.inquerito_detalhes && p.inquerito_detalhes.toLowerCase().includes(d)); } if (c('f-op-policial')) { filtered = filtered.filter(p => p.op_policial); const d = v('f-op-det'); if(d) filtered = filtered.filter(p => p.op_policial_detalhes && p.op_policial_detalhes.toLowerCase().includes(d)); } if (c('f-tac')) { filtered = filtered.filter(p => processHasResultado(p, 'Para celebrar TAC')); const d = v('f-tac-det'); if(d) filtered = filtered.filter(p => p.tac_obs && p.tac_obs.toLowerCase().includes(d)); }
+            closeReport();
+            let filtered = [...processos];
+            const val = (id) => (document.getElementById(id)?.value || '').trim();
+            const valLower = (id) => val(id).toLowerCase();
+            const inRange = (target, start, end) => {
+                if (!target) return false;
+                if (start && target < start) return false;
+                if (end && target > end) return false;
+                return true;
+            };
+
+            const filters = {
+                status: val('f-status'),
+                sei: valLower('f-sei'),
+                objeto: valLower('f-objeto'),
+                acusado: valLower('f-acusado'),
+                analista: valLower('f-analista'),
+                resultado: val('f-resultado'),
+                tipoPessoa: val('f-tipo-pessoa'),
+                penalidade: val('f-penalidade'),
+                opPolicial: val('f-op-policial'),
+                opDetalhes: valLower('f-op-det'),
+                inquerito: val('f-inquerito'),
+                inqueritoDetalhes: valLower('f-inq-det'),
+                epad: val('f-epad'),
+                tacStatus: val('f-tac-status'),
+                dataEntDe: val('f-data-de'),
+                dataEntAte: val('f-data-ate'),
+                dataConhecimentoDe: val('f-data-conhecimento-de'),
+                dataConhecimentoAte: val('f-data-conhecimento-ate'),
+                dataDistDe: val('f-data-dist-de'),
+                dataDistAte: val('f-data-dist-ate'),
+                prazoNtDe: val('f-prazo-nt-de'),
+                prazoNtAte: val('f-prazo-nt-ate'),
+                entregaNtDe: val('f-data-entrega-nt-de'),
+                entregaNtAte: val('f-data-entrega-nt-ate'),
+                despachoDe: val('f-data-despacho-de'),
+                despachoAte: val('f-data-despacho-ate'),
+                tacStatusDataDe: val('f-tac-status-data-de'),
+                tacStatusDataAte: val('f-tac-status-data-ate'),
+                tacLimiteDe: val('f-tac-limite-de'),
+                tacLimiteAte: val('f-tac-limite-ate')
+            };
+
+            filtered = filtered.filter((p) => {
+                if (filters.status && getStatusFromProcess(p) !== filters.status) return false;
+                if (filters.sei && !(p.sei || '').toLowerCase().includes(filters.sei)) return false;
+                if (filters.objeto && !(p.objeto || '').toLowerCase().includes(filters.objeto)) return false;
+                if (filters.acusado && !(Array.isArray(p.acusados) ? p.acusados.join(' ') : '').toLowerCase().includes(filters.acusado)) return false;
+                if (filters.analista && !(p.analista || '').toLowerCase().includes(filters.analista)) return false;
+                if (filters.resultado && !processHasResultado(p, filters.resultado)) return false;
+                if (filters.tipoPessoa === 'PF' && p.tipo_acusado !== 'Pessoa Física') return false;
+                if (filters.tipoPessoa === 'PJ' && !['Pessoa Jurídica', 'Pessoa Física + Jurídica'].includes(p.tipo_acusado)) return false;
+                if (filters.penalidade && p.penalidades !== filters.penalidade) return false;
+                if (!inRange(p.data_ent, filters.dataEntDe, filters.dataEntAte)) {
+                    if (filters.dataEntDe || filters.dataEntAte) return false;
+                }
+                if (!inRange(p.data_conhecimento, filters.dataConhecimentoDe, filters.dataConhecimentoAte)) {
+                    if (filters.dataConhecimentoDe || filters.dataConhecimentoAte) return false;
+                }
+                if (!inRange(p.data_distribuicao, filters.dataDistDe, filters.dataDistAte)) {
+                    if (filters.dataDistDe || filters.dataDistAte) return false;
+                }
+                if (!inRange(p.prazo_nt_data, filters.prazoNtDe, filters.prazoNtAte)) {
+                    if (filters.prazoNtDe || filters.prazoNtAte) return false;
+                }
+                if (!inRange(p.data_entrega_nt, filters.entregaNtDe, filters.entregaNtAte)) {
+                    if (filters.entregaNtDe || filters.entregaNtAte) return false;
+                }
+                const despachoDate = getDespachoDateForStatus(p);
+                if (!inRange(despachoDate, filters.despachoDe, filters.despachoAte)) {
+                    if (filters.despachoDe || filters.despachoAte) return false;
+                }
+                if (filters.opPolicial === 'sim' && p.op_policial !== true) return false;
+                if (filters.opPolicial === 'nao' && p.op_policial !== false) return false;
+                if (filters.opDetalhes && !(p.op_policial_detalhes || '').toLowerCase().includes(filters.opDetalhes)) return false;
+                if (filters.inquerito === 'sim' && p.possui_inquerito !== true) return false;
+                if (filters.inquerito === 'nao' && p.possui_inquerito !== false) return false;
+                if (filters.inqueritoDetalhes && !(p.inquerito_detalhes || '').toLowerCase().includes(filters.inqueritoDetalhes)) return false;
+                if (filters.epad === 'sim' && p.cad_epad !== true) return false;
+                if (filters.epad === 'nao' && p.cad_epad !== false) return false;
+                if (filters.tacStatus && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(filters.tacStatus)) return false;
+                if (!inRange(p.tac_status_data, filters.tacStatusDataDe, filters.tacStatusDataAte)) {
+                    if (filters.tacStatusDataDe || filters.tacStatusDataAte) return false;
+                }
+                if (!inRange(p.tac_data_limite, filters.tacLimiteDe, filters.tacLimiteAte)) {
+                    if (filters.tacLimiteDe || filters.tacLimiteAte) return false;
+                }
+                return true;
+            });
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório Geral de Processos (${filtered.length})</h2>${renderAnalyticTable(filtered)}`;
-            setLastReport(filtered, false);
-            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
-        }
-
-        async function generateStatusReport() {
-            const loaded = await refreshProcessosForReportGeneration();
-            if (!loaded) return;
-            closeReport(); const statusTarget = document.getElementById('rep-status-val').value; const start = document.getElementById('rep-status-de').value; const end = document.getElementById('rep-status-ate').value;
-            let filtered = processos.filter(p => { let match = true; if (statusTarget) match = match && getStatusFromProcess(p) === statusTarget; if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; return match; });
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos por Status (${filtered.length})</h2><p class="text-sm text-center mb-4">Status: ${statusTarget || 'Todos'} | Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
-            setLastReport(filtered, false);
-            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
-        }
-
-       async function generateProgressReport() {
-            const loaded = await refreshProcessosForReportGeneration();
-            if (!loaded) return;
-            closeReport(); const tipo = document.getElementById('rep-andamento-tipo').value; const start = document.getElementById('rep-andamento-de').value; const end = document.getElementById('rep-andamento-ate').value;
-            let filtered = processos.filter(p => { let match = true; const despachoRef = getDespachoDateForStatus(p); if (start) match = match && p.data_ent >= start; if (end) match = match && p.data_ent <= end; if (tipo === 'finalizado') match = match && getStatusFromProcess(p) === 'Concluído'; else if (tipo === 'andamento') match = match && getStatusFromProcess(p) !== 'Concluído'; return match; });
-            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Processos - ${tipo === 'andamento' ? 'Em Andamento' : tipo === 'finalizado' ? 'Finalizados' : 'Todos'} (${filtered.length})</h2><p class="text-sm text-center mb-4">Período: ${start ? formatDate(start) : 'Início'} a ${end ? formatDate(end) : 'Hoje'}</p>${renderAnalyticTable(filtered)}`;
             setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
@@ -2584,6 +2634,7 @@ filtered.sort((a, b) => {
             const avgJuizoAnalysis = calculateAverageDays(juizoAnalisadosList, 'data_analise_preliminar', 'data_despacho');
             const tacMap = {
                 'negociacao': buildTacRowsBySituation(juizoTacList, 'Em negociação'),
+                'propostosAceitos': buildTacRowsBySituation(juizoTacList, 'TAC proposto e aceito'),
                 'celebrados': buildTacRowsBySituation(juizoTacList, 'Celebrado'),
                 'recusados': buildTacRowsBySituation(juizoTacList, 'Recusado'),
                 'finalizados': buildTacRowsBySituation(juizoTacList, 'Finalizado')
@@ -2617,6 +2668,7 @@ filtered.sort((a, b) => {
                 + `${renderRow('Ministério dos Transportes', juizoMinTransportesList.length, juizoMinTransportesList, 'statusResultado')}</div>`
                 + `<div class="report-section"><div class="report-header">Termo de Ajustamento de Conduta – TAC</div>`
                 + `${renderRow('TACs Em Negociação', tacMap.negociacao.length, tacMap.negociacao, 'tac')}`
+                + `${renderRow('TACs Propostos e Aceitos', tacMap.propostosAceitos.length, tacMap.propostosAceitos, 'tac')}`
                 + `${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados, 'tac')}`
                 + `${renderRow('TACs Recusados', tacMap.recusados.length, tacMap.recusados, 'tac')}`
                 + `${renderRow('TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados, 'tac')}</div>`;
