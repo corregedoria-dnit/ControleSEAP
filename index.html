@@ -798,6 +798,10 @@ function getMissingSupabaseKeyMessage() {
     return 'Chave Supabase não configurada para este ambiente.';
 }
 
+function hasSupabaseAuthClient() {
+    return !!(supabaseClient && supabaseClient.auth);
+}
+
 // 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
 // --- VARIÁVEIS DE ESTADO GLOBAIS ---
 let currentUser = null;
@@ -887,7 +891,7 @@ function normalizeConfig(rawConfig = {}) {
 // 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
 
 async function loadCurrentUserProfile() {
-  if (!supabaseClient) return;
+  if (!hasSupabaseAuthClient()) return;
   if (!currentUser?.id) return;
   const { data, error } = await supabaseClient
     .from('usuarios')
@@ -909,22 +913,36 @@ async function loadCurrentUserProfile() {
   if (adminBadge) adminBadge.classList.toggle('hidden', !currentUser.is_admin);
 }
 
-        // Verifica se já existe uma sessão ativa ao carregar a página
-supabaseClient.auth.getSession().then(async ({ data: { session } }) => {
-  if (session) {
-    currentUser = session.user;
-    await loadCurrentUserProfile();
-    document.getElementById('login-overlay').style.display = 'none';
-    document.getElementById('app').style.display = 'flex';
-    initApp();
+          // Verifica se já existe uma sessão ativa ao carregar a página
+if (hasSupabaseAuthClient()) {
+  const authClient = supabaseClient.auth;
+  authClient.getSession().then(async ({ data: { session } }) => {
+    if (session) {
+      currentUser = session.user;
+      await loadCurrentUserProfile();
+      document.getElementById('login-overlay').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      initApp();
+    }
+  });
+} else {
+  const err = document.getElementById('error-msg');
+  if (err) {
+    err.innerText = getMissingSupabaseKeyMessage();
+    err.classList.remove('hidden');
   }
-});
+}
 
 // Função de logout atualizada
 async function logout() {
+  if (!hasSupabaseAuthClient()) {
+    window.location.reload(true);
+    return;
+  }
+  const authClient = supabaseClient.auth;
   try {
     // 1. Tenta fazer o logout oficial no Supabase
-    await supabaseClient.auth.signOut();
+    await authClient.signOut();
   } catch (error) {
     console.error("Erro ao comunicar logout ao Supabase:", error);
   } finally {
@@ -963,11 +981,18 @@ async function handleLogin(e) {
   const err = document.getElementById('error-msg');
   const btn = document.getElementById('btn-login');
 
+  if (!hasSupabaseAuthClient()) {
+    err.innerText = getMissingSupabaseKeyMessage();
+    err.classList.remove('hidden');
+    return;
+  }
+  const authClient = supabaseClient.auth;
+
   btn.innerText = 'Verificando...';
   err.classList.add('hidden');
 
   // Utilizando a autenticação nativa do Supabase
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
+  const { data, error } = await authClient.signInWithPassword({
     email: email,
     password: password,
   });
