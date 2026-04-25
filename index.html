@@ -788,7 +788,15 @@ if (keyFromUrl) {
 }
 const SUPABASE_URL = `https://${SUPABASE_ENVS[selectedEnv].projectId}.supabase.co`;
 const SUPABASE_KEY = keyFromUrl || localStorage.getItem(keyStorageName) || SUPABASE_ENVS[selectedEnv].key;
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const hasSupabaseKey = typeof SUPABASE_KEY === 'string' && SUPABASE_KEY.trim().length > 0;
+const supabaseClient = hasSupabaseKey ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+function getMissingSupabaseKeyMessage() {
+    if (selectedEnv === 'homolog') {
+        return 'Informe a chave da homologação: ?env=homolog&sb_key=SUA_CHAVE';
+    }
+    return 'Chave Supabase não configurada para este ambiente.';
+}
 
 // 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
 // --- VARIÁVEIS DE ESTADO GLOBAIS ---
@@ -879,6 +887,7 @@ function normalizeConfig(rawConfig = {}) {
 // 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
 
 async function loadCurrentUserProfile() {
+  if (!supabaseClient) return;
   if (!currentUser?.id) return;
   const { data, error } = await supabaseClient
     .from('usuarios')
