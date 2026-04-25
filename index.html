@@ -767,8 +767,21 @@
 
 <script>
 // --- CONFIGURAÇÃO SUPABASE ---
-const SUPABASE_URL = 'https://sqnqoqugtfegufwikhbt.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst';
+const SUPABASE_ENVS = {
+    producao: {
+        projectId: 'buqtsnywwsnzdyllesky',
+        key: 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst'
+    },
+    homolog: {
+        projectId: 'sqnqoqugtfegufwikhbt',
+        key: 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst'
+    }
+};
+const selectedEnv = new URLSearchParams(window.location.search).get('env') === 'homolog'
+    ? 'homolog'
+    : 'producao';
+const SUPABASE_URL = `https://${SUPABASE_ENVS[selectedEnv].projectId}.supabase.co`;
+const SUPABASE_KEY = SUPABASE_ENVS[selectedEnv].key;
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
