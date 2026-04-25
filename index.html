@@ -774,14 +774,20 @@ const SUPABASE_ENVS = {
     },
     homolog: {
         projectId: 'sqnqoqugtfegufwikhbt',
-        key: 'sb_publishable_AniXfRCWjroliyeA7FUr9w_rHEM3Xst'
+        key: ''
     }
 };
-const selectedEnv = new URLSearchParams(window.location.search).get('env') === 'homolog'
+const urlParams = new URLSearchParams(window.location.search);
+const selectedEnv = urlParams.get('env') === 'homolog'
     ? 'homolog'
     : 'producao';
+const keyStorageName = `controle-seap.supabase.key.${selectedEnv}`;
+const keyFromUrl = urlParams.get('supabase_key') || urlParams.get('sb_key');
+if (keyFromUrl) {
+    localStorage.setItem(keyStorageName, keyFromUrl);
+}
 const SUPABASE_URL = `https://${SUPABASE_ENVS[selectedEnv].projectId}.supabase.co`;
-const SUPABASE_KEY = SUPABASE_ENVS[selectedEnv].key;
+const SUPABASE_KEY = keyFromUrl || localStorage.getItem(keyStorageName) || SUPABASE_ENVS[selectedEnv].key;
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
@@ -959,13 +965,18 @@ async function handleLogin(e) {
 
   btn.innerText = 'Entrar';
 
-  if (error) {
+if (error) {
     console.error("Erro no login:", error.message);
-    err.innerText = "E-mail ou senha inválidos.";
+    if ((error.message || '').toLowerCase().includes('invalid api key')) {
+      err.innerText = selectedEnv === 'homolog'
+        ? 'Chave da homologação inválida. Abra com ?env=homolog&sb_key=SUA_CHAVE e tente novamente.'
+        : 'A chave de API configurada é inválida para este ambiente.';
+    } else {
+      err.innerText = "E-mail ou senha inválidos.";
+    }
     err.classList.remove('hidden');
     return;
   }
-
   if (data.user) {
     currentUser = data.user;
     await loadCurrentUserProfile();
