@@ -2632,7 +2632,9 @@ filtered.sort((a, b) => {
         }
 
         function isTacProcess(process) {
-            return normalizeText(getStatusFromProcess(process)) === normalizeText('TAC') || normalizeText(process.status_manual) === normalizeText('TAC');
+            return processHasResultado(process, 'Para celebrar TAC')
+                || normalizeText(getStatusFromProcess(process)) === normalizeText('TAC')
+                || normalizeText(process.status_manual) === normalizeText('TAC');
         }
 
         function buildTacRowsBySituation(processList, targetSituation) {
@@ -2777,8 +2779,8 @@ filtered.sort((a, b) => {
                 && byDespacho(p)
             );
             const juizoTacList = processos.filter(p =>
-                getStatusFromProcess(p) === 'TAC'
-                && byTacStatus(p)
+                processHasResultado(p, 'Para celebrar TAC')
+                && byDespacho(p)
             );
             const juizoPadList = processos.filter(p =>
                 processHasResultado(p, 'Instauração de PAD')
