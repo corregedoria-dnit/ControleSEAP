@@ -2585,14 +2585,15 @@ filtered.sort((a, b) => {
             processList.forEach(p => {
                 const accused = Array.isArray(p.acusados) ? p.acusados : [];
                 const outcomes = normalizeAccusedOutcomes(accused, p.resultados_acusados || []);
-                const shouldSplitByAccused = splitMultiAccused && accused.length > 1;
+               const shouldSplitByAccused = splitMultiAccused && processHasDifferentAccusedResults(p);
+                const accusedDisplay = accused.length ? accused.join(', ') : '—';
 
                 if (shouldSplitByAccused) {
                     outcomes.forEach(item => {
                         const result = item.resultado && item.resultado !== 'Não definida'
                             ? item.resultado
                             : (p.resultado || 'Não definida');
-                        if (normalizeText(result) === normalizeText(targetResult)) {
+                      if (normalizeText(result) === normalizeText(targetResult)) {
                             const despachoDate = item.data_despacho || p.data_despacho || '';
                             if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
                             rows.push({
@@ -2618,7 +2619,7 @@ filtered.sort((a, b) => {
                         rows.push({
                             sei: p.sei || '—',
                             objeto: p.objeto || '—',
-                            acusado: accused[0] || '—',
+                           acusado: accusedDisplay,
                             data_conhecimento: p.data_conhecimento || '',
                             status: getStatusFromProcess(p),
                             resultado: result,
@@ -2779,8 +2780,12 @@ filtered.sort((a, b) => {
                 && byDespacho(p)
             );
             const juizoTacList = processos.filter(p =>
-               processHasResultado(p, 'Para celebrar TAC')
+            processHasResultado(p, 'Para celebrar TAC')
                 && byDespacho(p)
+            );
+            const tacSectionList = processos.filter(p =>
+                processHasResultado(p, 'Para celebrar TAC')
+                && (byTacStatus(p) || byDespacho(p))
             );
             const tacSectionList = processos.filter(p =>
                 processHasResultado(p, 'Para celebrar TAC')
