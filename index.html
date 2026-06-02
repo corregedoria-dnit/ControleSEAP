@@ -2787,10 +2787,7 @@ filtered.sort((a, b) => {
                 processHasResultado(p, 'Para celebrar TAC')
                 && (byTacStatus(p) || byDespacho(p))
             );
-            const tacSectionList = processos.filter(p =>
-                processHasResultado(p, 'Para celebrar TAC')
-                && (byTacStatus(p) || byDespacho(p))
-            );
+           
             const juizoPadList = processos.filter(p =>
                 processHasResultado(p, 'Instauração de PAD')
                 && byDespacho(p)
