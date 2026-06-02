@@ -2592,7 +2592,7 @@ filtered.sort((a, b) => {
                         const result = item.resultado && item.resultado !== 'Não definida'
                             ? item.resultado
                             : (p.resultado || 'Não definida');
-                        if (result === targetResult) {
+                        if (normalizeText(result) === normalizeText(targetResult)) {
                             const despachoDate = item.data_despacho || p.data_despacho || '';
                             if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
                             rows.push({
@@ -2612,7 +2612,7 @@ filtered.sort((a, b) => {
                     const result = singleOutcome.resultado && singleOutcome.resultado !== 'Não definida'
                         ? singleOutcome.resultado
                         : (p.resultado || 'Não definida');
-                    if (result === targetResult) {
+                    if (normalizeText(result) === normalizeText(targetResult)) {
                         const despachoDate = singleOutcome.data_despacho || p.data_despacho || '';
                         if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
                         rows.push({
@@ -2632,7 +2632,7 @@ filtered.sort((a, b) => {
         }
 
         function isTacProcess(process) {
-            return processHasResultado(process, 'Para celebrar TAC')
+           return processHasResultado(process, 'Para celebrar TAC')
                 || normalizeText(getStatusFromProcess(process)) === normalizeText('TAC')
                 || normalizeText(process.status_manual) === normalizeText('TAC');
         }
@@ -2779,8 +2779,12 @@ filtered.sort((a, b) => {
                 && byDespacho(p)
             );
             const juizoTacList = processos.filter(p =>
-                processHasResultado(p, 'Para celebrar TAC')
+               processHasResultado(p, 'Para celebrar TAC')
                 && byDespacho(p)
+            );
+            const tacSectionList = processos.filter(p =>
+                processHasResultado(p, 'Para celebrar TAC')
+                && (byTacStatus(p) || byDespacho(p))
             );
             const juizoPadList = processos.filter(p =>
                 processHasResultado(p, 'Instauração de PAD')
@@ -2809,11 +2813,11 @@ filtered.sort((a, b) => {
 
             const avgJuizoAnalysis = calculateAverageDays(juizoAnalisadosList, 'data_analise_preliminar', 'data_despacho');
             const tacMap = {
-                'negociacao': buildTacRowsBySituation(juizoTacList, 'Em negociação'),
-                'propostosAceitos': buildTacRowsBySituation(juizoTacList, 'TAC proposto e aceito'),
-                'celebrados': buildTacRowsBySituation(juizoTacList, 'Celebrado'),
-                'recusados': buildTacRowsBySituation(juizoTacList, 'Recusado'),
-                'finalizados': buildTacRowsBySituation(juizoTacList, 'Finalizado')
+               'negociacao': buildTacRowsBySituation(tacSectionList, 'Em negociação'),
+                'propostosAceitos': buildTacRowsBySituation(tacSectionList, 'TAC proposto e aceito'),
+                'celebrados': buildTacRowsBySituation(tacSectionList, 'Celebrado'),
+                'recusados': buildTacRowsBySituation(tacSectionList, 'Recusado'),
+                'finalizados': buildTacRowsBySituation(tacSectionList, 'Finalizado')
             };
 
             let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
@@ -2854,7 +2858,8 @@ filtered.sort((a, b) => {
                 ...acervoJuizoAdmissibilidadeList,
                 ...noticiasProcessosAnalisadosList,
                 ...juizoAnalisadosList,
-                ...juizoTacList
+               ...juizoTacList,
+                ...tacSectionList
             ]);
             html += buildManagerialDifferentResultsFootnote(managerialReportProcesses, isAnalytic);
 
@@ -2863,7 +2868,7 @@ filtered.sort((a, b) => {
                 acervo_geral: uniqueProcessesByIdentity([...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList]),
                 noticias_irregularidade: uniqueProcessesByIdentity([...noticiasAnalisePreliminarList, ...noticiasProcessosAnalisadosList, ...noticiasArquivadosPreliminarList, ...noticiasEncaminhadosJuizoList, ...noticiasEncaminhadosJuizoJuntadoList]),
                 juizo_admissibilidade: juizoAnalisadosList,
-                termo_ajustamento_conduta: juizoTacList
+               termo_ajustamento_conduta: uniqueProcessesByIdentity(tacSectionList)
             };            document.getElementById('report-content').innerHTML = html;
             document.getElementById('report-output').classList.remove('hidden');
         }
