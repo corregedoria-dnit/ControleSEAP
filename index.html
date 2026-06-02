@@ -1642,7 +1642,7 @@ if (error) {
             const outcomes = normalizeAccusedOutcomes(process.acusados || [], process.resultados_acusados || []);
             return outcomes.some(item => item.data_despacho === despachoDate);
         }
- function getDefinedAccusedOutcomes(process) {
+        function getDefinedAccusedOutcomes(process) {
             const accused = Array.isArray(process.acusados) ? process.acusados : [];
             return normalizeAccusedOutcomes(accused, process.resultados_acusados || [])
                 .map(item => ({
@@ -1658,6 +1658,7 @@ if (error) {
             const distinctResults = new Set(getDefinedAccusedOutcomes(process).map(item => normalizeText(item.resultado)));
             return distinctResults.size > 1;
         }
+
        function getStatusFromProcess(p) {
            if (isValidProcessStatus(p.status_manual)) return p.status_manual;
            if (shouldSetTacStatus(p)) return 'TAC';
@@ -2573,10 +2574,7 @@ filtered.sort((a, b) => {
             const map = new Map();
             list.forEach((p) => {
                 if (!p) return;
-                const result = item.resultado && item.resultado !== 'Não definida'
-                            ? item.resultado
-                            : (p.resultado || 'Não definida');
-                        if (result === targetResult) {
+                const key = (p.sei && p.sei.trim()) || p.id || JSON.stringify([p.objeto, p.data_ent, p.data_analise_preliminar]);
                 if (!map.has(key)) map.set(key, p);
             });
             return Array.from(map.values());
@@ -2591,15 +2589,18 @@ filtered.sort((a, b) => {
 
                 if (shouldSplitByAccused) {
                     outcomes.forEach(item => {
-                        if (item.resultado === targetResult) {
+                        const result = item.resultado && item.resultado !== 'Não definida'
+                            ? item.resultado
+                            : (p.resultado || 'Não definida');
+                        if (result === targetResult) {
                             const despachoDate = item.data_despacho || p.data_despacho || '';
                             if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
                             rows.push({
-                            sei: `${p.sei || '—'}${processHasDifferentAccusedResults(p) ? '*' : ''}`,
+                                sei: `${p.sei || '—'}${processHasDifferentAccusedResults(p) ? '*' : ''}`,
                                 objeto: p.objeto || '—',
                                 acusado: item.acusado || '—',
                                 data_conhecimento: p.data_conhecimento || '',
-                               status: getStatusFromProcess(p),
+                                status: getStatusFromProcess(p),
                                 resultado: result,
                                 tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
                                 data_despacho: despachoDate
@@ -2641,7 +2642,8 @@ filtered.sort((a, b) => {
                 true
             );
         }
-function buildManagerialDifferentResultsFootnote(processList, isAnalytic) {
+
+        function buildManagerialDifferentResultsFootnote(processList, isAnalytic) {
             const mixedProcesses = uniqueProcessesByIdentity(processList).filter(processHasDifferentAccusedResults);
             if (!mixedProcesses.length) return '';
             const items = mixedProcesses.map(p => {
@@ -2684,7 +2686,7 @@ function buildManagerialDifferentResultsFootnote(processList, isAnalytic) {
             const resultHeader = mode === 'tac' ? '' : '<th class="border p-1">Resultado</th>';
             let html = `<div class="analytic-list border-t mt-2 pt-2"><div class="overflow-auto max-h-[60vh]"><table class="report-table w-full min-w-max text-xs border"><thead class="bg-gray-100"><tr><th class="border p-1">Nº SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Acusado</th><th class="border p-1">Data de conhecimento do fato</th><th class="border p-1">${statusHeader}</th>${resultHeader}</tr></thead><tbody>`;
             data.forEach(p => {
-                 if (p && Object.prototype.hasOwnProperty.call(p, 'acusado') && !Object.prototype.hasOwnProperty.call(p, 'acusados')) {
+                if (p && Object.prototype.hasOwnProperty.call(p, 'acusado') && !Object.prototype.hasOwnProperty.call(p, 'acusados')) {
                     if (mode === 'tac') {
                         const tacStatus = p.tac_sit || '—';
                         html += `<tr><td class="border p-1 font-mono">${p.sei || '—'}</td><td class="border p-1">${p.objeto || '—'}</td><td class="border p-1">${p.acusado || '—'}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1">${tacStatus}</td></tr>`;
@@ -2725,12 +2727,13 @@ function buildManagerialDifferentResultsFootnote(processList, isAnalytic) {
 
             const filtered = processos.filter(byConhecimento);
             const renderRow = (label, data, analyticList, mode = 'statusResultado') => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderManagerialFixedTable(analyticList, mode) : '');
-const renderResultRow = (label, result, processList, mode = 'statusResultado') => {
+            const renderResultRow = (label, result, processList, mode = 'statusResultado') => {
                 const analyticRows = isAnalytic && mode === 'statusResultado'
                     ? buildOutcomeRowsByResult(processList, result, true)
                     : processList;
                 return renderRow(label, processList.length, analyticRows, mode);
             };
+
               const acervoAnalisePreliminarList = processos.filter(p =>
                 normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
                 && isWithinPeriod(p.data_ent)
@@ -2819,7 +2822,7 @@ const renderResultRow = (label, result, processList, mode = 'statusResultado') =
                  + `${renderRow('Processos Analisados', noticiasProcessosAnalisadosList.length, [], 'seiOnly')}`
                 + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
                 + `<div class="report-sub-header">Resultados</div>`
-                + `${renderRow('Processos arquivados', noticiasArquivadosPreliminarList.length, noticiasArquivadosPreliminarList, 'statusResultado')}`
+                + `${renderResultRow('Processos arquivados', 'Arquivado após análise preliminar', noticiasArquivadosPreliminarList, 'statusResultado')}`
                 + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
                  + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
                    + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
@@ -2829,7 +2832,7 @@ const renderResultRow = (label, result, processList, mode = 'statusResultado') =
                 + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
                + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
                 + `<div class="report-sub-header">Resultados</div>`
-               + `${renderResultRow('Processos Arquivados', 'Arquivado após juízo de admissibilidade', juizoArquivadosList, 'statusResultado')}`
+                + `${renderResultRow('Processos Arquivados', 'Arquivado após juízo de admissibilidade', juizoArquivadosList, 'statusResultado')}`
                 + `${renderResultRow('Processos para negociação de Termo de Ajustamento de Conduta (TAC)', 'Para celebrar TAC', juizoTacList, 'statusResultado')}`
                 + `${renderResultRow('Instauração de Processo Administrativo Disciplinar (PAD)', 'Instauração de PAD', juizoPadList, 'statusResultado')}`
                 + `${renderResultRow('Instauração de Procedimento Administrativo de Responsabilização (PAR)', 'Instauração de PAR', juizoParList, 'statusResultado')}`
@@ -2843,7 +2846,8 @@ const renderResultRow = (label, result, processList, mode = 'statusResultado') =
                 + `${renderRow('TACs Celebrados', tacMap.celebrados.length, tacMap.celebrados, 'tac')}`
                 + `${renderRow('TACs Recusados', tacMap.recusados.length, tacMap.recusados, 'tac')}`
                 + `${renderRow('TACs Finalizados', tacMap.finalizados.length, tacMap.finalizados, 'tac')}</div>`;
-const managerialReportProcesses = uniqueProcessesByIdentity([
+
+            const managerialReportProcesses = uniqueProcessesByIdentity([
                 ...acervoAnalisePreliminarList,
                 ...acervoJuizoAdmissibilidadeList,
                 ...noticiasProcessosAnalisadosList,
