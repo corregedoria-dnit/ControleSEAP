@@ -1807,6 +1807,11 @@ function setupConfiguracoesView() {
                 .join(separator);
         }
 
+    function shouldShowPrescriptionDashboardAlert(process) {
+            return normalizeText(getStatusFromProcess(process)) !== normalizeText('TAC')
+                && !processHasResultado(process, 'Para celebrar TAC');
+        }
+
         function getPrescriptionAlertData(process, today) {
             const isOnlyPJ = process.tipo_acusado === 'Pessoa Jurídica';
             if (isOnlyPJ) {
@@ -1869,7 +1874,7 @@ function setupConfiguracoesView() {
 
           const atRiskProcesses = [];
             processos.forEach(p => {
-                if (isConcludedProcess(p)) return;
+                   if (isConcludedProcess(p) || !shouldShowPrescriptionDashboardAlert(p)) return;
                 const alertData = getPrescriptionAlertData(p, today);
                 const hasPrescricao = alertData.hasPrescricao;
                 const minDays = alertData.minDays;
