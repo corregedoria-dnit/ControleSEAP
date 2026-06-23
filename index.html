@@ -150,12 +150,6 @@
                     <button onclick="showPage('relatorios')" id="nav-relatorios" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center">
                         <i data-lucide="bar-chart-3" class="w-4 h-4 mr-2"></i> Relatórios
                     </button>
-                    <button onclick="showPage('servidores-pad')" id="nav-servidores-pad" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center">
-                        <i data-lucide="users" class="w-4 h-4 mr-2"></i> Servidores PAD
-                    </button>
-                    <button onclick="showPage('formacao-pad')" id="nav-formacao-pad" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center">
-                        <i data-lucide="user-check" class="w-4 h-4 mr-2"></i> Formação PAD
-                    </button>
                     <button onclick="showPage('configuracoes')" id="nav-configuracoes" class="nav-btn px-4 py-2 text-sm font-medium rounded-lg hover:bg-gray-100 flex items-center">
                         <i data-lucide="settings" class="w-4 h-4 mr-2"></i> Configurações
                     </button>
@@ -650,66 +644,6 @@
 
                 </div>
             </div>
- <div id="page-servidores-pad" class="page-content hidden animate-fadeIn max-w-7xl mx-auto">
-                <div class="bg-white p-6 rounded-lg shadow mb-6">
-                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
-                        <div>
-                            <h2 class="text-xl font-bold text-gray-800">Cadastro de Servidores para Comissões de PAD</h2>
-                            <p class="text-sm text-gray-500">Mantenha o banco de servidores elegíveis e acompanhe quantos processos disciplinares cada servidor integra.</p>
-                        </div>
-                        <button onclick="resetServidorPadForm()" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm flex items-center justify-center"><i data-lucide="plus" class="w-4 h-4 mr-2"></i>Novo servidor</button>
-                    </div>
-
-                    <form id="servidor-pad-form" onsubmit="submitServidorPadForm(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 border rounded-lg p-4 mb-6 bg-gray-50">
-                        <input type="hidden" id="servidor-pad-id">
-                        <div><label class="block text-sm font-bold required-field">Nome</label><input type="text" id="servidor-pad-nome" required class="w-full border rounded px-3 py-2"></div>
-                        <div><label class="block text-sm font-bold required-field">Lotação</label><input type="text" id="servidor-pad-lotacao" required class="w-full border rounded px-3 py-2"></div>
-                        <div><label class="block text-sm font-bold">Matéria de interesse</label><input type="text" id="servidor-pad-materia" class="w-full border rounded px-3 py-2" placeholder="Ex.: contrato, conduta, frequência"></div>
-                        <div><label class="block text-sm font-bold">Disponibilidade</label><select id="servidor-pad-disponibilidade" class="w-full border rounded px-3 py-2"><option value="Disponível">Disponível</option><option value="Disponível com restrições">Disponível com restrições</option><option value="Indisponível">Indisponível</option></select></div>
-                        <div><label class="block text-sm font-bold">Formação acadêmica</label><input type="text" id="servidor-pad-formacao" class="w-full border rounded px-3 py-2" placeholder="Ex.: Direito, Administração"></div>
-                        <div><label class="block text-sm font-bold">Conceito</label><select id="servidor-pad-conceito" class="w-full border rounded px-3 py-2"><option value="Excelente">Excelente</option><option value="Bom">Bom</option><option value="Regular">Regular</option><option value="Em avaliação">Em avaliação</option></select></div>
-                        <div class="md:col-span-2 lg:col-span-3 flex justify-end gap-2"><button type="button" onclick="resetServidorPadForm()" class="bg-gray-500 text-white px-4 py-2 rounded text-sm">Limpar</button><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Salvar servidor</button></div>
-                    </form>
-
-                    <div class="mb-3 flex flex-col md:flex-row gap-2 md:items-center md:justify-between">
-                        <input type="text" id="search-servidor-pad" oninput="renderServidoresPad()" class="border rounded px-3 py-2 text-sm w-full md:w-80" placeholder="Buscar por nome, lotação, matéria ou formação...">
-                        <span id="servidores-pad-resumo" class="text-sm text-gray-600"></span>
-                    </div>
-                    <div class="table-container border">
-                        <table>
-                            <thead class="bg-gray-100 text-sm"><tr><th>Nome</th><th>Lotação</th><th>Matéria</th><th>Disponibilidade</th><th>Formação</th><th>Conceito</th><th>Processos disciplinares</th><th>Ações</th></tr></thead>
-                            <tbody id="servidores-pad-table-body" class="text-sm bg-white"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div id="page-formacao-pad" class="page-content hidden animate-fadeIn max-w-7xl mx-auto">
-                <div class="bg-white p-6 rounded-lg shadow mb-6">
-                    <div class="mb-4">
-                        <h2 class="text-xl font-bold text-gray-800">Formação de Comissão de PAD</h2>
-                        <p class="text-sm text-gray-500">Monte comissões vinculadas ao número do processo SEI e selecione servidores conforme disponibilidade, perfil e carga atual.</p>
-                    </div>
-                    <form id="pad-form" onsubmit="submitPadForm(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 border rounded-lg p-4 mb-6 bg-gray-50">
-                        <input type="hidden" id="pad-id">
-                        <div><label class="block text-sm font-bold required-field">Processo SEI</label><input type="text" id="pad-sei" required class="w-full border rounded px-3 py-2 mask-sei" placeholder="00000.000000/0000-00"></div>
-                        <div><label class="block text-sm font-bold">Matéria do PAD</label><input type="text" id="pad-materia" class="w-full border rounded px-3 py-2"></div>
-                        <div><label class="block text-sm font-bold">Status</label><select id="pad-status" class="w-full border rounded px-3 py-2"><option>Em formação</option><option>Comissão formada</option><option>Em andamento</option><option>Concluído</option></select></div>
-                        <div><label class="block text-sm font-bold">Data de instauração</label><input type="date" id="pad-data" class="w-full border rounded px-3 py-2"></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-bold">Selecionar servidor</label><div class="flex gap-2"><select id="pad-servidor-select" class="w-full border rounded px-3 py-2"></select><button type="button" onclick="addServidorToPad()" class="bg-indigo-600 text-white px-3 py-2 rounded text-sm">Adicionar</button></div></div>
-                        <div class="md:col-span-2"><label class="block text-sm font-bold">Observações</label><input type="text" id="pad-obs" class="w-full border rounded px-3 py-2"></div>
-                        <div class="md:col-span-2 lg:col-span-4"><label class="block text-sm font-bold mb-1">Comissão selecionada</label><div id="pad-servidores-selecionados" class="flex flex-wrap gap-2 min-h-10 border rounded bg-white p-2"></div></div>
-                        <div class="md:col-span-2 lg:col-span-4 flex justify-end gap-2"><button type="button" onclick="resetPadForm()" class="bg-gray-500 text-white px-4 py-2 rounded text-sm">Limpar</button><button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded text-sm">Salvar comissão</button></div>
-                    </form>
-                    <div class="table-container border">
-                        <table>
-                            <thead class="bg-gray-100 text-sm"><tr><th>Processo SEI</th><th>Matéria</th><th>Status</th><th>Data</th><th>Comissão</th><th>Ações</th></tr></thead>
-                            <tbody id="pad-table-body" class="text-sm bg-white"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
 
             <div id="report-output" class="hidden bg-white p-8 shadow-lg mb-8 max-w-7xl mx-auto">
                 <div class="flex justify-end space-x-2 mb-6 no-print">
@@ -890,12 +824,7 @@ let isPriorityFilterActive = false;
 let lastReportData = [];
 let lastReportIsManagerial = false;
 const CONFIG_RECORD_ID = 'main';
-const PAD_SERVIDORES_STORAGE_KEY = 'controle-seap.servidores-pad';
-const PAD_COMISSOES_STORAGE_KEY = 'controle-seap.comissoes-pad';
-let servidoresPad = [];
-let comissoesPad = [];
-let currentPadServidores = [];
-    const DEFAULT_CONFIG = {
+const DEFAULT_CONFIG = {
   orgName: 'Controle Correicional',
   subtitle: 'Sistema Institucional',
   defaultUnit: 'SEAP',
@@ -1784,8 +1713,7 @@ if (error) {
   if(pageId === 'dashboard') loadDashboard();
   if(pageId === 'processos') refreshProcessos();
   if(pageId === 'novo-processo') resetForm();
- if(pageId === 'servidores-pad') initServidoresPadPage();
-  if(pageId === 'formacao-pad') initFormacaoPadPage();
+
   if(pageId === 'configuracoes') {
     loadConfigsToForm();
     fetchUsers(); // Busca os usuários (se for admin, a tabela será preenchida)
@@ -1794,177 +1722,6 @@ if (error) {
 
 
   if(pageId === 'relatorios') { populateAnalystFilters(); switchReportTab('geral'); }
-}
-
-function escapeHtml(value) {
-  return String(value ?? '').replace(/[&<>'"]/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
-}
-
-function loadPadData() {
-  try { servidoresPad = JSON.parse(localStorage.getItem(PAD_SERVIDORES_STORAGE_KEY) || '[]'); } catch { servidoresPad = []; }
-  try { comissoesPad = JSON.parse(localStorage.getItem(PAD_COMISSOES_STORAGE_KEY) || '[]'); } catch { comissoesPad = []; }
-}
-
-function persistPadData() {
-  localStorage.setItem(PAD_SERVIDORES_STORAGE_KEY, JSON.stringify(servidoresPad));
-  localStorage.setItem(PAD_COMISSOES_STORAGE_KEY, JSON.stringify(comissoesPad));
-}
-
-function getServidorPadProcessCount(servidorId) {
-  return comissoesPad.filter(c => Array.isArray(c.servidores) && c.servidores.includes(servidorId)).length;
-}
-
-function initServidoresPadPage() {
-  loadPadData();
-  renderServidoresPad();
-}
-
-function resetServidorPadForm() {
-  document.getElementById('servidor-pad-form')?.reset();
-  document.getElementById('servidor-pad-id').value = '';
-  document.getElementById('servidor-pad-disponibilidade').value = 'Disponível';
-  document.getElementById('servidor-pad-conceito').value = 'Excelente';
-}
-
-function submitServidorPadForm(event) {
-  event.preventDefault();
-  const id = document.getElementById('servidor-pad-id').value || `srv-${Date.now()}`;
-  const servidor = {
-    id,
-    nome: document.getElementById('servidor-pad-nome').value.trim(),
-    lotacao: document.getElementById('servidor-pad-lotacao').value.trim(),
-    materia: document.getElementById('servidor-pad-materia').value.trim(),
-    disponibilidade: document.getElementById('servidor-pad-disponibilidade').value,
-    formacao: document.getElementById('servidor-pad-formacao').value.trim(),
-    conceito: document.getElementById('servidor-pad-conceito').value
-  };
-  if (!servidor.nome || !servidor.lotacao) return showToast('Informe nome e lotação do servidor.', 'error');
-  const index = servidoresPad.findIndex(s => s.id === id);
-  if (index >= 0) servidoresPad[index] = servidor; else servidoresPad.push(servidor);
-  persistPadData();
-  resetServidorPadForm();
-  renderServidoresPad();
-  showToast('Servidor salvo no cadastro de PAD.', 'success');
-}
-
-function renderServidoresPad() {
-  loadPadData();
-  const term = normalizeText(document.getElementById('search-servidor-pad')?.value || '');
-  const filtered = servidoresPad.filter(s => [s.nome, s.lotacao, s.materia, s.formacao, s.conceito, s.disponibilidade].some(v => normalizeText(v).includes(term)));
-  const body = document.getElementById('servidores-pad-table-body');
-  if (!body) return;
-  body.innerHTML = filtered.length ? filtered.map(s => {
-    const count = getServidorPadProcessCount(s.id);
-    const badge = s.disponibilidade === 'Disponível' ? 'bg-green-100 text-green-700' : (s.disponibilidade === 'Indisponível' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700');
-    return `<tr class="border-b hover:bg-gray-50"><td class="font-semibold">${escapeHtml(s.nome)}</td><td>${escapeHtml(s.lotacao)}</td><td>${escapeHtml(s.materia || '-')}</td><td><span class="px-2 py-1 rounded text-xs ${badge}">${escapeHtml(s.disponibilidade)}</span></td><td>${escapeHtml(s.formacao || '-')}</td><td>${escapeHtml(s.conceito || '-')}</td><td class="font-bold text-center">${count}</td><td><button onclick="editServidorPad('${s.id}')" class="text-blue-600 hover:underline mr-2">Editar</button><button onclick="deleteServidorPad('${s.id}')" class="text-red-600 hover:underline">Excluir</button></td></tr>`;
-  }).join('') : '<tr><td colspan="8" class="text-center text-gray-500 py-6">Nenhum servidor cadastrado.</td></tr>';
-  document.getElementById('servidores-pad-resumo').innerText = `${filtered.length} servidor(es) listado(s) • ${servidoresPad.length} cadastrado(s)`;
-  if (window.lucide) lucide.createIcons();
-}
-
-function editServidorPad(id) {
-  const s = servidoresPad.find(item => item.id === id);
-  if (!s) return;
-  document.getElementById('servidor-pad-id').value = s.id;
-  document.getElementById('servidor-pad-nome').value = s.nome || '';
-  document.getElementById('servidor-pad-lotacao').value = s.lotacao || '';
-  document.getElementById('servidor-pad-materia').value = s.materia || '';
-  document.getElementById('servidor-pad-disponibilidade').value = s.disponibilidade || 'Disponível';
-  document.getElementById('servidor-pad-formacao').value = s.formacao || '';
-  document.getElementById('servidor-pad-conceito').value = s.conceito || 'Excelente';
-}
-
-function deleteServidorPad(id) {
-  if (getServidorPadProcessCount(id) > 0) return showToast('Servidor vinculado a comissão de PAD. Remova o vínculo antes de excluir.', 'error');
-  if (!confirm('Excluir este servidor do cadastro de PAD?')) return;
-  servidoresPad = servidoresPad.filter(s => s.id !== id);
-  persistPadData();
-  renderServidoresPad();
-}
-
-function initFormacaoPadPage() {
-  loadPadData();
-  renderPadServidorOptions();
-  renderSelectedPadServidores();
-  renderComissoesPad();
-}
-
-function renderPadServidorOptions() {
-  const select = document.getElementById('pad-servidor-select');
-  if (!select) return;
-  select.innerHTML = servidoresPad.map(s => `<option value="${s.id}">${escapeHtml(s.nome)} — ${escapeHtml(s.lotacao)} • ${getServidorPadProcessCount(s.id)} processo(s) • ${escapeHtml(s.disponibilidade)}</option>`).join('') || '<option value="">Cadastre servidores primeiro</option>';
-}
-
-function addServidorToPad() {
-  const id = document.getElementById('pad-servidor-select').value;
-  if (!id || currentPadServidores.includes(id)) return;
-  currentPadServidores.push(id);
-  renderSelectedPadServidores();
-}
-
-function removeServidorFromPad(id) {
-  currentPadServidores = currentPadServidores.filter(sid => sid !== id);
-  renderSelectedPadServidores();
-}
-
-function renderSelectedPadServidores() {
-  const wrap = document.getElementById('pad-servidores-selecionados');
-  if (!wrap) return;
-  wrap.innerHTML = currentPadServidores.length ? currentPadServidores.map(id => {
-    const s = servidoresPad.find(item => item.id === id);
-    return `<span class="bg-blue-50 text-blue-800 border border-blue-200 px-2 py-1 rounded text-xs inline-flex items-center">${escapeHtml(s?.nome || 'Servidor não encontrado')} <button type="button" onclick="removeServidorFromPad('${id}')" class="ml-2 text-blue-500 hover:text-red-700 font-bold">×</button></span>`;
-  }).join('') : '<span class="text-sm text-gray-400">Nenhum servidor selecionado.</span>';
-}
-
-function resetPadForm() {
-  document.getElementById('pad-form')?.reset();
-  document.getElementById('pad-id').value = '';
-  currentPadServidores = [];
-  renderSelectedPadServidores();
-}
-
-function submitPadForm(event) {
-  event.preventDefault();
-  const sei = document.getElementById('pad-sei').value.trim();
-  if (!sei) return showToast('Informe o número do processo SEI.', 'error');
-  if (!currentPadServidores.length) return showToast('Selecione ao menos um servidor para a comissão.', 'error');
-  const id = document.getElementById('pad-id').value || `pad-${Date.now()}`;
-  const comissao = { id, sei, materia: document.getElementById('pad-materia').value.trim(), status: document.getElementById('pad-status').value, data: document.getElementById('pad-data').value, obs: document.getElementById('pad-obs').value.trim(), servidores: [...currentPadServidores] };
-  const index = comissoesPad.findIndex(c => c.id === id);
-  if (index >= 0) comissoesPad[index] = comissao; else comissoesPad.push(comissao);
-  persistPadData();
-  resetPadForm();
-  initFormacaoPadPage();
-  showToast('Comissão de PAD salva.', 'success');
-}
-
-function renderComissoesPad() {
-  const body = document.getElementById('pad-table-body');
-  if (!body) return;
-  body.innerHTML = comissoesPad.length ? comissoesPad.map(c => {
-    const nomes = (c.servidores || []).map(id => servidoresPad.find(s => s.id === id)?.nome || 'Servidor não encontrado').join(', ');
-    return `<tr class="border-b hover:bg-gray-50"><td class="font-mono font-semibold">${escapeHtml(c.sei)}</td><td>${escapeHtml(c.materia || '-')}</td><td>${escapeHtml(c.status || '-')}</td><td>${formatDate(c.data) || '-'}</td><td class="whitespace-normal">${escapeHtml(nomes)}</td><td><button onclick="editComissaoPad('${c.id}')" class="text-blue-600 hover:underline mr-2">Editar</button><button onclick="deleteComissaoPad('${c.id}')" class="text-red-600 hover:underline">Excluir</button></td></tr>`;
-  }).join('') : '<tr><td colspan="6" class="text-center text-gray-500 py-6">Nenhuma comissão de PAD formada.</td></tr>';
-}
-
-function editComissaoPad(id) {
-  const c = comissoesPad.find(item => item.id === id);
-  if (!c) return;
-  document.getElementById('pad-id').value = c.id;
-  document.getElementById('pad-sei').value = c.sei || '';
-  document.getElementById('pad-materia').value = c.materia || '';
-  document.getElementById('pad-status').value = c.status || 'Em formação';
-  document.getElementById('pad-data').value = c.data || '';
-  document.getElementById('pad-obs').value = c.obs || '';
-  currentPadServidores = [...(c.servidores || [])];
-  renderSelectedPadServidores();
-}
-
-function deleteComissaoPad(id) {
-  if (!confirm('Excluir esta comissão de PAD?')) return;
-  comissoesPad = comissoesPad.filter(c => c.id !== id);
-  persistPadData();
-  initFormacaoPadPage();
 }
 
 function setupConfiguracoesView() {
