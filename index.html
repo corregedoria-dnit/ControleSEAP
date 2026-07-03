@@ -2573,7 +2573,20 @@ filtered.sort((a, b) => {
 
         function diffDays(d1, d2) { if(!d1 || !d2) return 0; return Math.ceil((new Date(d2) - new Date(d1)) / (1000 * 3600 * 24)); }
 
-         function calculateAverageDays(list, startField, endField) { const today = new Date().toISOString().split('T')[0]; const durations = list.map(p => { if(p[startField]) return diffDays(p[startField], p[endField] || today); return null; }).filter(d => d !== null); if (durations.length === 0) return 0; return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length); }
+         function getFieldValue(process, field) {
+            return typeof field === 'function' ? field(process) : process[field];
+        }
+
+        function calculateAverageDays(list, startField, endField) {
+            const durations = list.map(p => {
+                const startDate = getFieldValue(p, startField);
+                const endDate = getFieldValue(p, endField);
+                if (!startDate || !endDate) return null;
+                return diffDays(startDate, endDate);
+            }).filter(d => d !== null);
+            if (durations.length === 0) return 0;
+            return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length);
+        }
 
         function uniqueProcessesByIdentity(list) {
             const map = new Map();
@@ -2769,7 +2782,7 @@ filtered.sort((a, b) => {
                 ...noticiasEncaminhadosJuizoList,
                 ...noticiasEncaminhadosJuizoJuntadoList
             ]);
-            const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasProcessosAnalisadosList, 'data_ent', 'data_analise_preliminar');
+            const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasProcessosAnalisadosList, 'data_conhecimento', 'data_analise_preliminar');
 
             const juizoAnalisadosList = processos.filter(p =>
                 ['Concluído', 'TAC'].includes(getStatusFromProcess(p))
@@ -2817,7 +2830,7 @@ filtered.sort((a, b) => {
                 && byPreliminar(p)
             );
 
-            const avgJuizoAnalysis = calculateAverageDays(juizoAnalisadosList, 'data_analise_preliminar', 'data_despacho');
+            const avgJuizoAnalysis = calculateAverageDays(juizoAnalisadosList, 'data_analise_preliminar', getDespachoDateForStatus);
             const tacMap = {
                'negociacao': buildTacRowsBySituation(tacSectionList, 'Em negociação'),
                 'propostosAceitos': buildTacRowsBySituation(tacSectionList, 'TAC proposto e aceito'),
