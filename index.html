@@ -1615,7 +1615,19 @@ if (error) {
                 .trim()
                 .toLowerCase();
         }
-        function isValidProcessStatus(status) {
+    function escapeHTML(value) {
+            return (value ?? '')
+                .toString()
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        function escapeAttribute(value) {
+            return escapeHTML(value).replace(/`/g, '&#096;');
+        }    
+    function isValidProcessStatus(status) {
             return PROCESS_STATUS_OPTIONS.includes(status);
         }
         function processHasResultado(process, resultado) {
@@ -1808,10 +1820,13 @@ function setupConfiguracoesView() {
         }
 
     function shouldShowPrescriptionDashboardAlert(process) {
-               const isTacFinalized = normalizeText(getTacStatusFromProcess(process)) === normalizeText('Finalizado');
-            return !isTacFinalized
-                && normalizeText(getStatusFromProcess(process)) !== normalizeText('TAC')
-                && !processHasResultado(process, 'Para celebrar TAC');
+              const tacStatus = normalizeText(process?.tac_sit || getTacStatusFromProcess(process));
+            const processStatus = normalizeText(getStatusFromProcess(process));
+            const hasTacResult = processHasResultado(process, 'Para celebrar TAC');
+            const isTacFinished = tacStatus === normalizeText('Finalizado');
+            const isClosedTacSituation = isTacConcluded(tacStatus);
+            const isTacProcess = processStatus === normalizeText('TAC') || hasTacResult || tacStatus.length > 0;
+            return !(isTacProcess && (isTacFinished || isClosedTacSituation || processStatus === normalizeText('TAC') || hasTacResult));
         }
 
         function getPrescriptionAlertData(process, today) {
@@ -1872,7 +1887,7 @@ function setupConfiguracoesView() {
             document.getElementById('prazont-ok').innerText = ntOk; document.getElementById('prazont-alerta').innerText = ntAlerta; document.getElementById('prazont-vencido').innerText = ntVencido;
 
             tasks.sort((a, b) => a.days - b.days);
-            document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${t.p.sei}</span> <span class="text-gray-600 truncate block w-40">${t.p.objeto}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
+             document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${escapeHTML(t.p.sei)}</span> <span class="text-gray-600 truncate block w-40">${escapeHTML(t.p.objeto)}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
 
           const atRiskProcesses = [];
             processos.forEach(p => {
@@ -1897,7 +1912,7 @@ function setupConfiguracoesView() {
                 const statusItemsHtml = item.items
                     .map(entry => getStatusHtml(entry.label, entry.date, entry.daysLeft, entry.critThreshold, entry.highThreshold))
                     .join('');
-                return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${p.sei}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${p.objeto}">${p.objeto}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${statusItemsHtml}</div></div>`;
+                return `<div class="border-b py-2 text-sm ${p.prioritario ? 'priority-highlight' : ''}"><div class="flex justify-between items-start mb-1"><span class="font-mono font-semibold">${escapeHTML(p.sei)}</span><span class="text-gray-500 text-xs text-right truncate ml-2" title="${escapeAttribute(p.objeto)}">${escapeHTML(p.objeto)}</span></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1">${statusItemsHtml}</div></div>`;
             }).join('') : '<p class="text-gray-500 text-sm">Nenhum risco de prescrição iminente.</p>';
 
             const statusCounts = { 'Aguardando Distribuição': 0, 'Em análise': 0, 'Pendente de análise do(a) Corregedor(a)': 0, 'TAC': 0, 'Suspenso': 0, 'Concluído': 0 };
