@@ -1808,7 +1808,9 @@ function setupConfiguracoesView() {
         }
 
     function shouldShowPrescriptionDashboardAlert(process) {
-            return normalizeText(getStatusFromProcess(process)) !== normalizeText('TAC')
+               const isTacFinalized = normalizeText(getTacStatusFromProcess(process)) === normalizeText('Finalizado');
+            return !isTacFinalized
+                && normalizeText(getStatusFromProcess(process)) !== normalizeText('TAC')
                 && !processHasResultado(process, 'Para celebrar TAC');
         }
 
