@@ -494,6 +494,10 @@
                             <div id="tac-details" class="hidden bg-gray-50 p-4 rounded border">
                                 <h4 class="text-base font-semibold text-gray-700 mb-3">BLOCO 4 – TAC</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                        <label class="block text-sm font-medium mb-1">Número de processo de TAC</label>
+                                        <input type="text" id="process-tac-numero-processo" class="w-full border rounded px-3 py-2 mask-sei" placeholder="00000.000000/0000-00">
+                                    </div>
                                     <div>
                                         <label class="block text-sm font-medium mb-1">Status do TAC</label>
                                         <select id="process-tac-situacao" onchange="toggleTacDeadlineField()" class="w-full border rounded px-3 py-2">
@@ -538,6 +542,7 @@
                         <button onclick="switchReportTab('distribuicao')" id="tab-rep-distribuicao" class="pb-2 px-2 border-b-2 report-tab-btn">Distribuição por Analista</button>
                         <button onclick="switchReportTab('prescricao')" id="tab-rep-prescricao" class="pb-2 px-2 border-b-2 report-tab-btn">Controle Prescricional</button>
                         <button onclick="switchReportTab('entregues')" id="tab-rep-entregues" class="pb-2 px-2 border-b-2 report-tab-btn">Entregues vs Pendentes</button>
+                         <button onclick="switchReportTab('situacao')" id="tab-rep-situacao" class="pb-2 px-2 border-b-2 report-tab-btn">Situação dos Processos</button>
                         <button onclick="switchReportTab('gerencial')" id="tab-rep-gerencial" class="pb-2 px-2 border-b-2 report-tab-btn">Gerencial Mensal</button>
                     </div>
 
@@ -586,6 +591,18 @@
                             <div><label class="text-xs font-bold text-gray-600">Data limite TAC (Até)</label><input type="date" id="f-tac-limite-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                         </div>
                         <button onclick="generateGeneralReport()" class="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto">Gerar Relatório Geral</button>
+                    </div>
+  <div id="filters-situacao" class="report-filters hidden animate-fadeIn">
+                        <h3 class="font-semibold mb-2">Relatório por Situação dos Processos</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div><label class="text-xs font-bold text-gray-600">Data de Entrada (De):</label><input type="date" id="rep-sit-start" class="border rounded px-3 py-2 w-full mt-1"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data de Entrada (Até):</label><input type="date" id="rep-sit-end" class="border rounded px-3 py-2 w-full mt-1"></div>
+                            <div class="flex items-end space-x-4 pb-1">
+                                <label><input type="radio" name="rep-sit-type" value="sintetico" checked> Sintético</label>
+                                <label><input type="radio" name="rep-sit-type" value="analitico"> Analítico</label>
+                            </div>
+                        </div>
+                        <button onclick="generateSituationReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório por Situação</button>
                     </div>
 
                     <div id="filters-gerencial" class="report-filters hidden animate-fadeIn">
@@ -1414,6 +1431,7 @@ if (error) {
                 resultado: document.getElementById('process-resultado').value,
                 doc_resp: document.getElementById('process-doc-resposta').value,
                 tac_sit: document.getElementById('process-tac-situacao').value,
+                tac_numero_processo: document.getElementById('process-tac-numero-processo').value,
                 tac_status_data: document.getElementById('process-tac-status-data').value,
                 tac_data_limite: document.getElementById('process-tac-data-limite').value,
                 tac_obs: document.getElementById('process-tac-obs').value,
@@ -2088,7 +2106,8 @@ filtered.sort((a, b) => {
                 possui_inquerito: 'check-inquerito',
                 cad_epad: 'check-epad',
                 prioritario: 'process-prioritario',
-                tac_sit: 'process-tac-situacao'
+                tac_sit: 'process-tac-situacao',
+                tac_numero_processo: 'process-tac-numero-processo'
             };
             Object.keys(p).forEach(key => {
                 const customEl = customFieldMap[key] ? document.getElementById(customFieldMap[key]) : null;
@@ -2347,6 +2366,7 @@ filtered.sort((a, b) => {
             resultados_acusados: { label: 'Resultados por acusado', get: p => formatAccusedOutcomes(p) },
             doc_resp: { label: 'Documento de Resposta', get: p => p.doc_resp || '—' },
             tac_apto: { label: 'Para celebrar TAC', get: p => processHasResultado(p, 'Para celebrar TAC') ? 'Sim' : 'Não' },
+            tac_numero_processo: { label: 'Número processo TAC', get: p => p.tac_numero_processo || '—' },
             tac_sit: { label: 'Situação TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p) },
             tac_status_data: { label: 'Data do status TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data) },
             tac_data_limite: { label: 'Data limite TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite) },
@@ -2523,7 +2543,40 @@ filtered.sort((a, b) => {
             setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
+async function generateSituationReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
+            closeReport();
+            const start = document.getElementById('rep-sit-start').value;
+            const end = document.getElementById('rep-sit-end').value;
+            const isAnalytic = document.querySelector('input[name="rep-sit-type"]:checked').value === 'analitico';
+            const filtered = processos.filter(p => (!start || p.data_ent >= start) && (!end || p.data_ent <= end));
+            const statusGroups = PROCESS_STATUS_OPTIONS.map(status => ({
+                label: status,
+                items: filtered.filter(p => getStatusFromProcess(p) === status)
+            }));
+            const tacSituations = ['Em negociação', 'TAC proposto e aceito', 'Celebrado', 'Recusado', 'Finalizado'];
+            const tacGroups = tacSituations.map(status => ({
+                label: status,
+                items: filtered.filter(p => processHasResultado(p, 'Para celebrar TAC') && normalizeText(getTacStatusFromProcess(p)) === normalizeText(status))
+            }));
 
+            let html = `<h2 class="text-2xl font-bold text-center mb-2">Relatório por Situação dos Processos</h2><p class="text-center text-sm mb-4">Total filtrado: ${filtered.length} processos</p>`;
+            html += '<div class="report-section"><h3 class="report-header">Situação dos processos</h3>';
+            statusGroups.forEach(group => {
+                html += `<div class="report-item"><span>${group.label}</span><span class="font-bold">${group.items.length}</span></div>`;
+                if (isAnalytic) html += renderAnalyticTable(group.items);
+            });
+            html += '</div><div class="report-section"><h3 class="report-header">Situação de TAC</h3>';
+            tacGroups.forEach(group => {
+                html += `<div class="report-item"><span>${group.label}</span><span class="font-bold">${group.items.length}</span></div>`;
+                if (isAnalytic) html += renderAnalyticTable(group.items);
+            });
+            html += '</div>';
+            setLastReport(filtered, false);
+            document.getElementById('report-content').innerHTML = html;
+            document.getElementById('report-output').classList.remove('hidden');
+        }
         async function generateDistributionReport() {
             const loaded = await refreshProcessosForReportGeneration();
             if (!loaded) return;
