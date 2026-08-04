@@ -285,7 +285,9 @@
                             <div><label class="block text-xs font-bold text-gray-600">Prazo para NT</label><input type="date" id="fp-prazo_nt_data" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Data de Entrega NT</label><input type="date" id="fp-data_entrega_nt" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Data Despacho</label><input type="date" id="fp-data_despacho" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
-
+                            <div><label class="block text-xs font-bold text-gray-600">Data Análise Preliminar - SEAP</label><input type="date" id="fp-data_analise_preliminar" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
+                            <div><label class="block text-xs font-bold text-gray-600">IPS?</label><select id="fp-ips" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select></div>
+                            <div><label class="block text-xs font-bold text-gray-600">Status Manual</label><select id="fp-status_manual" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option><option value="Em análise">Em análise</option><option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option><option value="TAC">TAC</option><option value="Suspenso">Suspenso</option><option value="Concluído">Concluído</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Unidade de Origem</label><input type="text" id="fp-unidade_origem" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Documento de Origem</label><input type="text" id="fp-doc_origem" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                             <div><label class="block text-xs font-bold text-gray-600">Juntado a Processo</label><input type="text" id="fp-juntado" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
@@ -300,6 +302,7 @@
                             <div><label class="block text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="fp-epad_detalhes" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
                             <div><label class="block text-xs font-bold text-gray-600">Status do TAC</label><select id="fp-tac_sit" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
+                              <div><label class="block text-xs font-bold text-gray-600">Número processo TAC</label><input type="text" id="fp-tac_numero_processo" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm mask-sei"></div>
                             <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-600">Observações do TAC</label><input type="text" id="fp-tac_obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
                             <div class="md:col-span-3 lg:col-span-4"><label class="block text-xs font-bold text-gray-600">Observações Gerais</label><input type="text" id="fp-obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
@@ -575,14 +578,28 @@
                             <div><label class="text-xs font-bold text-gray-600">Data Entrega NT (Até)</label><input type="date" id="f-data-entrega-nt-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Data Assinatura Despacho (De)</label><input type="date" id="f-data-despacho-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Data Assinatura Despacho (Até)</label><input type="date" id="f-data-despacho-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Análise Preliminar - SEAP (De)</label><input type="date" id="f-data-analise-preliminar-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Data Análise Preliminar - SEAP (Até)</label><input type="date" id="f-data-analise-preliminar-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">IPS?</label><select id="f-ips" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Prioritário</label><select id="f-prioritario" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Status Manual</label><select id="f-status-manual" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Cadastrado">Cadastrado</option><option value="Aguardando Distribuição">Aguardando Distribuição</option><option value="Em análise">Em análise</option><option value="Pendente de análise do(a) Corregedor(a)">Pendente de análise do(a) Corregedor(a)</option><option value="TAC">TAC</option><option value="Suspenso">Suspenso</option><option value="Concluído">Concluído</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Resultado</label><select id="f-resultado" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Não definida">Não definida</option><option value="Instauração de PAD">Instauração de PAD</option><option value="Instauração de PAR">Instauração de PAR</option><option value="Instauração de SINPA">Instauração de SINPA</option><option value="Instauração de SINAC">Instauração de SINAC</option><option value="Instauração de SINVE">Instauração de SINVE</option><option value="Instauração de IPS">Instauração de IPS</option><option value="Encaminhado para o Min. dos Transportes">Min. Transportes</option><option value="Para celebrar TAC">Para celebrar TAC</option><option value="Arquivado após análise preliminar">Arquivado após análise preliminar</option><option value="Arquivado após juízo de admissibilidade">Arquivado após juízo de admissibilidade</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Penalidade Aplicável</label><select id="f-penalidade" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todas</option><option value="Advertência">Advertência</option><option value="Suspensão">Suspensão</option><option value="Demissão">Demissão</option><option value="Multa (PJ)">Multa (PJ)</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Unidade de Origem</label><input type="text" id="f-unidade-origem" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Documento de Origem</label><input type="text" id="f-doc-origem" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Juntado a Processo</label><input type="text" id="f-juntado" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Processos Relacionados</label><input type="text" id="f-relacionados" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Documento de Resposta</label><input type="text" id="f-doc-resp" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Operação Policial</label><select id="f-op-policial" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Detalhes Op. Policial</label><input type="text" id="f-op-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Possui Inquérito</label><select id="f-inquerito" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Detalhes Inquérito</label><input type="text" id="f-inq-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Cadastrado no ePAD</label><select id="f-epad" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="f-epad-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Status do TAC</label><select id="f-tac-status" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
+                             <div><label class="text-xs font-bold text-gray-600">Número processo TAC</label><input type="text" id="f-tac-numero-processo" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Observações TAC</label><input type="text" id="f-tac-obs" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Observações Gerais</label><input type="text" id="f-obs" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Data status TAC (De)</label><input type="date" id="f-tac-status-data-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Data status TAC (Até)</label><input type="date" id="f-tac-status-data-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Data limite TAC (De)</label><input type="date" id="f-tac-limite-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
@@ -1972,10 +1989,10 @@ function setupConfiguracoesView() {
             const getVal = (id) => document.getElementById(id)?.value; const getValLower = (id) => (document.getElementById(id)?.value || '').toLowerCase();
 
             const fpStatus = getVal('fp-status'), fpSei = getValLower('fp-sei'), fpObjeto = getValLower('fp-objeto'), fpAcusados = getValLower('fp-acusados'), fpAnalista = getValLower('fp-analista'), fpResultado = getVal('fp-resultado'), fpTipoAcusado = getVal('fp-tipo_acusado'), fpPenalidades = getVal('fp-penalidades');
-            const fpDataEnt = getVal('fp-data_ent'), fpDataConhecimento = getVal('fp-data_conhecimento'), fpDataDistribuicao = getVal('fp-data_distribuicao'), fpPrazoNtData = getVal('fp-prazo_nt_data'), fpDataEntregaNt = getVal('fp-data_entrega_nt'), fpDataDespacho = getVal('fp-data_despacho');
+            const fpDataEnt = getVal('fp-data_ent'), fpDataConhecimento = getVal('fp-data_conhecimento'), fpDataDistribuicao = getVal('fp-data_distribuicao'), fpPrazoNtData = getVal('fp-prazo_nt_data'), fpDataEntregaNt = getVal('fp-data_entrega_nt'), fpDataDespacho = getVal('fp-data_despacho'), fpDataAnalisePreliminar = getVal('fp-data_analise_preliminar');
             const fpUnidadeOrigem = getValLower('fp-unidade_origem'), fpDocOrigem = getValLower('fp-doc_origem'), fpJuntado = getValLower('fp-juntado'), fpRelacionados = getValLower('fp-relacionados'), fpDocResp = getValLower('fp-doc_resp');
             const fpOpPolicial = getVal('fp-op_policial'), fpOpPolicialDetalhes = getValLower('fp-op_policial_detalhes'), fpPossuiInquerito = getVal('fp-possui_inquerito'), fpInqueritoDetalhes = getValLower('fp-inquerito_detalhes'), fpCadEpad = getVal('fp-cad_epad'), fpEpadDetalhes = getValLower('fp-epad_detalhes');
-            const fpTacSit = getVal('fp-tac_sit'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips');
+            const fpTacSit = getVal('fp-tac_sit'), fpTacNumeroProcesso = getValLower('fp-tac_numero_processo'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips'), fpStatusManual = getVal('fp-status_manual');
 
             const filtered = processos.filter(p => {
                 if (search) {
@@ -1984,18 +2001,16 @@ function setupConfiguracoesView() {
                         || matchesMaskedText(getRelatedProcessesDisplay(p), search);
                     if (!matchGlobal) return false;
                 }
-                if (isPriorityFilterActive && !p.prioritario) return false;
-               // if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && (!p.sei || !p.sei.toLowerCase().includes(fpSei))) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (fpResultado && p.resultado !== fpResultado) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
+                if (isPriorityFilterActive && !p.prioritario) return false;               
                 if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && !matchesMaskedText(p.sei, fpSei)) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (!processHasResultado(p, fpResultado)) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
-                if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (!processHasDespachoDate(p, fpDataDespacho)) return false;
-                //if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && (!p.doc_origem || !p.doc_origem.toLowerCase().includes(fpDocOrigem))) return false; if (fpJuntado && (!p.juntado || !p.juntado.toLowerCase().includes(fpJuntado))) return false; if (fpRelacionados && (!p.relacionados || !p.relacionados.toLowerCase().includes(fpRelacionados))) return false; if (fpDocResp && (!p.doc_resp || !p.doc_resp.toLowerCase().includes(fpDocResp))) return false;
+                 if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (!processHasDespachoDate(p, fpDataDespacho)) return false; if (fpDataAnalisePreliminar && p.data_analise_preliminar !== fpDataAnalisePreliminar) return false;
                 if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && !matchesMaskedText(p.doc_origem, fpDocOrigem)) return false; if (fpJuntado && !matchesMaskedText(p.juntado, fpJuntado)) return false; if (fpRelacionados && !matchesMaskedText(getRelatedProcessesDisplay(p), fpRelacionados)) return false; if (fpDocResp && !matchesMaskedText(p.doc_resp, fpDocResp)) return false;
-                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false;
-                //if (fpOpPolicialDetalhes && (!p.op_policial_detalhes || !p.op_policial_detalhes.toLowerCase().includes(fpOpPolicialDetalhes))) return false; if (fpInqueritoDetalhes && (!p.inquerito_detalhes || !p.inquerito_detalhes.toLowerCase().includes(fpInqueritoDetalhes))) return false; if (fpEpadDetalhes && (!p.epad_detalhes || !p.epad_detalhes.toLowerCase().includes(fpEpadDetalhes))) return false;
+                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false;                
                 if (fpOpPolicialDetalhes && !matchesMaskedText(p.op_policial_detalhes, fpOpPolicialDetalhes)) return false; if (fpInqueritoDetalhes && !matchesMaskedText(p.inquerito_detalhes, fpInqueritoDetalhes)) return false; if (fpEpadDetalhes && !matchesMaskedText(p.epad_detalhes, fpEpadDetalhes)) return false;
-                if ((fpTacSit || fpTacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
-                if (fpTacSit && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(fpTacSit)) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
+                if ((fpTacSit || fpTacNumeroProcesso || fpTacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
+                if (fpTacSit && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(fpTacSit)) return false; if (fpTacNumeroProcesso && !matchesMaskedText(p.tac_numero_processo, fpTacNumeroProcesso)) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
                 if (fpIps && String(!!p.ips) !== fpIps) return false;
+                if (fpStatusManual && p.status_manual !== fpStatusManual) return false;
                 return true;
             });
 
@@ -2451,6 +2466,16 @@ filtered.sort((a, b) => {
             let filtered = [...processos];
             const val = (id) => (document.getElementById(id)?.value || '').trim();
             const valLower = (id) => val(id).toLowerCase();
+            const normalizeDigits = (value) => String(value || '').replace(/\D/g, '');
+            const matchesMaskedText = (fieldValue, query) => {
+                const normalizedField = String(fieldValue || '').toLowerCase();
+                const normalizedQuery = String(query || '').toLowerCase();
+                if (!normalizedQuery) return true;
+                if (normalizedField.includes(normalizedQuery)) return true;
+                const digitsOnlyQuery = normalizeDigits(normalizedQuery);
+                return digitsOnlyQuery.length > 0 && normalizeDigits(normalizedField).includes(digitsOnlyQuery);
+            };
+            const includesText = (fieldValue, query) => !query || String(fieldValue || '').toLowerCase().includes(query);
             const inRange = (target, start, end) => {
                 if (!target) return false;
                 if (start && target < start) return false;
@@ -2467,12 +2492,24 @@ filtered.sort((a, b) => {
                 resultado: val('f-resultado'),
                 tipoPessoa: val('f-tipo-pessoa'),
                 penalidade: val('f-penalidade'),
+                unidadeOrigem: valLower('f-unidade-origem'),
+                docOrigem: valLower('f-doc-origem'),
+                juntado: valLower('f-juntado'),
+                relacionados: valLower('f-relacionados'),
+                docResp: valLower('f-doc-resp'),
                 opPolicial: val('f-op-policial'),
                 opDetalhes: valLower('f-op-det'),
                 inquerito: val('f-inquerito'),
                 inqueritoDetalhes: valLower('f-inq-det'),
                 epad: val('f-epad'),
+                epadDetalhes: valLower('f-epad-det'),
+                ips: val('f-ips'),
+                prioritario: val('f-prioritario'),
+                statusManual: val('f-status-manual'),
                 tacStatus: val('f-tac-status'),
+                tacNumeroProcesso: valLower('f-tac-numero-processo'),
+                tacObs: valLower('f-tac-obs'),
+                obs: valLower('f-obs'),
                 dataEntDe: val('f-data-de'),
                 dataEntAte: val('f-data-ate'),
                 dataConhecimentoDe: val('f-data-conhecimento-de'),
@@ -2485,6 +2522,8 @@ filtered.sort((a, b) => {
                 entregaNtAte: val('f-data-entrega-nt-ate'),
                 despachoDe: val('f-data-despacho-de'),
                 despachoAte: val('f-data-despacho-ate'),
+                analisePreliminarDe: val('f-data-analise-preliminar-de'),
+                analisePreliminarAte: val('f-data-analise-preliminar-ate'),
                 tacStatusDataDe: val('f-tac-status-data-de'),
                 tacStatusDataAte: val('f-tac-status-data-ate'),
                 tacLimiteDe: val('f-tac-limite-de'),
@@ -2493,14 +2532,24 @@ filtered.sort((a, b) => {
 
             filtered = filtered.filter((p) => {
                 if (filters.status && getStatusFromProcess(p) !== filters.status) return false;
-                if (filters.sei && !(p.sei || '').toLowerCase().includes(filters.sei)) return false;
-                if (filters.objeto && !(p.objeto || '').toLowerCase().includes(filters.objeto)) return false;
-                if (filters.acusado && !(Array.isArray(p.acusados) ? p.acusados.join(' ') : '').toLowerCase().includes(filters.acusado)) return false;
-                if (filters.analista && !(p.analista || '').toLowerCase().includes(filters.analista)) return false;
+                if (filters.sei && !matchesMaskedText(p.sei, filters.sei)) return false;
+                if (!includesText(p.objeto, filters.objeto)) return false;
+                if (!includesText(Array.isArray(p.acusados) ? p.acusados.join(' ') : '', filters.acusado)) return false;
+                if (!includesText(p.analista, filters.analista)) return false;
                 if (filters.resultado && !processHasResultado(p, filters.resultado)) return false;
                 if (filters.tipoPessoa === 'PF' && p.tipo_acusado !== 'Pessoa Física') return false;
                 if (filters.tipoPessoa === 'PJ' && !['Pessoa Jurídica', 'Pessoa Física + Jurídica'].includes(p.tipo_acusado)) return false;
                 if (filters.penalidade && p.penalidades !== filters.penalidade) return false;
+                if (!includesText(p.unidade_origem, filters.unidadeOrigem)) return false;
+                if (filters.docOrigem && !matchesMaskedText(p.doc_origem, filters.docOrigem)) return false;
+                if (filters.juntado && !matchesMaskedText(p.juntado, filters.juntado)) return false;
+                if (filters.relacionados && !matchesMaskedText(getRelatedProcessesDisplay(p), filters.relacionados)) return false;
+                if (filters.docResp && !matchesMaskedText(p.doc_resp, filters.docResp)) return false;
+                if (filters.ips === 'sim' && p.ips !== true) return false;
+                if (filters.ips === 'nao' && p.ips !== false) return false;
+                if (filters.prioritario === 'sim' && p.prioritario !== true) return false;
+                if (filters.prioritario === 'nao' && p.prioritario === true) return false;
+                if (filters.statusManual && p.status_manual !== filters.statusManual) return false;
                 if (!inRange(p.data_ent, filters.dataEntDe, filters.dataEntAte)) {
                     if (filters.dataEntDe || filters.dataEntAte) return false;
                 }
@@ -2520,15 +2569,23 @@ filtered.sort((a, b) => {
                 if (!inRange(despachoDate, filters.despachoDe, filters.despachoAte)) {
                     if (filters.despachoDe || filters.despachoAte) return false;
                 }
+                if (!inRange(p.data_analise_preliminar, filters.analisePreliminarDe, filters.analisePreliminarAte)) {
+                    if (filters.analisePreliminarDe || filters.analisePreliminarAte) return false;
+                }
                 if (filters.opPolicial === 'sim' && p.op_policial !== true) return false;
                 if (filters.opPolicial === 'nao' && p.op_policial !== false) return false;
-                if (filters.opDetalhes && !(p.op_policial_detalhes || '').toLowerCase().includes(filters.opDetalhes)) return false;
+                 if (!includesText(p.op_policial_detalhes, filters.opDetalhes)) return false;
                 if (filters.inquerito === 'sim' && p.possui_inquerito !== true) return false;
                 if (filters.inquerito === 'nao' && p.possui_inquerito !== false) return false;
-                if (filters.inqueritoDetalhes && !(p.inquerito_detalhes || '').toLowerCase().includes(filters.inqueritoDetalhes)) return false;
+                if (!includesText(p.inquerito_detalhes, filters.inqueritoDetalhes)) return false;
                 if (filters.epad === 'sim' && p.cad_epad !== true) return false;
                 if (filters.epad === 'nao' && p.cad_epad !== false) return false;
+                if (filters.epadDetalhes && !matchesMaskedText(p.epad_detalhes, filters.epadDetalhes)) return false;
+                if ((filters.tacStatus || filters.tacNumeroProcesso || filters.tacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
                 if (filters.tacStatus && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(filters.tacStatus)) return false;
+                if (filters.tacNumeroProcesso && !matchesMaskedText(p.tac_numero_processo, filters.tacNumeroProcesso)) return false;
+                if (!includesText(p.tac_obs, filters.tacObs)) return false;
+                if (!includesText(p.obs, filters.obs)) return false;
                 if (!inRange(p.tac_status_data, filters.tacStatusDataDe, filters.tacStatusDataAte)) {
                     if (filters.tacStatusDataDe || filters.tacStatusDataAte) return false;
                 }
