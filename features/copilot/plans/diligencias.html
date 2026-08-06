@@ -1,0 +1,182 @@
+<!--
+SQL para rodar no Supabase (SQL Editor) para criar a tabela `diligencias` e trigger para updated_at.
+Execute este bloco no SQL editor do Supabase antes de usar a UI abaixo.
+
+-- Habilita gerador de UUID (se necessário)
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
+-- Cria a tabela de diligências
+CREATE TABLE IF NOT EXISTS public.diligencias (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  numero_documento text NOT NULL,
+  data_envio date NOT NULL,
+  data_resposta date,
+  processo_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Trigger para manter updated_at
+CREATE OR REPLACE FUNCTION public.trigger_set_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS set_timestamp ON public.diligencias;
+CREATE TRIGGER set_timestamp
+BEFORE UPDATE ON public.diligencias
+FOR EACH ROW
+EXECUTE FUNCTION public.trigger_set_timestamp();
+
+-- Exemplo de inserção
+-- INSERT INTO public.diligencias (numero_documento, data_envio, data_resposta, processo_id)
+-- VALUES ('DOC-123', '2026-08-06', NULL, NULL);
+--
+-- Observação: configurar policies (RLS) conforme necessário para permitir acesso via API anônima ou via usuários autenticados.
+-- Por exemplo, para permitir inserts via anon key em ambiente fechado, adicione políticas no painel de Auth/Policies do Supabase.
+--
+-- Fim do bloco SQL
+-->
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle de Diligências</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;margin:16px}
+    .card{border:1px solid #ddd;padding:12px;border-radius:6px;margin-bottom:12px}
+    label{display:block;margin-top:8px}
+    input[type=text], input[type=date]{width:100%;padding:6px;margin-top:4px;box-sizing:border-box}
+    button{margin-top:10px;padding:8px 12px}
+    .counts{display:flex;gap:12px}
+    .counts .item{background:#f7f7f7;padding:8px;border-radius:4px}
+    table{width:100%;border-collapse:collapse;margin-top:10px}
+    table th, table td{border:1px solid #eee;padding:8px;text-align:left}
+  </style>
+</head>
+<body>
+  <h1>Controle de Diligências</h1>
+
+  <div class="card">
+    <h2>Configurar Supabase</h2>
+    <p>Preencha a URL e a ANON KEY do Supabase abaixo (ou substitua direto nas variáveis no script).</p>
+    <label>SUPABASE_URL <input id="supabaseUrl" type="text" placeholder="https://xyz.supabase.co" /></label>
+    <label>SUPABASE_ANON_KEY <input id="supabaseKey" type="text" placeholder="public-anon-key" /></label>
+    <button id="btnInit">Iniciar conexão</button>
+    <span id="status" style="margin-left:12px;color:green"></span>
+  </div>
+
+  <div class="card">
+    <h2>Nova Diligência</h2>
+    <label>Número do documento <input id="numero_documento" type="text" /></label>
+    <label>Data de envio <input id="data_envio" type="date" /></label>
+    <label>Data de resposta (opcional) <input id="data_resposta" type="date" /></label>
+    <label>ID do processo (opcional) <input id="processo_id" type="text" placeholder="uuid do processo"/></label>
+    <button id="btnCreate">Salvar diligência</button>
+    <div id="createResult" style="margin-top:8px;color:blue"></div>
+  </div>
+
+  <div class="card">
+    <h2>Dashboard</h2>
+    <div class="counts">
+      <div class="item">Total: <span id="totalCount">0</span></div>
+      <div class="item">Pendentes: <span id="pendingCount">0</span></div>
+      <div class="item">Respondidas: <span id="answeredCount">0</span></div>
+    </div>
+
+    <h3>Últimas diligências</h3>
+    <table>
+      <thead><tr><th>Número</th><th>Envio</th><th>Resposta</th><th>Criado em</th></tr></thead>
+      <tbody id="list"></tbody>
+    </table>
+    <button id="btnRefresh">Atualizar</button>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Configurações iniciais (substitua manualmente ou use os campos acima)
+    let SUPABASE_URL = '';
+    let SUPABASE_ANON_KEY = '';
+    let supabase = null;
+
+    document.getElementById('btnInit').addEventListener('click', ()=>{
+      SUPABASE_URL = document.getElementById('supabaseUrl').value.trim();
+      SUPABASE_ANON_KEY = document.getElementById('supabaseKey').value.trim();
+      if(!SUPABASE_URL || !SUPABASE_ANON_KEY){
+        alert('Preencha URL e ANON KEY do Supabase');
+        return;
+      }
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      document.getElementById('status').textContent = 'Conectado';
+      loadCounts();
+      loadList();
+    });
+
+    document.getElementById('btnCreate').addEventListener('click', async ()=>{
+      if(!supabase){ alert('Inicie a conexão com o Supabase primeiro'); return; }
+      const numero_documento = document.getElementById('numero_documento').value.trim();
+      const data_envio = document.getElementById('data_envio').value;
+      const data_resposta = document.getElementById('data_resposta').value || null;
+      const processo_id = document.getElementById('processo_id').value.trim() || null;
+      if(!numero_documento || !data_envio){ alert('Preencha número do documento e data de envio'); return; }
+
+      const { data, error } = await supabase
+        .from('diligencias')
+        .insert([{ numero_documento, data_envio, data_resposta, processo_id }]);
+      const out = document.getElementById('createResult');
+      if(error){ out.style.color='red'; out.textContent = 'Erro: '+error.message; console.error(error); }
+      else{ out.style.color='green'; out.textContent = 'Diligência salva';
+        document.getElementById('numero_documento').value='';
+        document.getElementById('data_envio').value='';
+        document.getElementById('data_resposta').value='';
+        document.getElementById('processo_id').value='';
+        loadCounts(); loadList();
+      }
+    });
+
+    document.getElementById('btnRefresh').addEventListener('click', ()=>{ if(!supabase){ alert('Inicie a conexão'); return; } loadCounts(); loadList(); });
+
+    async function loadCounts(){
+      if(!supabase) return;
+      // total
+      const [{ count: totalCount }, { count: pendingCount }, { count: answeredCount}] = await Promise.all([
+        supabase.from('diligencias').select('*', { count: 'exact' }).maybeSingle(),
+        supabase.from('diligencias').select('*', { count: 'exact' }).is('data_resposta', null),
+        supabase.from('diligencias').select('*', { count: 'exact' }).not('data_resposta', 'is', null)
+      ].map(p=>p.catch(e=>({ count: 0 }))));
+
+      // Fallbacks: supabase client returns { data, error, count }
+      // Para simplificar, executamos consultas separadas para obter contagens.
+      const totalQ = await supabase.from('diligencias').select('id', { count: 'exact', head: true });
+      const pendingQ = await supabase.from('diligencias').select('id', { count: 'exact', head: true }).is('data_resposta', null);
+      const answeredQ = await supabase.from('diligencias').select('id', { count: 'exact', head: true }).not('data_resposta', 'is', null);
+
+      document.getElementById('totalCount').textContent = totalQ.count ?? 0;
+      document.getElementById('pendingCount').textContent = pendingQ.count ?? 0;
+      document.getElementById('answeredCount').textContent = answeredQ.count ?? 0;
+    }
+
+    async function loadList(){
+      if(!supabase) return;
+      const { data, error } = await supabase.from('diligencias').select('numero_documento, data_envio, data_resposta, created_at').order('created_at', { ascending: false }).limit(50);
+      const tbody = document.getElementById('list');
+      tbody.innerHTML = '';
+      if(error){ tbody.innerHTML = '<tr><td colspan="4" style="color:red">Erro ao buscar: '+error.message+'</td></tr>'; return; }
+      if(!data || data.length === 0){ tbody.innerHTML = '<tr><td colspan="4">Nenhuma diligência</td></tr>'; return; }
+      for(const r of data){
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(r.numero_documento)}</td><td>${formatDate(r.data_envio)}</td><td>${r.data_resposta?formatDate(r.data_resposta):''}</td><td>${r.created_at?new Date(r.created_at).toLocaleString():''}</td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function formatDate(d){ if(!d) return ''; const dt = new Date(d); return dt.toLocaleDateString(); }
+    function escapeHtml(s){ if(!s) return ''; return String(s).replace(/[&<>"']/g, (c)=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c]); }
+  </script>
+</body>
+</html>
