@@ -199,6 +199,15 @@
                         </div>
                     </div>
                 </div>
+ <div class="bg-white p-6 rounded-lg shadow mb-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clipboard-clock" class="w-5 h-5 mr-2"></i> Controle de Prazo das Diligências</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-4">
+                        <div class="p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-sm text-green-700">Dentro do Prazo</p><p id="prazodil-ok" class="text-2xl font-bold text-green-800">...</p></div>
+                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-700">Próximas do Vencimento</p><p id="prazodil-alerta" class="text-2xl font-bold text-yellow-800">...</p></div>
+                        <div class="p-4 bg-red-50 rounded-lg border border-red-200"><p class="text-sm text-red-700">Vencidas</p><p id="prazodil-vencido" class="text-2xl font-bold text-red-800">...</p></div>
+                    </div>
+                    <div id="diligencias-list-dashboard" class="overflow-y-auto max-h-48 text-sm scrollbar-thin">Carregando...</div>
+                </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
@@ -524,6 +533,16 @@
                                     </div>
                                 </div>
                             </div>
+                              <div class="bg-gray-50 p-4 rounded border">
+                                <h4 class="text-base font-semibold text-gray-700 mb-3">BLOCO 5 – DILIGÊNCIAS</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                                    <div><label class="block text-sm font-medium">Documento solicitante</label><input type="text" id="diligencia-doc" class="w-full border rounded px-3 py-2 mt-1"></div>
+                                    <div><label class="block text-sm font-medium">Prazo para atendimento</label><input type="date" id="diligencia-prazo" class="w-full border rounded px-3 py-2 mt-1"></div>
+                                    <div><label class="block text-sm font-medium">Data de resposta</label><input type="date" id="diligencia-resposta" class="w-full border rounded px-3 py-2 mt-1"></div>
+                                    <button type="button" onclick="addDiligencia()" class="bg-blue-600 text-white px-3 py-2 rounded hover:bg-blue-700">Adicionar diligência</button>
+                                </div>
+                                <div id="lista-diligencias" class="mt-3 space-y-2"></div>
+                            </div>
                             <textarea id="process-obs" class="w-full border rounded px-3 py-2" rows="3" placeholder="Observações Gerais"></textarea>
                         </div>
                     </div>
@@ -544,6 +563,7 @@
                         <button onclick="switchReportTab('prescricao')" id="tab-rep-prescricao" class="pb-2 px-2 border-b-2 report-tab-btn">Controle Prescricional</button>
                         <button onclick="switchReportTab('entregues')" id="tab-rep-entregues" class="pb-2 px-2 border-b-2 report-tab-btn">Entregues vs Pendentes</button>
                          <button onclick="switchReportTab('situacao')" id="tab-rep-situacao" class="pb-2 px-2 border-b-2 report-tab-btn">Situação dos Processos</button>
+                        <button onclick="switchReportTab('tramite')" id="tab-rep-tramite" class="pb-2 px-2 border-b-2 report-tab-btn">Tempo de Tramitação</button>
                         <button onclick="switchReportTab('gerencial')" id="tab-rep-gerencial" class="pb-2 px-2 border-b-2 report-tab-btn">Gerencial Mensal</button>
                     </div>
 
@@ -618,6 +638,11 @@
                             </div>
                         </div>
                         <button onclick="generateSituationReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório por Situação</button>
+                    </div>
+                     <div id="filters-tramite" class="report-filters hidden animate-fadeIn">
+                        <h3 class="font-semibold mb-2">Relatório de Tempo de Tramitação</h3>
+                        <p class="text-sm text-gray-600 mb-4">Lista processos em andamento classificados do mais antigo para o mais novo e destaca em vermelho aqueles com prazo global superior a 400 dias.</p>
+                        <button onclick="generateTramitationReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório de Tramitação</button>
                     </div>
 
                     <div id="filters-gerencial" class="report-filters hidden animate-fadeIn">
@@ -851,6 +876,7 @@ const PROCESS_STATUS_OPTIONS = [
 let currentAccused = [];
 let currentAccusedOutcomes = [];
 let currentRelatedProcesses = [];
+let currentDiligencias = [];
 let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
@@ -1194,6 +1220,11 @@ if (error) {
                 } else if (!Array.isArray(p.relacionados)) {
                     p.relacionados = [];
                 }
+                if (typeof p.diligencias === 'string') {
+                    try { p.diligencias = JSON.parse(p.diligencias); } catch (e) { p.diligencias = []; }
+                } else if (!Array.isArray(p.diligencias)) {
+                    p.diligencias = [];
+                }
                 if (!isValidProcessStatus(p.status_manual)) {
                     p.status_manual = null;
                 }
@@ -1276,7 +1307,11 @@ if (error) {
             } else {
                 dbData.relacionados = null;
             }
-
+            if (Array.isArray(dbData.diligencias)) {
+                dbData.diligencias = dbData.diligencias.length > 0 ? JSON.stringify(dbData.diligencias) : null;
+            } else {
+                dbData.diligencias = null;
+            }
             console.log("Enviando para o Supabase:", dbData); // Ótimo para depurar
 
             const { error } = await supabaseClient.from('processos').upsert([dbData]);
@@ -1450,6 +1485,7 @@ if (error) {
                 tac_status_data: document.getElementById('process-tac-status-data').value,
                 tac_data_limite: document.getElementById('process-tac-data-limite').value,
                 tac_obs: document.getElementById('process-tac-obs').value,
+                diligencias: currentDiligencias,
                 obs: document.getElementById('process-obs').value,
             };
 
@@ -1662,7 +1698,7 @@ if (error) {
         }    
     function isValidProcessStatus(status) {
             return PROCESS_STATUS_OPTIONS.includes(status);
-        }
+      }
         function processHasResultado(process, resultado) {
             if (!resultado) return true;
             const normalizedResultado = normalizeText(resultado);
@@ -1921,6 +1957,18 @@ function setupConfiguracoesView() {
 
             tasks.sort((a, b) => a.days - b.days);
              document.getElementById('task-list-dashboard').innerHTML = tasks.length ? tasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${escapeHTML(t.p.sei)}</span> <span class="text-gray-600 truncate block w-40">${escapeHTML(t.p.objeto)}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencido (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma tarefa crítica.</p>';
+         const diligenceTasks = [];
+            let dilOk=0, dilAlerta=0, dilVencido=0;
+            processos.forEach(p => (Array.isArray(p.diligencias) ? p.diligencias : []).forEach(d => {
+                if (!d.prazo_atendimento || d.data_resposta) return;
+                const days = diffDays(today, d.prazo_atendimento);
+                if (days < 0) dilVencido++; else if (days <= config.alerts.high.task) dilAlerta++; else dilOk++;
+                if (days <= config.alerts.high.task) diligenceTasks.push({ p, d, days, crit: days <= config.alerts.crit.task });
+            }));
+            document.getElementById('prazodil-ok').innerText = dilOk; document.getElementById('prazodil-alerta').innerText = dilAlerta; document.getElementById('prazodil-vencido').innerText = dilVencido;
+            diligenceTasks.sort((a, b) => a.days - b.days);
+            document.getElementById('diligencias-list-dashboard').innerHTML = diligenceTasks.length ? diligenceTasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${escapeHTML(t.p.sei)}</span><span class="text-gray-600 truncate block w-56">${escapeHTML(t.d.doc_solicitante || 'Diligência')}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencida (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma diligência crítica.</p>';
+
 
           const atRiskProcesses = [];
             processos.forEach(p => {
@@ -2001,11 +2049,11 @@ function setupConfiguracoesView() {
                         || matchesMaskedText(getRelatedProcessesDisplay(p), search);
                     if (!matchGlobal) return false;
                 }
-                if (isPriorityFilterActive && !p.prioritario) return false;               
+                if (isPriorityFilterActive && !p.prioritario) return false;
                 if (fpStatus && getStatusFromProcess(p) !== fpStatus) return false; if (fpSei && !matchesMaskedText(p.sei, fpSei)) return false; if (fpObjeto && (!p.objeto || !p.objeto.toLowerCase().includes(fpObjeto))) return false; if (fpAcusados && (!p.acusados || !p.acusados.join(' ').toLowerCase().includes(fpAcusados))) return false; if (fpAnalista && (!p.analista || !p.analista.toLowerCase().includes(fpAnalista))) return false; if (!processHasResultado(p, fpResultado)) return false; if (fpTipoAcusado && p.tipo_acusado !== fpTipoAcusado) return false; if (fpPenalidades && p.penalidades !== fpPenalidades) return false;
                  if (fpDataEnt && p.data_ent !== fpDataEnt) return false; if (fpDataConhecimento && p.data_conhecimento !== fpDataConhecimento) return false; if (fpDataDistribuicao && p.data_distribuicao !== fpDataDistribuicao) return false; if (fpPrazoNtData && p.prazo_nt_data !== fpPrazoNtData) return false; if (fpDataEntregaNt && p.data_entrega_nt !== fpDataEntregaNt) return false; if (!processHasDespachoDate(p, fpDataDespacho)) return false; if (fpDataAnalisePreliminar && p.data_analise_preliminar !== fpDataAnalisePreliminar) return false;
                 if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && !matchesMaskedText(p.doc_origem, fpDocOrigem)) return false; if (fpJuntado && !matchesMaskedText(p.juntado, fpJuntado)) return false; if (fpRelacionados && !matchesMaskedText(getRelatedProcessesDisplay(p), fpRelacionados)) return false; if (fpDocResp && !matchesMaskedText(p.doc_resp, fpDocResp)) return false;
-                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false;                
+                if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false;
                 if (fpOpPolicialDetalhes && !matchesMaskedText(p.op_policial_detalhes, fpOpPolicialDetalhes)) return false; if (fpInqueritoDetalhes && !matchesMaskedText(p.inquerito_detalhes, fpInqueritoDetalhes)) return false; if (fpEpadDetalhes && !matchesMaskedText(p.epad_detalhes, fpEpadDetalhes)) return false;
                 if ((fpTacSit || fpTacNumeroProcesso || fpTacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
                 if (fpTacSit && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(fpTacSit)) return false; if (fpTacNumeroProcesso && !matchesMaskedText(p.tac_numero_processo, fpTacNumeroProcesso)) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
@@ -2078,13 +2126,16 @@ filtered.sort((a, b) => {
             const prescriptionGridCols = prescriptionItems.length >= 4 ? 4 : prescriptionItems.length >= 3 ? 3 : 2;
              detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${getRelatedProcessesDisplay(p)}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid gap-2 grid-cols-${prescriptionGridCols}">${prescriptionItems.length ? prescriptionItems.map(entry => `<div><b>${entry.label}:</b> ${formatDate(entry.value)}</div>`).join('') : '<div>—</div>'}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span><p><b>Número processo TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : (p.tac_numero_processo || '—')}</p><p><b>Data do status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</p><p><b>Data limite para cumprimento do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite)}</p>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
-        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; renderAccused(); renderProcessosRelacionados(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details', 'tac-deadline-wrap'].forEach(id => document.getElementById(id)?.classList.add('hidden')); renderAccusedDecisionFields(); }
+        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; currentDiligencias=[]; renderAccused(); renderProcessosRelacionados(); renderDiligencias(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details', 'tac-deadline-wrap'].forEach(id => document.getElementById(id)?.classList.add('hidden')); renderAccusedDecisionFields(); }
         function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); currentAccusedOutcomes.push({ acusado: v, resultado: 'Não definida', data_despacho: '' }); document.getElementById('input-acusado').value=''; renderAccused(); renderAccusedDecisionFields(); }}
         function removeAcusado(idx) { currentAccused.splice(idx, 1); currentAccusedOutcomes.splice(idx, 1); renderAccused(); renderAccusedDecisionFields(); }
         function renderAccused() { document.getElementById('lista-acusados').innerHTML = currentAccused.map((a, i) => `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs inline-flex items-center">${a} <button type="button" onclick="removeAcusado(${i})" class="ml-1.5 text-blue-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
         function addProcessoRelacionado() { const input = document.getElementById('input-processo-relacionado'); const v = (input?.value || '').trim(); if(v){ currentRelatedProcesses.push(v); input.value=''; renderProcessosRelacionados(); }}
         function removeProcessoRelacionado(idx) { currentRelatedProcesses.splice(idx, 1); renderProcessosRelacionados(); }
         function renderProcessosRelacionados() { document.getElementById('lista-processos-relacionados').innerHTML = currentRelatedProcesses.map((rel, i) => `<span class="bg-slate-100 text-slate-800 px-2 py-1 rounded text-xs inline-flex items-center">${rel} <button type="button" onclick="removeProcessoRelacionado(${i})" class="ml-1.5 text-slate-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
+        function addDiligencia() { const doc = document.getElementById('diligencia-doc').value.trim(); const prazo = document.getElementById('diligencia-prazo').value; const resposta = document.getElementById('diligencia-resposta').value; if(!doc || !prazo) return alert('Informe o documento solicitante e o prazo da diligência.'); currentDiligencias.push({ doc_solicitante: doc, prazo_atendimento: prazo, data_resposta: resposta }); document.getElementById('diligencia-doc').value=''; document.getElementById('diligencia-prazo').value=''; document.getElementById('diligencia-resposta').value=''; renderDiligencias(); }
+        function removeDiligencia(idx) { currentDiligencias.splice(idx, 1); renderDiligencias(); }
+        function renderDiligencias() { const el = document.getElementById('lista-diligencias'); if(!el) return; el.innerHTML = currentDiligencias.length ? currentDiligencias.map((d, i) => `<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 bg-white border rounded p-2 text-sm"><div><b>Doc. solicitante:</b> ${escapeHTML(d.doc_solicitante)} | <b>Prazo:</b> ${formatDate(d.prazo_atendimento)} | <b>Resposta:</b> ${formatDate(d.data_resposta)}</div><button type="button" onclick="removeDiligencia(${i})" class="text-red-600 hover:underline self-start md:self-auto">Remover</button></div>`).join('') : '<p class="text-sm text-gray-500">Nenhuma diligência cadastrada.</p>'; }    
         function hasTacOutcomeInForm() {
             const resultado = document.getElementById('process-resultado')?.value;
             if (normalizeText(resultado) === normalizeText('Para celebrar TAC')) return true;
@@ -2140,11 +2191,13 @@ filtered.sort((a, b) => {
             currentAccused = p.acusados||[];
             currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, p.resultados_acusados || []);
             currentRelatedProcesses = getRelatedProcesses(p);
+            currentDiligencias = Array.isArray(p.diligencias) ? p.diligencias : [];
             if ((!Array.isArray(p.resultados_acusados) || p.resultados_acusados.length === 0) && currentAccused.length) {
                 currentAccusedOutcomes = normalizeAccusedOutcomes(currentAccused, currentAccused.map((acusado, idx) => ({ acusado, resultado: idx === 0 ? (p.resultado || 'Não definida') : 'Não definida', data_despacho: idx === 0 ? (p.data_despacho || '') : '' })));
             }
             renderAccused();
             renderProcessosRelacionados();
+             renderDiligencias();
             renderAccusedDecisionFields();
             toggleTacDetails(processHasResultado(p, 'Para celebrar TAC'));
             calculatePrescription();
@@ -2384,6 +2437,7 @@ filtered.sort((a, b) => {
             tac_status_data: { label: 'Data do status TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data) },
             tac_data_limite: { label: 'Data limite TAC', get: p => getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite) },
             tac_obs: { label: 'Observações TAC', get: p => p.tac_obs || '—' },
+            diligencias: { label: 'Diligências', get: p => Array.isArray(p.diligencias) && p.diligencias.length ? p.diligencias.map(d => `${d.doc_solicitante || 'Doc.'} - prazo ${formatDate(d.prazo_atendimento)} - resposta ${formatDate(d.data_resposta)}`).join(' | ') : '—' },
             obs: { label: 'Observações Gerais', get: p => p.obs || '—' }
         };
 
@@ -2631,6 +2685,22 @@ async function generateSituationReport() {
             setLastReport(filtered, false);
             document.getElementById('report-content').innerHTML = html;
             document.getElementById('report-output').classList.remove('hidden');
+        }
+     async function generateTramitationReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
+            closeReport();
+            const andamentoStatuses = ['Cadastrado', 'Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'];
+            const inProgress = processos.filter(p => andamentoStatuses.includes(getStatusFromProcess(p))).sort((a, b) => (a.data_conhecimento || a.data_ent || '').localeCompare(b.data_conhecimento || b.data_ent || ''));
+            const avgPreliminar = calculateAverageDays(processos, 'data_ent', 'data_analise_preliminar');
+            const avgIps = calculateAverageDays(processos.filter(p => p.ips === true || processHasResultado(p, 'Instauração de IPS')), 'data_distribuicao', 'data_entrega_nt');
+            const avgGlobal = calculateAverageDays(processos, 'data_conhecimento', getDespachoDateForStatus);
+            let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório de Tempo de Tramitação</h2><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 text-center"><div class="p-3 border rounded bg-blue-50"><p class="text-xs text-blue-700">Processos em andamento</p><p class="text-2xl font-bold">${inProgress.length}</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise preliminar</p><p class="text-2xl font-bold">${avgPreliminar} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo médio análise de IPS</p><p class="text-2xl font-bold">${avgIps} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo global médio</p><p class="text-2xl font-bold">${avgGlobal} dias</p></div></div>`;
+            html += '<table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr><th class="border p-2">Número do processo</th><th class="border p-2">Data de entrada</th><th class="border p-2">Data de conhecimento do fato</th><th class="border p-2">Tempo médio de tramitação</th><th class="border p-2">Status</th></tr></thead><tbody>';
+            inProgress.forEach(p => { const end = getDespachoDateForStatus(p) || new Date().toISOString().split('T')[0]; const dias = diffDays(p.data_conhecimento || p.data_ent, end); const danger = dias > 400; html += `<tr class="${danger ? 'bg-red-100 text-red-800 font-bold' : ''}"><td class="border p-2 font-mono">${escapeHTML(p.sei || p.id || '—')}</td><td class="border p-2">${formatDate(p.data_ent)}</td><td class="border p-2">${formatDate(p.data_conhecimento)}</td><td class="border p-2">${dias} dias</td><td class="border p-2">${getStatusFromProcess(p)}</td></tr>`; });
+            html += '</tbody></table><p class="text-xs text-gray-500 mt-3">Processos acima de 400 dias destacados em vermelho. Ordenação: do mais antigo para o mais novo.</p>';
+            setLastReport(inProgress, false);
+            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
         async function generateDistributionReport() {
             const loaded = await refreshProcessosForReportGeneration();
@@ -2938,6 +3008,7 @@ async function generateSituationReport() {
                 processHasResultado(p, 'Instauração de PAR')
                 && byDespacho(p)
             );
+             
             const juizoSinpaList = processos.filter(p =>
                 processHasResultado(p, 'Instauração de SINPA')
                 && byDespacho(p)
