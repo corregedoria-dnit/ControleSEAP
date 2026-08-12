@@ -2700,11 +2700,14 @@ async function generateSituationReport() {
             const reportBase = processos.filter(isWithinKnowledgePeriod);
             const andamentoStatuses = ['Cadastrado', 'Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'];
             const inProgress = reportBase.filter(p => andamentoStatuses.includes(getStatusFromProcess(p))).sort((a, b) => (a.data_conhecimento || a.data_ent || '').localeCompare(b.data_conhecimento || b.data_ent || ''));
-            const avgPreliminar = calculateAverageDays(reportBase, 'data_ent', 'data_analise_preliminar');
-            const avgIps = calculateAverageDays(reportBase.filter(p => p.ips === true || processHasResultado(p, 'Instauração de IPS')), 'data_distribuicao', 'data_entrega_nt');
+            const isWithinMonthlyPeriod = getMonthlyPeriodMatcher(start, end);
+            const preliminarAnalyzed = getManagerialPreliminarAnalyzedProcesses(processos, isWithinMonthlyPeriod);
+            const juizoAnalyzed = getManagerialJuizoAnalyzedProcesses(processos, isWithinMonthlyPeriod);
+            const avgPreliminar = calculateAverageDays(preliminarAnalyzed, 'data_conhecimento', 'data_analise_preliminar');
+            const avgJuizoAnalysis = calculateAverageDays(juizoAnalyzed, 'data_analise_preliminar', getDespachoDateForStatus);
             const avgGlobal = calculateAverageDays(reportBase, 'data_conhecimento', getDespachoDateForStatus);
             const periodLabel = (start || end) ? `${formatDate(start) || 'início'} a ${formatDate(end) || 'hoje'}` : 'Todo o período';
-            let html = `<h2 class="text-2xl font-bold text-center mb-2">Relatório de Tempo de Tramitação</h2><p class="text-center text-sm mb-4">Período de conhecimento do fato: ${periodLabel}</p><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 text-center"><div class="p-3 border rounded bg-blue-50"><p class="text-xs text-blue-700">Processos em andamento</p><p class="text-2xl font-bold">${inProgress.length}</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise preliminar</p><p class="text-2xl font-bold">${avgPreliminar} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo médio análise de IPS</p><p class="text-2xl font-bold">${avgIps} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo global médio</p><p class="text-2xl font-bold">${avgGlobal} dias</p></div></div>`;
+            let html = `<h2 class="text-2xl font-bold text-center mb-2">Relatório de Tempo de Tramitação</h2><p class="text-center text-sm mb-4">Período de conhecimento do fato: ${periodLabel}</p><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 text-center"><div class="p-3 border rounded bg-blue-50"><p class="text-xs text-blue-700">Processos em andamento</p><p class="text-2xl font-bold">${inProgress.length}</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise preliminar</p><p class="text-2xl font-bold">${avgPreliminar} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise de processos (IPS e não IPS)</p><p class="text-2xl font-bold">${avgJuizoAnalysis} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo global médio</p><p class="text-2xl font-bold">${avgGlobal} dias</p></div></div>`;
             html += '<table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr><th class="border p-2">Número do processo</th><th class="border p-2">Data de entrada</th><th class="border p-2">Data de conhecimento do fato</th><th class="border p-2">Tempo médio de tramitação</th><th class="border p-2">Status</th></tr></thead><tbody>';
             inProgress.forEach(p => { const end = getDespachoDateForStatus(p) || new Date().toISOString().split('T')[0]; const dias = diffDays(p.data_conhecimento || p.data_ent, end); const danger = dias > 400; html += `<tr class="${danger ? 'bg-red-100 text-red-800 font-bold' : ''}"><td class="border p-2 font-mono">${escapeHTML(p.sei || p.id || '—')}</td><td class="border p-2">${formatDate(p.data_ent)}</td><td class="border p-2">${formatDate(p.data_conhecimento)}</td><td class="border p-2">${dias} dias</td><td class="border p-2">${getStatusFromProcess(p)}</td></tr>`; });
             html += '</tbody></table><p class="text-xs text-gray-500 mt-3">Processos acima de 400 dias destacados em vermelho. Ordenação: do mais antigo para o mais novo.</p>';
@@ -2791,7 +2794,43 @@ async function generateSituationReport() {
             if (durations.length === 0) return 0;
             return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length);
         }
+function getMonthlyPeriodMatcher(startStr, endStr) {
+            return (dateValue) => {
+                if (!dateValue) return false;
+                if (startStr && dateValue < startStr) return false;
+                if (endStr && dateValue > endStr) return false;
+                return true;
+            };
+        }
 
+        function getManagerialPreliminarAnalyzedProcesses(source, isWithinPeriod) {
+            const byPreliminar = (p) => isWithinPeriod(p.data_analise_preliminar);
+            const noticiasArquivadosPreliminarList = source.filter(p =>
+                processHasResultado(p, 'Arquivado após análise preliminar')
+                && byPreliminar(p)
+            );
+            const noticiasEncaminhadosJuizoList = source.filter(p =>
+                ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
+                && byPreliminar(p)
+            );
+            const noticiasEncaminhadosJuizoJuntadoList = source.filter(p =>
+                p.juntado && p.juntado.trim().length > 0
+                && byPreliminar(p)
+            );
+            return uniqueProcessesByIdentity([
+                ...noticiasArquivadosPreliminarList,
+                ...noticiasEncaminhadosJuizoList,
+                ...noticiasEncaminhadosJuizoJuntadoList
+            ]);
+        }
+
+        function getManagerialJuizoAnalyzedProcesses(source, isWithinPeriod) {
+            return source.filter(p =>
+                ['Concluído', 'TAC'].includes(getStatusFromProcess(p))
+                && !processHasResultado(p, 'Arquivado após análise preliminar')
+                && isWithinPeriod(getDespachoDateForStatus(p))
+            );
+        }
         function uniqueProcessesByIdentity(list) {
             const map = new Map();
             list.forEach((p) => {
@@ -2939,12 +2978,7 @@ async function generateSituationReport() {
             const type = document.querySelector('input[name="rep-man-type"]:checked').value;
             const isAnalytic = type === 'analitico';
 
-            const isWithinPeriod = (dateValue) => {
-                if (!dateValue) return false;
-                if (startStr && dateValue < startStr) return false;
-                if (endStr && dateValue > endStr) return false;
-                return true;
-            };
+            const isWithinPeriod = getMonthlyPeriodMatcher(startStr, endStr);
             const byConhecimento = (p) => isWithinPeriod(p.data_conhecimento);
              const byPreliminar = (p) => isWithinPeriod(p.data_analise_preliminar);
             const byDespacho = (p) => isWithinPeriod(getDespachoDateForStatus(p));
@@ -2981,18 +3015,10 @@ async function generateSituationReport() {
                 p.juntado && p.juntado.trim().length > 0
                 && byPreliminar(p)
             );
-            const noticiasProcessosAnalisadosList = uniqueProcessesByIdentity([
-                ...noticiasArquivadosPreliminarList,
-                ...noticiasEncaminhadosJuizoList,
-                ...noticiasEncaminhadosJuizoJuntadoList
-            ]);
+           const noticiasProcessosAnalisadosList = getManagerialPreliminarAnalyzedProcesses(processos, isWithinPeriod);
             const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasProcessosAnalisadosList, 'data_conhecimento', 'data_analise_preliminar');
 
-            const juizoAnalisadosList = processos.filter(p =>
-                ['Concluído', 'TAC'].includes(getStatusFromProcess(p))
-                && !processHasResultado(p, 'Arquivado após análise preliminar')
-                && byDespacho(p)
-            );
+            const juizoAnalisadosList = getManagerialJuizoAnalyzedProcesses(processos, isWithinPeriod);
             const juizoAnalisadosIps = juizoAnalisadosList.filter(p => p.ips === true);
             const juizoAnalisadosNaoIps = juizoAnalisadosList.filter(p => p.ips === false);
             const juizoAnalisadosTotal = juizoAnalisadosIps.length + juizoAnalisadosNaoIps.length;
