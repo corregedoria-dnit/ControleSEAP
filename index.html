@@ -885,6 +885,7 @@ let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
 let lastReportIsManagerial = false;
+let lastReportExportFields = null;
 const CONFIG_RECORD_ID = 'main';
 const DEFAULT_CONFIG = {
   orgName: 'Controle Correicional',
@@ -2488,9 +2489,10 @@ filtered.sort((a, b) => {
 
         let lastManagerialSections = null;
 
-        function setLastReport(data, isManagerial = false) {
+        function setLastReport(data, isManagerial = false, exportFields = null) {
             lastReportData = Array.isArray(data) ? [...data] : [];
             lastReportIsManagerial = isManagerial;
+            lastReportExportFields = Array.isArray(exportFields) && exportFields.length ? [...exportFields] : null;
             lastManagerialSections = null;
         }
 
@@ -2696,22 +2698,33 @@ async function generateSituationReport() {
             closeReport();
             const start = document.getElementById('rep-tram-start').value;
             const end = document.getElementById('rep-tram-end').value;
+            const today = new Date().toISOString().split('T')[0];
             const isWithinKnowledgePeriod = (p) => (!start || p.data_conhecimento >= start) && (!end || p.data_conhecimento <= end);
-            const reportBase = processos.filter(isWithinKnowledgePeriod);
-            const andamentoStatuses = ['Cadastrado', 'Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'];
-            const inProgress = reportBase.filter(p => andamentoStatuses.includes(getStatusFromProcess(p))).sort((a, b) => (a.data_conhecimento || a.data_ent || '').localeCompare(b.data_conhecimento || b.data_ent || ''));
-            const isWithinMonthlyPeriod = getMonthlyPeriodMatcher(start, end);
-            const preliminarAnalyzed = getManagerialPreliminarAnalyzedProcesses(processos, isWithinMonthlyPeriod);
-            const juizoAnalyzed = getManagerialJuizoAnalyzedProcesses(processos, isWithinMonthlyPeriod);
-            const avgPreliminar = calculateAverageDays(preliminarAnalyzed, 'data_conhecimento', 'data_analise_preliminar');
-            const avgJuizoAnalysis = calculateAverageDays(juizoAnalyzed, 'data_analise_preliminar', getDespachoDateForStatus);
-            const avgGlobal = calculateAverageDays(reportBase, 'data_conhecimento', getDespachoDateForStatus);
+            const tramitationStatuses = ['Cadastrado', 'Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'];
+            const processStatus = (p) => getStatusFromProcess(p);
+            const getTramitationStartDate = (p) => p.data_conhecimento || p.data_ent;
+            const calculateCurrentAverage = (list) => calculateAverageDays(list, getTramitationStartDate, () => today);
+            const inProgress = processos
+                .filter(p => isWithinKnowledgePeriod(p) && tramitationStatuses.includes(processStatus(p)))
+                .sort((a, b) => (getTramitationStartDate(a) || '').localeCompare(getTramitationStartDate(b) || ''));
+            const preliminaryProcesses = inProgress.filter(p => processStatus(p) === 'Cadastrado');
+            const analysisProcesses = inProgress.filter(p => ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(processStatus(p)));
+            const avgPreliminar = calculateCurrentAverage(preliminaryProcesses);
+            const avgJuizoAnalysis = calculateCurrentAverage(analysisProcesses);
+            const avgGlobal = calculateCurrentAverage(inProgress);
             const periodLabel = (start || end) ? `${formatDate(start) || 'início'} a ${formatDate(end) || 'hoje'}` : 'Todo o período';
             let html = `<h2 class="text-2xl font-bold text-center mb-2">Relatório de Tempo de Tramitação</h2><p class="text-center text-sm mb-4">Período de conhecimento do fato: ${periodLabel}</p><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 text-center"><div class="p-3 border rounded bg-blue-50"><p class="text-xs text-blue-700">Processos em andamento</p><p class="text-2xl font-bold">${inProgress.length}</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise preliminar</p><p class="text-2xl font-bold">${avgPreliminar} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise de processos (IPS e não IPS)</p><p class="text-2xl font-bold">${avgJuizoAnalysis} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo global médio</p><p class="text-2xl font-bold">${avgGlobal} dias</p></div></div>`;
             html += '<table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr><th class="border p-2">Número do processo</th><th class="border p-2">Data de entrada</th><th class="border p-2">Data de conhecimento do fato</th><th class="border p-2">Tempo médio de tramitação</th><th class="border p-2">Status</th></tr></thead><tbody>';
-            inProgress.forEach(p => { const end = getDespachoDateForStatus(p) || new Date().toISOString().split('T')[0]; const dias = diffDays(p.data_conhecimento || p.data_ent, end); const danger = dias > 400; html += `<tr class="${danger ? 'bg-red-100 text-red-800 font-bold' : ''}"><td class="border p-2 font-mono">${escapeHTML(p.sei || p.id || '—')}</td><td class="border p-2">${formatDate(p.data_ent)}</td><td class="border p-2">${formatDate(p.data_conhecimento)}</td><td class="border p-2">${dias} dias</td><td class="border p-2">${getStatusFromProcess(p)}</td></tr>`; });
+            inProgress.forEach(p => { const dias = diffDays(getTramitationStartDate(p), today); const danger = dias > 400; html += `<tr class="${danger ? 'bg-red-100 text-red-800 font-bold' : ''}"><td class="border p-2 font-mono">${escapeHTML(p.sei || p.id || '—')}</td><td class="border p-2">${formatDate(p.data_ent)}</td><td class="border p-2">${formatDate(p.data_conhecimento)}</td><td class="border p-2">${dias} dias</td><td class="border p-2">${processStatus(p)}</td></tr>`; });
+         
             html += '</tbody></table><p class="text-xs text-gray-500 mt-3">Processos acima de 400 dias destacados em vermelho. Ordenação: do mais antigo para o mais novo.</p>';
-            setLastReport(inProgress, false);
+             setLastReport(inProgress, false, [
+                { label: 'Número do processo', get: p => p.sei || p.id || '—' },
+                { label: 'Data de entrada', get: p => formatDate(p.data_ent) },
+                { label: 'Data de conhecimento do fato', get: p => formatDate(p.data_conhecimento) },
+                { label: 'Tempo médio de tramitação', get: p => `${diffDays(getTramitationStartDate(p), today)} dias` },
+                { label: 'Status', get: p => processStatus(p) }
+            ]);
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
         async function generateDistributionReport() {
@@ -2778,7 +2791,13 @@ async function generateSituationReport() {
             document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
         }
 
-        function diffDays(d1, d2) { if(!d1 || !d2) return 0; return Math.ceil((new Date(d2) - new Date(d1)) / (1000 * 3600 * 24)); }
+         function diffDays(d1, d2) {
+            if(!d1 || !d2) return 0;
+            const start = new Date(`${d1}T00:00:00`);
+            const end = new Date(`${d2}T00:00:00`);
+            if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+            return Math.max(0, Math.ceil((end - start) / (1000 * 3600 * 24)));
+        }
 
          function getFieldValue(process, field) {
             return typeof field === 'function' ? field(process) : process[field];
@@ -3168,6 +3187,12 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
 
             const rows = lastReportData.map(p => {
                 const row = {};
+                if (lastReportExportFields) {
+                    lastReportExportFields.forEach(field => {
+                        row[field.label] = field.get(p);
+                    });
+                    return row;
+                }
                 REPORT_FIELD_ORDER.forEach(field => {
                     row[REPORT_FIELDS[field].label] = formatFieldValueForExport(field, p);
                 });
