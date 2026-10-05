@@ -850,17 +850,94 @@ if (keyFromUrl) {
 const SUPABASE_URL = `https://${SUPABASE_ENVS[selectedEnv].projectId}.supabase.co`;
 const SUPABASE_KEY = keyFromUrl || localStorage.getItem(keyStorageName) || SUPABASE_ENVS[selectedEnv].key;
 const hasSupabaseKey = typeof SUPABASE_KEY === 'string' && SUPABASE_KEY.trim().length > 0;
-const supabaseClient = hasSupabaseKey ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const supabaseClient = hasSupabaseKey && window.supabase
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
+    : null;
 
-function getMissingSupabaseKeyMessage() {
-    if (selectedEnv === 'homolog') {
-        return 'Informe a chave da homologação: ?env=homolog&sb_key=SUA_CHAVE';
-    }
-    return 'Chave Supabase não configurada para este ambiente.';
+// Contrato de acesso usado pela interface. O adaptador legado traduz as chamadas
+// do Supabase para operações independentes do fornecedor; a futura API FastAPI
+// poderá implementar o mesmo contrato sem alterar as telas e regras de negócio.
+function createSupabaseBackend(client) {
+    if (!client) return null;
+
+    const unwrap = ({ data, error }) => {
+        if (error) throw error;
+        return data;
+    };
+
+    return Object.freeze({
+        auth: Object.freeze({
+            getSession: async () => {
+                const { data, error } = await client.auth.getSession();
+                if (error) throw error;
+                return data.session;
+            },
+            signIn: async (credentials) => {
+                const { data, error } = await client.auth.signInWithPassword(credentials);
+                if (error) throw error;
+                return data.user;
+            },
+            signOut: async () => {
+                const { error } = await client.auth.signOut();
+                if (error) throw error;
+            },
+            clearSessionArtifacts: () => {
+                for (const key of Object.keys(localStorage)) {
+                    if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
+                        localStorage.removeItem(key);
+                    }
+                }
+            },
+            getProfile: async (userId) => unwrap(await client
+                .from('usuarios')
+                .select('is_admin, nome_completo, username')
+                .eq('id', userId)
+                .single())
+        }),
+        config: Object.freeze({
+            load: async (id) => unwrap(await client
+                .from('configuracoes')
+                .select('*')
+                .eq('id', id)
+                .maybeSingle()),
+            save: async (payload) => unwrap(await client
+                .from('configuracoes')
+                .upsert([payload], { onConflict: 'id' }))
+        }),
+        processes: Object.freeze({
+            list: async () => unwrap(await client.from('processos').select('*')),
+            save: async (payload) => unwrap(await client.from('processos').upsert([payload])),
+            remove: async (id) => unwrap(await client.from('processos').delete().eq('id', id)),
+            subscribe: (onChange, onStatus) => client
+                .channel('public:processos')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, onChange)
+                .subscribe((status) => {
+                    const connectionState = status === 'SUBSCRIBED'
+                        ? 'connected'
+                        : (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' ? 'unavailable' : 'connecting');
+                    onStatus(connectionState);
+                })
+        }),
+        users: Object.freeze({
+            list: async () => unwrap(await client
+                .from('usuarios')
+                .select('id, nome_completo, username, is_admin')
+                .order('nome_completo', { ascending: true })),
+            update: async (id, payload) => unwrap(await client.from('usuarios').update(payload).eq('id', id)),
+            create: async (payload) => unwrap(await client.from('usuarios').insert([payload])),
+            remove: async (id) => unwrap(await client.from('usuarios').delete().eq('id', id))
+        })
+    });
 }
 
-function hasSupabaseAuthClient() {
-    return !!(supabaseClient && supabaseClient.auth);
+const seapBackend = createSupabaseBackend(supabaseClient);
+
+function getBackendUnavailableMessage() {
+    return 'Serviço de autenticação indisponível.';
+}
+
+function hasAuthProvider() {
+    return !!seapBackend?.auth;
 }
 
 // 👇 VERIFIQUE SE ESTE BLOCO ABAIXO EXISTE NO SEU CÓDIGO 👇
@@ -954,32 +1031,28 @@ function normalizeConfig(rawConfig = {}) {
 // 👆 FIM DO BLOCO DE VARIÁVEIS GLOBAIS 👆
 
 async function loadCurrentUserProfile() {
-  if (!hasSupabaseAuthClient()) return;
+  if (!hasAuthProvider()) return;
   if (!currentUser?.id) return;
-  const { data, error } = await supabaseClient
-    .from('usuarios')
-    .select('is_admin, nome_completo, username')
-    .eq('id', currentUser.id)
-        .single();
-
-  if (error) {
+  let profile;
+  try {
+    profile = await seapBackend.auth.getProfile(currentUser.id);
+  } catch (error) {
     console.warn('Não foi possível carregar perfil do usuário:', error.message);
     currentUser.is_admin = false;
     return;
   }
 
-  currentUser.is_admin = !!data?.is_admin;
-  currentUser.nome_completo = data?.nome_completo || currentUser.nome_completo || '';
-  currentUser.username = data?.username || currentUser.username || '';
+  currentUser.is_admin = !!profile?.is_admin;
+  currentUser.nome_completo = profile?.nome_completo || currentUser.nome_completo || '';
+  currentUser.username = profile?.username || currentUser.username || '';
 
   const adminBadge = document.getElementById('admin-badge');
   if (adminBadge) adminBadge.classList.toggle('hidden', !currentUser.is_admin);
 }
 
           // Verifica se já existe uma sessão ativa ao carregar a página
-if (hasSupabaseAuthClient()) {
-  const authClient = supabaseClient.auth;
-  authClient.getSession().then(async ({ data: { session } }) => {
+if (hasAuthProvider()) {
+  seapBackend.auth.getSession().then(async (session) => {
     if (session) {
       currentUser = session.user;
       await loadCurrentUserProfile();
@@ -987,27 +1060,28 @@ if (hasSupabaseAuthClient()) {
       document.getElementById('app').style.display = 'flex';
       initApp();
     }
+  }).catch((error) => {
+    console.error('Erro ao restaurar sessão:', error);
   });
 } else {
   const err = document.getElementById('error-msg');
   if (err) {
-    err.innerText = getMissingSupabaseKeyMessage();
+    err.innerText = getBackendUnavailableMessage();
     err.classList.remove('hidden');
   }
 }
 
 // Função de logout atualizada
 async function logout() {
-  if (!hasSupabaseAuthClient()) {
+  if (!hasAuthProvider()) {
     window.location.reload(true);
     return;
   }
-  const authClient = supabaseClient.auth;
   try {
-    // 1. Tenta fazer o logout oficial no Supabase
-    await authClient.signOut();
+    // Solicita o encerramento da sessão ao provedor de identidade ativo.
+    await seapBackend.auth.signOut();
   } catch (error) {
-    console.error("Erro ao comunicar logout ao Supabase:", error);
+    console.error("Erro ao encerrar sessão:", error);
   } finally {
     // 2. Limpa a variável global
     currentUser = null;
@@ -1021,12 +1095,8 @@ async function logout() {
         document.getElementById('log-pass').value = '';
     }
 
-    // 5. Limpa o armazenamento local do Supabase à força (Fallback)
-    for (let key in localStorage) {
-      if (key.startsWith('sb-') && key.endsWith('-auth-token')) {
-        localStorage.removeItem(key);
-      }
-    }
+    // O adaptador ativo limpa os artefatos locais da sessão.
+    seapBackend.auth.clearSessionArtifacts();
 
     // 6. Recarrega a página ignorando o cache
     window.location.reload(true);
@@ -1037,32 +1107,24 @@ async function logout() {
 async function handleLogin(e) {
   e.preventDefault();
 
-  // Nota: O Supabase Auth usa E-mail por padrão, não um "username" simples.
-  // Certifique-se de que os usuários usem e-mail para logar.
   const email = document.getElementById('log-user').value;
   const password = document.getElementById('log-pass').value;
   const err = document.getElementById('error-msg');
   const btn = document.getElementById('btn-login');
 
-  if (!hasSupabaseAuthClient()) {
-    err.innerText = getMissingSupabaseKeyMessage();
+  if (!hasAuthProvider()) {
+    err.innerText = getBackendUnavailableMessage();
     err.classList.remove('hidden');
     return;
   }
-  const authClient = supabaseClient.auth;
-
   btn.innerText = 'Verificando...';
   err.classList.add('hidden');
 
-  // Utilizando a autenticação nativa do Supabase
-  const { data, error } = await authClient.signInWithPassword({
-    email: email,
-    password: password,
-  });
-
-  btn.innerText = 'Entrar';
-
-if (error) {
+  let user;
+  try {
+    user = await seapBackend.auth.signIn({ email, password });
+  } catch (error) {
+    btn.innerText = 'Entrar';
     console.error("Erro no login:", error.message);
     if ((error.message || '').toLowerCase().includes('invalid api key')) {
       err.innerText = selectedEnv === 'homolog'
@@ -1074,8 +1136,10 @@ if (error) {
     err.classList.remove('hidden');
     return;
   }
-  if (data.user) {
-    currentUser = data.user;
+
+  btn.innerText = 'Entrar';
+  if (user) {
+    currentUser = user;
     await loadCurrentUserProfile();
     document.getElementById('login-overlay').style.display = 'none';
     document.getElementById('app').style.display = 'flex';
@@ -1148,13 +1212,8 @@ if (error) {
         async function fetchConfig() {
             let isConnected = false;
             try {
-                const { data, error } = await supabaseClient
-                    .from('configuracoes')
-                    .select('*')
-                    .eq('id', CONFIG_RECORD_ID)
-                    .maybeSingle();
-
-                if (error) throw error;
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                const data = await seapBackend.config.load(CONFIG_RECORD_ID);
 
                 if (data) {
                     const loadedConfig = extractStoredConfig(data);
@@ -1180,24 +1239,22 @@ if (error) {
             return isConnected;
         }
 
-        async function saveConfigsToSupabase() {
+        async function persistConfig() {
             const payload = {
                 id: CONFIG_RECORD_ID,
                 dados: config
             };
 
-            const { error } = await supabaseClient
-                .from('configuracoes')
-                .upsert([payload], { onConflict: 'id' });
-
-            if (error) {
-                throw error;
-            }
+            if (!seapBackend) throw new Error('Backend indisponível.');
+            await seapBackend.config.save(payload);
         }
 
         async function fetchProcessos() {
-            const { data, error } = await supabaseClient.from('processos').select('*');
-            if (error) {
+            let data;
+            try {
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                data = await seapBackend.processes.list();
+            } catch (error) {
                 console.error(error);
                 showToast("Erro ao carregar processos da nuvem.", "error");
                 return false;
@@ -1251,23 +1308,21 @@ if (error) {
         }
 
         function subscribeRealtime() {
-            supabaseClient
-                .channel('public:processos')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, () => {
+            if (!seapBackend) return;
+            seapBackend.processes.subscribe(() => {
                     fetchProcessos(); // Atualiza toda a tela de todos automaticamente
-                })
-                .subscribe((status) => {
-                    if (status === 'SUBSCRIBED') {
+                }, (status) => {
+                    if (status === 'connected') {
                         setOnlineStatus('Online', 'online');
                     }
 
-                    if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+                    if (status === 'unavailable') {
                         setOnlineStatus('Online (tempo real indisponível)', 'warning');
                     }
                 });
         }
 
-         async function saveProcessToSupabase(data, isEditing = false) {
+         async function saveProcess(data, isEditing = false) {
             const dbData = Object.assign({}, data);
             const persistedBooleanFields = ['op_policial', 'possui_inquerito', 'cad_epad', 'prioritario'];
             persistedBooleanFields.forEach(field => {
@@ -1317,40 +1372,29 @@ if (error) {
             } else {
                 dbData.diligencias = null;
             }
-            console.log("Enviando para o Supabase:", dbData); // Ótimo para depurar
-
-            const { error } = await supabaseClient.from('processos').upsert([dbData]);
-
-            if (error) {
-                console.error("Erro Supabase:", error);
+            try {
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                await seapBackend.processes.save(dbData);
+            } catch (error) {
+                console.error("Erro ao salvar processo:", error);
                 alert('Erro ao salvar no banco. Verifique o console para mais detalhes.');
-            } else {
-                showToast("Processo salvo na nuvem com sucesso!");
-                fetchProcessos();
-                showPage('processos');
-                            }
+                return;
+            }
+
+            showToast("Processo salvo com sucesso!");
+            fetchProcessos();
+            showPage('processos');
         }
 
-        //    async function saveProcessToSupabase(data) {
-      //      const dbData = { ...data };
-            // Garante que array vire string para salvar na tabela caso ela seja do tipo TEXT
-        //    dbData.acusados = JSON.stringify(data.acusados);
-          //
-          //  const { error } = await supabaseClient.from('processos').upsert([dbData]);
-          //  if (error) {
-          //      console.error("Erro Supabase:", error);
-          //      alert('Erro ao salvar no banco. Verifique se as colunas da tabela "processos" estão exatas.');
-          //  } else {
-          //      showToast("Processo salvo na nuvem com sucesso!");
-          //      fetchProcessos();
-          //      showPage('processos');
-         //   }
-      //  }
-
-        async function deleteProcessFromSupabase(id) {
-            const { error } = await supabaseClient.from('processos').delete().eq('id', id);
-            if (error) alert("Erro ao excluir.");
-            else fetchProcessos();
+        async function removeProcess(id) {
+            try {
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                await seapBackend.processes.remove(id);
+                fetchProcessos();
+            } catch (error) {
+                console.error("Erro ao excluir processo:", error);
+                alert("Erro ao excluir.");
+            }
         }
 
 
@@ -1386,7 +1430,7 @@ if (error) {
             config = normalizeConfig(config);
 
             try {
-                await saveConfigsToSupabase();
+                await persistConfig();
                 updateHeader();
                 showToast('Configurações salvas e sincronizadas!', 'success');
             } catch (error) {
@@ -1526,13 +1570,13 @@ if (error) {
             warnPreliminaryAnalysisStatus(data);
 
             // Chama a função de salvar, que fará a limpeza dos dados
-            saveProcessToSupabase(data, isEditing);
+            saveProcess(data, isEditing);
         }
 
 
         function deleteProcess(id) {
             if(confirm('Tem certeza que deseja excluir este processo?')) {
-                deleteProcessFromSupabase(id);
+                removeProcess(id);
                 showToast("Processo excluído!");
                 if(currentView === 'list') document.getElementById('split-detail-view').innerHTML = '<div class="flex items-center justify-center h-full text-gray-400">Selecione um processo...</div>';
             }
@@ -2231,12 +2275,11 @@ filtered.sort((a, b) => {
 
         async function fetchUsers() {
             if (!currentUser) return;
-            const { data, error } = await supabaseClient
-                .from('usuarios')
-                .select('id, nome_completo, username, senha, is_admin')
-                .order('nome_completo', { ascending: true });
-
-            if (error) {
+            let data;
+            try {
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                data = await seapBackend.users.list();
+            } catch (error) {
                 console.error(error);
                 showToast('Erro ao carregar usuários.', 'error');
                 return;
@@ -2329,15 +2372,12 @@ filtered.sort((a, b) => {
             const payload = { nome_completo: nome, username, is_admin: isUserAdmin };
             if (senha) payload.senha = senha;
 
-            let result;
-            if (id) {
-                result = await supabaseClient.from('usuarios').update(payload).eq('id', id);
-            } else {
-                result = await supabaseClient.from('usuarios').insert([payload]);
-            }
-
-            if (result.error) {
-                console.error(result.error);
+            try {
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                if (id) await seapBackend.users.update(id, payload);
+                else await seapBackend.users.create(payload);
+            } catch (error) {
+                console.error(error);
                 showToast('Erro ao salvar usuário.', 'error');
                 return;
             }
@@ -2358,8 +2398,10 @@ filtered.sort((a, b) => {
             }
             if (!confirm('Deseja realmente excluir este usuário?')) return;
 
-            const { error } = await supabaseClient.from('usuarios').delete().eq('id', userId);
-            if (error) {
+            try {
+                if (!seapBackend) throw new Error('Backend indisponível.');
+                await seapBackend.users.remove(userId);
+            } catch (error) {
                 console.error(error);
                 showToast('Erro ao excluir usuário.', 'error');
                 return;
@@ -3239,9 +3281,9 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
             reader.onload = async function(e) {
                 try {
                     const importedData = JSON.parse(e.target.result);
-                    if (importedData.config) { config = normalizeConfig(importedData.config); await saveConfigsToSupabase(); }
+                    if (importedData.config) { config = normalizeConfig(importedData.config); await persistConfig(); }
                     if (importedData.processos && Array.isArray(importedData.processos)) {
-                        for(const p of importedData.processos) { await saveProcessToSupabase(p); }
+                        for(const p of importedData.processos) { await saveProcess(p); }
                     }
                     showToast("Backup importado. Recarregando..."); setTimeout(() => window.location.reload(), 2000);
                 } catch (err) { alert("Erro ao ler JSON válido."); }
