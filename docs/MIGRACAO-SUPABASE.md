@@ -55,3 +55,10 @@ Não foram inventados modelos de negócio nem migrations de tabelas porque o sch
 O controle legado de diligências está incorporado ao `index.html` e ao campo `processos.diligencias`, incluindo indicadores de prazo no dashboard. O protótipo isolado que propunha a tabela `public.diligencias` foi removido da branch de migração porque seus campos e seu vínculo com o processo divergem do contrato usado no sistema principal.
 
 Nesta etapa, não criar tabela, migration ou endpoint de persistência para diligências. Primeiro confirmar no Supabase se a tabela separada existe e contém dados, e inspecionar os tipos e a estrutura efetiva do campo `processos.diligencias`. O módulo React/API deve preservar o comportamento do fluxo principal, evitando duplicidade de registros.
+
+
+## Implementação inicial do módulo de diligências
+
+A interface React implementa consulta da tabela `processos` (`id`, `sei`, `objeto`, `diligencias`), inclusão, registro/limpeza da data de resposta e remoção de itens dentro de `processos.diligencias`. A serialização segue o legado, gravando a coleção como JSON em texto (ou `null` quando vazia). O dashboard calcula pendentes dentro do prazo, vencendo em até 15 dias, vencidas e respondidas. O limite de 15 dias reproduz o valor padrão de `alerts.high.task` observado no código legado; ainda falta carregar essa configuração dinâmica de `configuracoes`.
+
+**Limitação deliberada desta etapa:** o frontend acessa Supabase diretamente com a chave publicável e a sessão do usuário, assim como o legado. Não foi possível validar a execução contra o projeto real, os tipos SQL, a RLS ou se `diligencias` é `text`/`jsonb`. Antes de disponibilizar em produção, testar leitura e atualização em homologação, confirmar políticas de SELECT/UPDATE em `processos` e migrar essas operações para endpoints FastAPI protegidos, se essa for a arquitetura aprovada. Nenhuma migration de banco foi criada.
