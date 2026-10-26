@@ -11,3 +11,8 @@ Consulte [docs/MIGRACAO-SUPABASE.md](docs/MIGRACAO-SUPABASE.md) para arquitetura
 ### API
 
 A API inicial fica em `backend/`. Configure as variáveis descritas em `backend/.env.example`. Não versione arquivos `.env` nem credenciais.
+
+
+### Diligências
+
+O controle legado de diligências já integra o dashboard e os registros de processos em `index.html`. Na branch de migração, o protótipo HTML independente foi removido para evitar manter um segundo fluxo com contrato de dados divergente. Nenhuma tabela ou dado do Supabase foi alterado; a implementação React/API será feita após confirmar o schema existente.
