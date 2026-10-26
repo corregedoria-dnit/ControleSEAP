@@ -30,3 +30,16 @@ backend:test:
     - pip install -e "./backend[dev]"
   script:
     - pytest backend/tests
+
+frontend:build:
+  stage: validate
+  image: node:22-alpine
+  cache:
+    key: "npm-$CI_COMMIT_REF_SLUG"
+    paths:
+      - frontend/node_modules/
+  before_script:
+    - cd frontend
+    - npm install
+  script:
+    - npm run build
