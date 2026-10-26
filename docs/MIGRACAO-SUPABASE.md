@@ -48,3 +48,10 @@ Não foram inventados modelos de negócio nem migrations de tabelas porque o sch
 4. Extrair a interface HTML para React/Vite gradualmente.
 5. Adicionar CI/CD, scans, build de imagens e deploy homologado.
 6. Testar em projeto Supabase de homologação; não executar migrations em produção nesta etapa.
+
+
+## Unificação das diligências
+
+O controle legado de diligências está incorporado ao `index.html` e ao campo `processos.diligencias`, incluindo indicadores de prazo no dashboard. O protótipo isolado que propunha a tabela `public.diligencias` foi removido da branch de migração porque seus campos e seu vínculo com o processo divergem do contrato usado no sistema principal.
+
+Nesta etapa, não criar tabela, migration ou endpoint de persistência para diligências. Primeiro confirmar no Supabase se a tabela separada existe e contém dados, e inspecionar os tipos e a estrutura efetiva do campo `processos.diligencias`. O módulo React/API deve preservar o comportamento do fluxo principal, evitando duplicidade de registros.
