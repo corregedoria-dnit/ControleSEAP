@@ -2,7 +2,7 @@
 
 ## 1. Escopo e confiabilidade
 
-Este levantamento foi feito por leitura estática do `index.html` da branch `main` (arquivo monolítico com cerca de 252 KB) e do arquivo `features/copilot/plans/diligencias.html`. A aplicação usa Supabase JS no navegador e acessa diretamente as tabelas `processos`, `configuracoes` e `usuarios`.
+Este levantamento foi feito por leitura estática do `index.html` da branch `main` (arquivo monolítico com cerca de 252 KB) e do protótipo isolado `features/copilot/plans/diligencias.html`. A aplicação principal já possui controle de prazo das diligências no dashboard e armazena diligências dentro do campo `processos.diligencias`. O HTML isolado é um protótipo independente que propõe uma tabela `public.diligencias`; ele não deve ser tratado como parte integrada do fluxo principal.
 
 **Limitação importante:** este documento é um mapeamento do contrato que o código cliente sugere, não uma introspecção do banco. Não tivemos acesso ao catálogo PostgreSQL/Supabase, constraints, tipos reais, índices, triggers, políticas RLS, funções, usuários de Auth nem dados. Nenhuma migration deve ser executada com base apenas neste documento.
 
@@ -11,7 +11,7 @@ Este levantamento foi feito por leitura estática do `index.html` da branch `mai
 | Caminho | Função observada |
 |---|---|
 | `index.html` | Aplicação legada: interface, autenticação, CRUD, regras de negócio, dashboard, relatórios, importação/exportação e conexão Supabase. |
-| `features/copilot/plans/diligencias.html` | Artefato HTML de planejamento; precisa ser avaliado separadamente para saber se faz parte do produto em produção. |
+| `features/copilot/plans/diligencias.html` | Protótipo independente removido desta branch para evitar manter uma segunda interface e um segundo contrato de dados para diligências. O controle funcional legado permanece em `index.html`. |
 | `README.md` | Apenas descrição curta do repositório. |
 | `frontend/` | Nova base React/Vite adicionada na branch de migração; ainda não substitui os módulos legados. |
 | `backend/` | Nova base FastAPI adicionada na branch de migração; os endpoints de negócio ainda não foram implementados. |
@@ -176,3 +176,14 @@ Solicitar ao administrador do projeto, sem compartilhar segredos:
 ## 12. Nota de segurança sobre configuração
 
 O cliente legado permite selecionar ambiente e sobrescrever a chave via query string, guardando-a em `localStorage`. Essa mecânica deve ser removida na nova interface e substituída por configuração de build/deploy. Chaves publicáveis não são credenciais administrativas; a segurança real depende de RLS e políticas. Nunca colocar senha de banco, JWT secret ou service-role em `VITE_*`, HTML, URL ou repositório.
+
+
+## 13. Unificação do módulo de diligências
+
+A leitura do sistema legado confirmou que o controle de diligências **já está incorporado ao código principal** (`index.html`): há indicadores de prazo no dashboard e o processo possui a coleção `diligencias`, utilizada também na apresentação de dados e nos relatórios. Para a migração, a referência funcional inicial será esse fluxo incorporado ao processo.
+
+O arquivo isolado `features/copilot/plans/diligencias.html` implementava outro fluxo, baseado numa tabela separada `public.diligencias` com os campos `numero_documento`, `data_envio`, `data_resposta` e `processo_id`. Esse contrato diverge do fluxo legado, que utiliza propriedades como `doc_solicitante`, `prazo_atendimento` e `data_resposta` dentro de `processos.diligencias`. Mantê-los como duas fontes funcionais criaria duplicidade e exigiria uma regra de sincronização que não foi definida.
+
+**Decisão nesta etapa:** remover da branch de migração o HTML independente, sem alterar o `index.html` legado nem criar/alterar tabelas. Na migração React/API, as diligências serão tratadas como parte do módulo de processos até que a inspeção do schema real e a definição de compatibilidade esclareçam se existe uma tabela separada em uso. Não se deve criar a tabela `public.diligencias` apenas com base no SQL comentado no protótipo.
+
+**Pendente antes de implementar persistência:** confirmar no Supabase os tipos e a estrutura de `processos.diligencias`, se há tabela `public.diligencias` em uso e se existem registros nessa tabela. A remoção do protótipo não exclui nem migra dados do banco.
