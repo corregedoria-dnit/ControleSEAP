@@ -187,3 +187,19 @@ O arquivo isolado `features/copilot/plans/diligencias.html` implementava outro f
 **Decisão nesta etapa:** remover da branch de migração o HTML independente, sem alterar o `index.html` legado nem criar/alterar tabelas. Na migração React/API, as diligências serão tratadas como parte do módulo de processos até que a inspeção do schema real e a definição de compatibilidade esclareçam se existe uma tabela separada em uso. Não se deve criar a tabela `public.diligencias` apenas com base no SQL comentado no protótipo.
 
 **Pendente antes de implementar persistência:** confirmar no Supabase os tipos e a estrutura de `processos.diligencias`, se há tabela `public.diligencias` em uso e se existem registros nessa tabela. A remoção do protótipo não exclui nem migra dados do banco.
+
+
+## 14. Migração inicial do módulo React de diligências
+
+Foi implementada uma primeira interface em `frontend/src/App.tsx`, com:
+
+- autenticação via Supabase Auth;
+- listagem de processos e suas diligências;
+- inclusão de diligência vinculada a processo com documento solicitante, prazo e data de resposta opcional;
+- alteração/limpeza da data de resposta e remoção de diligências;
+- busca por SEI, objeto ou documento e filtros por pendentes, respondidas e todas;
+- resumo de pendentes dentro do prazo, vencidas, próximas do vencimento e respondidas.
+
+O comportamento usa o contrato legado `processos.diligencias` e a serialização JSON em texto observada em `saveProcessToSupabase`. O limiar de alerta é 15 dias, correspondente ao valor padrão legado `alerts.high.task`; a configuração personalizada ainda não foi conectada à nova interface.
+
+**Não validado em ambiente real:** tipos SQL, permissões RLS, atualização via Supabase, existência de registros na tabela separada `public.diligencias` e build da aplicação. A implementação não cria, exclui ou migra tabelas. O acesso direto ao Supabase é provisório, mantendo a compatibilidade com o cliente legado até implementar e validar endpoints FastAPI.
