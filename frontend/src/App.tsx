@@ -143,7 +143,7 @@ export default function App() {
     const state = getDeadlineState(item);
     const matchesFilter = filter === "all" || (filter === "pending" ? state !== "answered" : state === "answered");
     const needle = search.trim().toLocaleLowerCase("pt-BR");
-    const matchesSearch = !needle || [item.sei, item.objeto, item.doc_solicitante].some((v) => v.toLocaleLowerCase("pt-BR").includes(needle));
+    const matchesSearch = !needle || [item.sei, item.objeto, item.doc_solicitante].some((v) => String(v ?? "").toLocaleLowerCase("pt-BR").includes(needle));
     return matchesFilter && matchesSearch;
   }).sort((a, b) => {
     if (a.data_resposta && !b.data_resposta) return 1;
