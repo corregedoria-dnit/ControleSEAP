@@ -1,0 +1,32 @@
+stages:
+  - validate
+  - test
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
+
+cache:
+  key: "pip-$CI_COMMIT_REF_SLUG"
+  paths:
+    - .cache/pip/
+
+backend:validate:
+  stage: validate
+  image: python:3.12-slim
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -e "./backend[dev]"
+  script:
+    - python -m compileall -q backend/src
+    - ruff check backend/src backend/tests
+
+backend:test:
+  stage: test
+  image: python:3.12-slim
+  before_script:
+    - python -m pip install --upgrade pip
+    - pip install -e "./backend[dev]"
+  script:
+    - pytest backend/tests
