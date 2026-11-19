@@ -641,10 +641,10 @@
                     </div>
                      <div id="filters-tramite" class="report-filters hidden animate-fadeIn">
                         <h3 class="font-semibold mb-2">Relatório de Tempo de Tramitação</h3>
-                        <p class="text-sm text-gray-600 mb-4">Lista processos em andamento classificados do mais antigo para o mais novo e destaca em vermelho aqueles com prazo global superior a 400 dias.</p>
+                        <p class="text-sm text-gray-600 mb-4">Calcula os tempos médios das etapas pelos mesmos critérios do Relatório Gerencial Mensal. O período é aplicado à data de conclusão de cada etapa: análise preliminar ou despacho do juízo de admissibilidade.</p>
                          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                            <div><label class="text-xs font-bold text-gray-600">Data de Conhecimento do Fato (De):</label><input type="date" id="rep-tram-start" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data de Conhecimento do Fato (Até):</label><input type="date" id="rep-tram-end" class="border rounded px-3 py-2 w-full mt-1"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Período (De):</label><input type="date" id="rep-tram-start" class="border rounded px-3 py-2 w-full mt-1"></div>
+                            <div><label class="text-xs font-bold text-gray-600">Período (Até):</label><input type="date" id="rep-tram-end" class="border rounded px-3 py-2 w-full mt-1"></div>
                         </div>
                          <button onclick="generateTramitationReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório de Tramitação</button>
                     </div>
@@ -2696,36 +2696,75 @@ async function generateSituationReport() {
             const loaded = await refreshProcessosForReportGeneration();
             if (!loaded) return;
             closeReport();
+
             const start = document.getElementById('rep-tram-start').value;
             const end = document.getElementById('rep-tram-end').value;
-            const today = new Date().toISOString().split('T')[0];
-            const isWithinKnowledgePeriod = (p) => (!start || p.data_conhecimento >= start) && (!end || p.data_conhecimento <= end);
-            const tramitationStatuses = ['Cadastrado', 'Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'];
-            const processStatus = (p) => getStatusFromProcess(p);
-            const getTramitationStartDate = (p) => p.data_conhecimento || p.data_ent;
-            const calculateCurrentAverage = (list) => calculateAverageDays(list, getTramitationStartDate, () => today);
-            const inProgress = processos
-                .filter(p => isWithinKnowledgePeriod(p) && tramitationStatuses.includes(processStatus(p)))
-                .sort((a, b) => (getTramitationStartDate(a) || '').localeCompare(getTramitationStartDate(b) || ''));
-            const preliminaryProcesses = inProgress.filter(p => processStatus(p) === 'Cadastrado');
-            const analysisProcesses = inProgress.filter(p => ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(processStatus(p)));
-            const avgPreliminar = calculateCurrentAverage(preliminaryProcesses);
-            const avgJuizoAnalysis = calculateCurrentAverage(analysisProcesses);
-            const avgGlobal = calculateCurrentAverage(inProgress);
-            const periodLabel = (start || end) ? `${formatDate(start) || 'início'} a ${formatDate(end) || 'hoje'}` : 'Todo o período';
-            let html = `<h2 class="text-2xl font-bold text-center mb-2">Relatório de Tempo de Tramitação</h2><p class="text-center text-sm mb-4">Período de conhecimento do fato: ${periodLabel}</p><div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6 text-center"><div class="p-3 border rounded bg-blue-50"><p class="text-xs text-blue-700">Processos em andamento</p><p class="text-2xl font-bold">${inProgress.length}</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise preliminar</p><p class="text-2xl font-bold">${avgPreliminar} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio análise de processos (IPS e não IPS)</p><p class="text-2xl font-bold">${avgJuizoAnalysis} dias</p></div><div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Prazo global médio</p><p class="text-2xl font-bold">${avgGlobal} dias</p></div></div>`;
-            html += '<table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr><th class="border p-2">Número do processo</th><th class="border p-2">Data de entrada</th><th class="border p-2">Data de conhecimento do fato</th><th class="border p-2">Tempo médio de tramitação</th><th class="border p-2">Status</th></tr></thead><tbody>';
-            inProgress.forEach(p => { const dias = diffDays(getTramitationStartDate(p), today); const danger = dias > 400; html += `<tr class="${danger ? 'bg-red-100 text-red-800 font-bold' : ''}"><td class="border p-2 font-mono">${escapeHTML(p.sei || p.id || '—')}</td><td class="border p-2">${formatDate(p.data_ent)}</td><td class="border p-2">${formatDate(p.data_conhecimento)}</td><td class="border p-2">${dias} dias</td><td class="border p-2">${processStatus(p)}</td></tr>`; });
-         
-            html += '</tbody></table><p class="text-xs text-gray-500 mt-3">Processos acima de 400 dias destacados em vermelho. Ordenação: do mais antigo para o mais novo.</p>';
-             setLastReport(inProgress, false, [
-                { label: 'Número do processo', get: p => p.sei || p.id || '—' },
-                { label: 'Data de entrada', get: p => formatDate(p.data_ent) },
-                { label: 'Data de conhecimento do fato', get: p => formatDate(p.data_conhecimento) },
-                { label: 'Tempo médio de tramitação', get: p => `${diffDays(getTramitationStartDate(p), today)} dias` },
-                { label: 'Status', get: p => processStatus(p) }
-            ]);
-            document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
+            const isWithinPeriod = getMonthlyPeriodMatcher(start, end);
+
+            // Reutiliza exatamente os universos e os marcos temporais do Relatório Gerencial Mensal.
+            const preliminaryProcesses = getManagerialPreliminarAnalyzedProcesses(processos, isWithinPeriod);
+            const juizoProcesses = getManagerialJuizoAnalyzedProcesses(processos, isWithinPeriod);
+            const avgPreliminar = calculateAverageDays(
+                preliminaryProcesses,
+                'data_conhecimento',
+                'data_analise_preliminar'
+            );
+            const avgJuizo = calculateAverageDays(
+                juizoProcesses,
+                'data_analise_preliminar',
+                getDespachoDateForStatus
+            );
+            const preliminaryAverageCount = preliminaryProcesses.filter(p => p.data_conhecimento && p.data_analise_preliminar).length;
+            const juizoAverageCount = juizoProcesses.filter(p => p.data_analise_preliminar && getDespachoDateForStatus(p)).length;
+
+            const periodLabel = (start || end)
+                ? (formatDate(start) || 'início') + ' a ' + (formatDate(end) || 'hoje')
+                : 'Todo o período';
+
+            const renderStageTable = (list, durationStart, durationEnd) => {
+                let table = '<div class="overflow-auto"><table class="report-table w-full text-xs border mt-3"><thead class="bg-gray-100"><tr>' +
+                    '<th class="border p-2">Número do processo</th>' +
+                    '<th class="border p-2">Data inicial</th>' +
+                    '<th class="border p-2">Data final</th>' +
+                    '<th class="border p-2">Duração (dias)</th>' +
+                    '<th class="border p-2">Status</th></tr></thead><tbody>';
+                list.forEach(p => {
+                    const firstDate = durationStart(p);
+                    const lastDate = durationEnd(p);
+                    const hasDates = Boolean(firstDate && lastDate);
+                    const days = hasDates ? diffDays(firstDate, lastDate) : null;
+                    table += '<tr>' +
+                        '<td class="border p-2 font-mono">' + escapeHTML(p.sei || p.id || '—') + '</td>' +
+                        '<td class="border p-2">' + (formatDate(firstDate) || '—') + '</td>' +
+                        '<td class="border p-2">' + (formatDate(lastDate) || '—') + '</td>' +
+                        '<td class="border p-2">' + (days === null ? '—' : days + ' dias') + '</td>' +
+                        '<td class="border p-2">' + escapeHTML(getStatusFromProcess(p) || '—') + '</td></tr>';
+                });
+                return table + '</tbody></table></div>';
+            };
+
+            let html = '<h2 class="text-2xl font-bold text-center mb-2">Relatório de Tempo de Tramitação</h2>' +
+                '<p class="text-center text-sm mb-4">Período das etapas concluídas: ' + periodLabel + '</p>' +
+                '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 text-center">' +
+                    '<div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio da análise preliminar</p>' +
+                    '<p class="text-2xl font-bold">' + avgPreliminar + ' dias</p><p class="text-xs text-gray-500">' + preliminaryProcesses.length + ' processos considerados</p></div>' +
+                    '<div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-700">Tempo médio do juízo de admissibilidade</p>' +
+                    '<p class="text-2xl font-bold">' + avgJuizo + ' dias</p><p class="text-xs text-gray-500">' + juizoProcesses.length + ' processos considerados</p></div>' +
+                '</div>' +
+                '<div class="report-section"><h3 class="report-header">Análise Preliminar</h3>' +
+                    '<p class="text-xs text-gray-600 mb-2">Critério gerencial: data do conhecimento do fato até a data da análise preliminar. O período seleciona pela data da análise preliminar.</p>' +
+                    renderStageTable(preliminaryProcesses, p => p.data_conhecimento, p => p.data_analise_preliminar) +
+                '</div>' +
+                '<div class="report-section"><h3 class="report-header">Juízo de Admissibilidade</h3>' +
+                    '<p class="text-xs text-gray-600 mb-2">Critério gerencial: data da análise preliminar até a data do despacho. O período seleciona pela data do despacho.</p>' +
+                    renderStageTable(juizoProcesses, p => p.data_analise_preliminar, p => getDespachoDateForStatus(p)) +
+                '</div>' +
+                '<p class="text-xs text-gray-500 mt-3">A média é calculada em dias corridos e arredondada para inteiro, pela mesma função utilizada no Relatório Gerencial Mensal. Registros sem uma das datas necessárias não entram no cálculo da média.</p>';
+
+            const reportProcesses = uniqueProcessesByIdentity([...preliminaryProcesses, ...juizoProcesses]);
+            setLastReport(reportProcesses, false);
+            document.getElementById('report-content').innerHTML = html;
+            document.getElementById('report-output').classList.remove('hidden');
         }
         async function generateDistributionReport() {
             const loaded = await refreshProcessosForReportGeneration();
