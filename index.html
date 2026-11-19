@@ -2714,12 +2714,14 @@ async function generateSituationReport() {
                 'data_analise_preliminar',
                 getDespachoDateForStatus
             );
+            const preliminaryAverageCount = preliminaryProcesses.filter(p => p.data_conhecimento && p.data_analise_preliminar).length;
+            const juizoAverageCount = juizoProcesses.filter(p => p.data_analise_preliminar && getDespachoDateForStatus(p)).length;
 
             const periodLabel = (start || end)
                 ? (formatDate(start) || 'início') + ' a ' + (formatDate(end) || 'hoje')
                 : 'Todo o período';
 
-            const renderStageTable = (list, startDate, endDate, durationStart, durationEnd) => {
+            const renderStageTable = (list, durationStart, durationEnd) => {
                 let table = '<div class="overflow-auto"><table class="report-table w-full text-xs border mt-3"><thead class="bg-gray-100"><tr>' +
                     '<th class="border p-2">Número do processo</th>' +
                     '<th class="border p-2">Data inicial</th>' +
@@ -2751,11 +2753,11 @@ async function generateSituationReport() {
                 '</div>' +
                 '<div class="report-section"><h3 class="report-header">Análise Preliminar</h3>' +
                     '<p class="text-xs text-gray-600 mb-2">Critério gerencial: data do conhecimento do fato até a data da análise preliminar. O período seleciona pela data da análise preliminar.</p>' +
-                    renderStageTable(preliminaryProcesses, 'data_conhecimento', 'data_analise_preliminar', p => p.data_conhecimento, p => p.data_analise_preliminar) +
+                    renderStageTable(preliminaryProcesses, p => p.data_conhecimento, p => p.data_analise_preliminar) +
                 '</div>' +
                 '<div class="report-section"><h3 class="report-header">Juízo de Admissibilidade</h3>' +
                     '<p class="text-xs text-gray-600 mb-2">Critério gerencial: data da análise preliminar até a data do despacho. O período seleciona pela data do despacho.</p>' +
-                    renderStageTable(juizoProcesses, 'data_analise_preliminar', 'data_despacho', p => p.data_analise_preliminar, p => getDespachoDateForStatus(p)) +
+                    renderStageTable(juizoProcesses, p => p.data_analise_preliminar, p => getDespachoDateForStatus(p)) +
                 '</div>' +
                 '<p class="text-xs text-gray-500 mt-3">A média é calculada em dias corridos e arredondada para inteiro, pela mesma função utilizada no Relatório Gerencial Mensal. Registros sem uma das datas necessárias não entram no cálculo da média.</p>';
 
