@@ -533,7 +533,36 @@
                                     </div>
                                 </div>
                             </div>
-                              <div class="bg-gray-50 p-4 rounded border">
+  
+                            <div id="tacs-manager-panel" class="hidden bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
+                                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2 mb-3">
+                                    <div><h4 class="text-base font-semibold text-blue-900">TACs vinculados ao processo de origem</h4><p id="tacs-origin-process-label" class="text-xs text-blue-700 mt-1"></p></div>
+                                    <span class="text-xs text-blue-700">Cada TAC possui cadastro e acompanhamento independentes.</span>
+                                </div>
+                                <div id="tacs-manager-locked" class="hidden bg-white border rounded p-3 text-sm text-gray-600 mb-3">Salve primeiro o processo de origem. Depois, abra sua edição para cadastrar e gerenciar os TACs vinculados.</div>
+                                <div id="tac-editor" class="bg-white border rounded-lg p-4 mb-4">
+                                    <div class="flex items-center justify-between mb-3"><h5 id="tac-editor-title" class="font-semibold text-gray-800">Cadastrar novo TAC</h5><button type="button" id="btn-tac-cancel-edit" onclick="resetTacForm()" class="hidden text-xs text-gray-600 hover:text-blue-700">Cancelar edição</button></div>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Número do processo do TAC</label><input id="tac-form-numero-processo" type="text" class="w-full border rounded px-3 py-2 text-sm mask-sei" placeholder="00000.000000/0000-00"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Processo de origem</label><div id="tac-form-processo-origem-display" class="w-full border rounded px-3 py-2 text-sm bg-gray-100 min-h-[38px]">—</div></div>
+                                        <div class="flex items-center pt-5"><label class="flex items-center gap-2 text-sm"><input id="tac-form-origem-pad" type="checkbox" onchange="toggleTacOriginPad()"> Origem é um PAD</label></div>
+                                        <div id="tac-form-processo-pad-wrap" class="hidden"><label class="block text-xs font-semibold text-gray-600 mb-1">Número do processo PAD</label><input id="tac-form-processo-pad" type="text" class="w-full border rounded px-3 py-2 text-sm mask-sei" placeholder="00000.000000/0000-00"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Processo de comunicação da chefia</label><input id="tac-form-processo-comunicacao" type="text" class="w-full border rounded px-3 py-2 text-sm mask-sei" placeholder="00000.000000/0000-00"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">TAC cadastrado no ePAD?</label><select id="tac-form-cadastrado-epad" class="w-full border rounded px-3 py-2 text-sm"><option value="false">Não</option><option value="true">Sim</option></select></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Status do TAC</label><select id="tac-form-status" class="w-full border rounded px-3 py-2 text-sm"><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data do status</label><input id="tac-form-data-status" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Prazo para cumprimento (dias)</label><input id="tac-form-prazo-dias" type="number" min="0" step="1" class="w-full border rounded px-3 py-2 text-sm" placeholder="Dias"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data limite para cumprimento</label><input id="tac-form-data-limite" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de finalização</label><input id="tac-form-data-finalizacao" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div class="md:col-span-2 lg:col-span-3"><label class="block text-xs font-semibold text-gray-600 mb-1">Observações do TAC</label><textarea id="tac-form-observacoes" rows="2" class="w-full border rounded px-3 py-2 text-sm" placeholder="Informações complementares"></textarea></div>
+                                    </div>
+                                    <div class="flex justify-end mt-3"><button type="button" id="btn-tac-save" onclick="saveTacForProcess()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-semibold">Adicionar TAC</button></div>
+                                </div>
+                                <div><div class="flex items-center justify-between mb-2"><h5 class="font-semibold text-gray-800">TACs cadastrados</h5><button type="button" onclick="loadTacsForProcess(document.getElementById('process-id').value)" class="text-xs text-blue-700 hover:underline">Atualizar lista</button></div><div id="tacs-list" class="space-y-2"><p class="text-sm text-gray-500">Salve o processo para carregar os TACs vinculados.</p></div></div>
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded border">
                                 <h4 class="text-base font-semibold text-gray-700 mb-3">BLOCO 5 – DILIGÊNCIAS</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
                                     <div><label class="block text-sm font-medium">Documento solicitante</label><input type="text" id="diligencia-doc" class="w-full border rounded px-3 py-2 mt-1"></div>
@@ -881,6 +910,9 @@ let currentAccused = [];
 let currentAccusedOutcomes = [];
 let currentRelatedProcesses = [];
 let currentDiligencias = [];
+let currentTacs = [];
+let editingTacId = null;
+let loadedTacsProcessId = null;
 let currentView = 'cards';
 let isPriorityFilterActive = false;
 let lastReportData = [];
@@ -1277,15 +1309,7 @@ if (error) {
             if (!dbData.op_policial) dbData.op_policial_detalhes = null;
             if (!dbData.possui_inquerito) dbData.inquerito_detalhes = null;
             if (!dbData.cad_epad) dbData.epad_detalhes = null;
-            if (!processHasResultado(dbData, 'Para celebrar TAC')) {
-                dbData.tac_sit = null;
-                dbData.tac_obs = null;
-                dbData.tac_status_data = null;
-                dbData.tac_data_limite = null;
-            }
-            if (normalizeText(dbData.tac_sit) !== normalizeText('TAC proposto e aceito')) {
-                dbData.tac_data_limite = null;
-            }
+            // Preserva os campos legados de TAC durante a migração para public.tacs.
             // Itera sobre todas as chaves do objeto
             for (const key in dbData) {
                 // Se o valor for uma string vazia, converte para null
@@ -2131,7 +2155,7 @@ filtered.sort((a, b) => {
             const prescriptionGridCols = prescriptionItems.length >= 4 ? 4 : prescriptionItems.length >= 3 ? 3 : 2;
              detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${getRelatedProcessesDisplay(p)}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid gap-2 grid-cols-${prescriptionGridCols}">${prescriptionItems.length ? prescriptionItems.map(entry => `<div><b>${entry.label}:</b> ${formatDate(entry.value)}</div>`).join('') : '<div>—</div>'}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span><p><b>Número processo TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : (p.tac_numero_processo || '—')}</p><p><b>Data do status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</p><p><b>Data limite para cumprimento do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite)}</p>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
-        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; currentDiligencias=[]; renderAccused(); renderProcessosRelacionados(); renderDiligencias(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details', 'tac-deadline-wrap'].forEach(id => document.getElementById(id)?.classList.add('hidden')); renderAccusedDecisionFields(); }
+        function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; currentDiligencias=[]; currentTacs=[]; editingTacId=null; loadedTacsProcessId=null; renderAccused(); renderProcessosRelacionados(); renderDiligencias(); renderTacsList(); resetTacForm(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details', 'tac-deadline-wrap', 'tacs-manager-panel'].forEach(id => document.getElementById(id)?.classList.add('hidden')); renderAccusedDecisionFields(); }
         function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); currentAccusedOutcomes.push({ acusado: v, resultado: 'Não definida', data_despacho: '' }); document.getElementById('input-acusado').value=''; renderAccused(); renderAccusedDecisionFields(); }}
         function removeAcusado(idx) { currentAccused.splice(idx, 1); currentAccusedOutcomes.splice(idx, 1); renderAccused(); renderAccusedDecisionFields(); }
         function renderAccused() { document.getElementById('lista-acusados').innerHTML = currentAccused.map((a, i) => `<span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs inline-flex items-center">${a} <button type="button" onclick="removeAcusado(${i})" class="ml-1.5 text-blue-500 font-bold hover:text-red-700">×</button></span>`).join(''); }
@@ -2146,15 +2170,133 @@ filtered.sort((a, b) => {
             if (normalizeText(resultado) === normalizeText('Para celebrar TAC')) return true;
             return (currentAccusedOutcomes || []).some(item => normalizeText(item?.resultado) === normalizeText('Para celebrar TAC'));
         }
+
+        function toggleTacOriginPad() {
+            const isPad = !!document.getElementById('tac-form-origem-pad')?.checked;
+            document.getElementById('tac-form-processo-pad-wrap')?.classList.toggle('hidden', !isPad);
+            if (!isPad) { const field = document.getElementById('tac-form-processo-pad'); if (field) field.value = ''; }
+        }
+        function resetTacForm() {
+            editingTacId = null;
+            ['tac-form-numero-processo','tac-form-processo-pad','tac-form-processo-comunicacao','tac-form-data-status','tac-form-data-assinatura','tac-form-prazo-dias','tac-form-data-limite','tac-form-data-finalizacao','tac-form-observacoes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+            document.getElementById('tac-form-origem-pad').checked=false;
+            document.getElementById('tac-form-cadastrado-epad').value='false';
+            document.getElementById('tac-form-status').value='Em negociação';
+            document.getElementById('tac-editor-title').textContent='Cadastrar novo TAC';
+            document.getElementById('btn-tac-save').textContent='Adicionar TAC';
+            document.getElementById('btn-tac-cancel-edit').classList.add('hidden');
+            toggleTacOriginPad();
+        }
+        async function loadTacsForProcess(processId) {
+            if (!processId || !supabaseClient) { currentTacs=[]; loadedTacsProcessId=null; renderTacsList(); return; }
+            const normalizedId=String(processId);
+            const {data,error}=await supabaseClient.from('tacs').select('*').eq('processo_origem_id',normalizedId).order('created_at',{ascending:false});
+            if(error) {
+                console.error('Erro ao carregar TACs:',error);
+                currentTacs=[]; loadedTacsProcessId=normalizedId; renderTacsList();
+                const missing=(error.message||'').toLowerCase().includes('relation') || error.code==='42P01';
+                showToast(missing ? 'A tabela public.tacs ainda não está disponível. Aplique a migração SQL antes de utilizar o cadastro.' : 'Não foi possível carregar os TACs. Verifique as permissões da tabela.','error');
+                return;
+            }
+            currentTacs=Array.isArray(data)?data:[]; loadedTacsProcessId=normalizedId; renderTacsList();
+        }
+        function renderTacsList() {
+            const container=document.getElementById('tacs-list'); if(!container)return;
+            if(!document.getElementById('process-id')?.value){container.innerHTML='<p class="text-sm text-gray-500">Salve o processo de origem para cadastrar TACs vinculados.</p>';return;}
+            if(!currentTacs.length){container.innerHTML='<p class="text-sm text-gray-500 bg-white border rounded p-3">Nenhum TAC cadastrado para este processo.</p>';return;}
+            container.innerHTML=currentTacs.map(tac=>{
+                const origin=tac.origem_pad?(tac.processo_pad||'PAD não informado'):(processos.find(p=>String(p.id)===String(tac.processo_origem_id))?.sei||'Processo de origem');
+                return `<div class="bg-white border rounded-lg p-3"><div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2"><div class="min-w-0">
+                    <div class="flex flex-wrap items-center gap-2"><span class="font-semibold text-gray-800">${escapeHTML(tac.numero_processo||'TAC sem número informado')}</span><span class="status-badge st-tac">${escapeHTML(tac.status||'Sem status')}</span></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-1 text-xs text-gray-600 mt-2">
+                    <p><b>Processo de origem:</b> ${escapeHTML(origin)}</p><p><b>Processo de comunicação da chefia:</b> ${escapeHTML(tac.processo_comunicacao_chefia||'—')}</p>
+                    <p><b>TAC cadastrado no ePAD:</b> ${tac.cadastrado_epad?'Sim':'Não'}</p><p><b>Data do status:</b> ${formatDate(tac.data_status)}</p>
+                    <p><b>Data de assinatura:</b> ${formatDate(tac.data_assinatura)}</p><p><b>Prazo:</b> ${tac.prazo_dias==null?'—':escapeHTML(tac.prazo_dias+' dias')}</p>
+                    <p><b>Data limite:</b> ${formatDate(tac.data_limite)}</p><p><b>Data de finalização:</b> ${formatDate(tac.data_finalizacao)}</p></div>
+                    ${tac.observacoes?`<p class="text-xs text-gray-600 mt-2 whitespace-pre-wrap"><b>Observações:</b> ${escapeHTML(tac.observacoes)}</p>`:''}</div>
+                    <div class="flex gap-2 shrink-0"><button type="button" onclick="editTac('${escapeAttribute(tac.id)}')" class="text-blue-700 border border-blue-200 rounded px-3 py-1 text-xs hover:bg-blue-50">Editar</button><button type="button" onclick="deleteTac('${escapeAttribute(tac.id)}')" class="text-red-600 border border-red-200 rounded px-3 py-1 text-xs hover:bg-red-50">Excluir</button></div></div></div>`;
+            }).join('');
+        }
+        function editTac(tacId) {
+            const tac=currentTacs.find(item=>String(item.id)===String(tacId)); if(!tac)return;
+            editingTacId=tac.id;
+            document.getElementById('tac-form-numero-processo').value=tac.numero_processo||'';
+            document.getElementById('tac-form-origem-pad').checked=!!tac.origem_pad;
+            document.getElementById('tac-form-processo-pad').value=tac.processo_pad||'';
+            document.getElementById('tac-form-processo-comunicacao').value=tac.processo_comunicacao_chefia||'';
+            document.getElementById('tac-form-cadastrado-epad').value=tac.cadastrado_epad?'true':'false';
+            document.getElementById('tac-form-status').value=tac.status||'Em negociação';
+            document.getElementById('tac-form-data-status').value=tac.data_status||'';
+            document.getElementById('tac-form-data-assinatura').value=tac.data_assinatura||'';
+            document.getElementById('tac-form-prazo-dias').value=tac.prazo_dias??'';
+            document.getElementById('tac-form-data-limite').value=tac.data_limite||'';
+            document.getElementById('tac-form-data-finalizacao').value=tac.data_finalizacao||'';
+            document.getElementById('tac-form-observacoes').value=tac.observacoes||'';
+            document.getElementById('tac-editor-title').textContent='Editar TAC';
+            document.getElementById('btn-tac-save').textContent='Salvar alterações';
+            document.getElementById('btn-tac-cancel-edit').classList.remove('hidden');
+            toggleTacOriginPad();
+            document.getElementById('tac-editor').scrollIntoView({behavior:'smooth',block:'start'});
+        }
+        async function saveTacForProcess() {
+            const processId=document.getElementById('process-id')?.value;
+            if(!processId){showToast('Salve primeiro o processo de origem.','error');return;}
+            const originPad=document.getElementById('tac-form-origem-pad').checked;
+            const processoPad=document.getElementById('tac-form-processo-pad').value.trim();
+            const status=document.getElementById('tac-form-status').value;
+            const prazoRaw=document.getElementById('tac-form-prazo-dias').value;
+            const prazoDias=prazoRaw===''?null:Number(prazoRaw);
+            if(originPad&&!processoPad){showToast('Informe o número do processo PAD de origem.','error');return;}
+            if(prazoDias!==null&&(!Number.isInteger(prazoDias)||prazoDias<0)){showToast('O prazo deve ser informado em dias inteiros, sem valor negativo.','error');return;}
+            const dataAssinatura=document.getElementById('tac-form-data-assinatura').value||null;
+            const dataFinalizacao=document.getElementById('tac-form-data-finalizacao').value||null;
+            if(status==='Celebrado'&&!dataAssinatura){showToast('Informe a data de assinatura para um TAC celebrado.','error');return;}
+            if(status==='Finalizado'&&!dataFinalizacao){showToast('Informe a data de finalização para um TAC finalizado.','error');return;}
+            const payload={
+                processo_origem_id:String(processId),
+                numero_processo:document.getElementById('tac-form-numero-processo').value.trim()||null,
+                origem_pad:originPad, processo_pad:originPad?processoPad:null,
+                processo_comunicacao_chefia:document.getElementById('tac-form-processo-comunicacao').value.trim()||null,
+                cadastrado_epad:document.getElementById('tac-form-cadastrado-epad').value==='true',
+                data_assinatura:dataAssinatura,status,
+                data_status:document.getElementById('tac-form-data-status').value||null,
+                prazo_dias:prazoDias,data_limite:document.getElementById('tac-form-data-limite').value||null,
+                data_finalizacao:dataFinalizacao,
+                observacoes:document.getElementById('tac-form-observacoes').value.trim()||null,
+                updated_at:new Date().toISOString()
+            };
+            const button=document.getElementById('btn-tac-save'); button.disabled=true;
+            try {
+                const request=editingTacId?supabaseClient.from('tacs').update(payload).eq('id',editingTacId):supabaseClient.from('tacs').insert([payload]);
+                const {error}=await request; if(error)throw error;
+                showToast(editingTacId?'TAC atualizado com sucesso.':'TAC cadastrado com sucesso.','success');
+                resetTacForm(); await loadTacsForProcess(processId);
+            } catch(error) {
+                console.error('Erro ao salvar TAC:',error);
+                showToast('Não foi possível salvar o TAC. Confira a migração SQL e as permissões de acesso.','error');
+            } finally {button.disabled=false;}
+        }
+        async function deleteTac(tacId) {
+            if(!window.confirm('Confirma a exclusão deste TAC? Esta operação não exclui o processo de origem.'))return;
+            const processId=document.getElementById('process-id')?.value;
+            const {error}=await supabaseClient.from('tacs').delete().eq('id',tacId);
+            if(error){console.error('Erro ao excluir TAC:',error);showToast('Não foi possível excluir o TAC.','error');return;}
+            if(String(editingTacId)===String(tacId))resetTacForm();
+            showToast('TAC excluído.','success'); await loadTacsForProcess(processId);
+        }
+
         function toggleTacDetails(forceShow = null) {
             const mustShowTac = typeof forceShow === 'boolean' ? forceShow : hasTacOutcomeInForm();
-            const tacContainer = document.getElementById('tac-details');
-            const tacStatusField = document.getElementById('process-tac-situacao');
-            tacContainer.classList.toggle('hidden', !mustShowTac);
-            if (mustShowTac && !tacStatusField.value) {
-                tacStatusField.value = 'Em negociação';
-            }
-            toggleTacDeadlineField();
+            document.getElementById('tac-details')?.classList.add('hidden');
+            const manager = document.getElementById('tacs-manager-panel');
+            if (manager) manager.classList.toggle('hidden', !mustShowTac);
+            const processId = document.getElementById('process-id')?.value;
+            const process = processos.find(item => String(item.id) === String(processId));
+            const originDisplay = document.getElementById('tac-form-processo-origem-display');
+            if (originDisplay) originDisplay.textContent = process?.sei || 'Processo de origem';
+            document.getElementById('tacs-manager-locked')?.classList.toggle('hidden', !!processId);
+            document.getElementById('tac-editor')?.classList.toggle('hidden', !processId);
+            if (mustShowTac && processId && loadedTacsProcessId !== String(processId)) loadTacsForProcess(processId);
         }
         function toggleTacDeadlineField() {
             const tacStatus = document.getElementById('process-tac-situacao')?.value || '';
@@ -2162,7 +2304,7 @@ filtered.sort((a, b) => {
             const deadlineInput = document.getElementById('process-tac-data-limite');
             const shouldShow = normalizeText(tacStatus) === normalizeText('TAC proposto e aceito');
             if (deadlineWrap) deadlineWrap.classList.toggle('hidden', !shouldShow);
-            if (!shouldShow && deadlineInput) deadlineInput.value = '';
+            // Preserva o valor legado mesmo quando o campo fica oculto.
         }
         function toggleConditionalField(elementId, show) { document.getElementById(elementId).classList.toggle('hidden', !show); }
         function toggleFilterDetail(elementId) { document.getElementById(elementId).classList.toggle('hidden'); }
@@ -2205,6 +2347,7 @@ filtered.sort((a, b) => {
              renderDiligencias();
             renderAccusedDecisionFields();
             toggleTacDetails(processHasResultado(p, 'Para celebrar TAC'));
+            loadTacsForProcess(p.id);
             calculatePrescription();
         }
 
