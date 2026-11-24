@@ -1,14 +1,7 @@
--- SEAP | Migração inicial da estrutura de múltiplos TACs
+-- SEAP | 001 - Estrutura para múltiplos TACs
 -- PostgreSQL / Supabase
--- Estratégia segura:
--- 1) Descobre o tipo real de public.processos.id e o reutiliza nas chaves relacionadas.
--- 2) Cria public.tacs sem alterar/remover colunas antigas.
--- 3) Migra o TAC legado de cada processo uma única vez.
--- 4) Preserva o status legado literal em status_legado.
--- 5) Não transfere processos.cad_epad: esse campo diz respeito ao processo, não ao TAC.
---
--- Execute primeiro em homologação, com backup válido. Revise políticas RLS/grants
--- conforme o padrão institucional antes de disponibilizar a tabela pela API.
+-- Cria a tabela independente de TACs sem alterar a tabela public.processos.
+-- Execute em homologação primeiro. Este script NÃO migra dados.
 
 BEGIN;
 
@@ -28,7 +21,7 @@ BEGIN
        AND NOT a.attisdropped;
 
     IF v_id_type IS NULL THEN
-        RAISE EXCEPTION 'Não foi possível localizar public.processos.id. Migração cancelada.';
+        RAISE EXCEPTION 'Não foi possível localizar public.processos.id. Criação cancelada.';
     END IF;
 
     EXECUTE format($ddl$
@@ -64,77 +57,26 @@ $migration$;
 
 CREATE INDEX IF NOT EXISTS idx_tacs_processo_origem
     ON public.tacs(processo_origem_id);
-
 CREATE INDEX IF NOT EXISTS idx_tacs_status
     ON public.tacs(status);
-
 CREATE INDEX IF NOT EXISTS idx_tacs_data_assinatura
     ON public.tacs(data_assinatura);
-
 CREATE INDEX IF NOT EXISTS idx_tacs_numero_processo
     ON public.tacs(numero_processo);
 
--- Migra o registro legado sem apagar ou modificar qualquer coluna de processos.
--- processo_legado_id garante idempotência: executar novamente não duplica o legado.
-INSERT INTO public.tacs (
-    processo_origem_id,
-    processo_legado_id,
-    numero_processo,
-    status,
-    status_legado,
-    data_status,
-    data_limite,
-    observacoes,
-    cadastrado_epad,
-    origem_pad
-)
-SELECT
-    p.id,
-    p.id,
-    NULLIF(BTRIM(p.tac_numero_processo), ''),
-    CASE
-        WHEN LOWER(BTRIM(COALESCE(p.tac_sit, ''))) = LOWER('Recusado')
-            THEN 'TAC proposto e não aceito'
-        ELSE COALESCE(NULLIF(BTRIM(p.tac_sit), ''), 'Em negociação')
-    END,
-    p.tac_sit,
-    p.tac_status_data,
-    p.tac_data_limite,
-    p.tac_obs,
-    FALSE,
-    FALSE
-FROM public.processos p
-WHERE
-       p.tac_sit IS NOT NULL
-    OR p.tac_numero_processo IS NOT NULL
-    OR p.tac_status_data IS NOT NULL
-    OR p.tac_data_limite IS NOT NULL
-    OR p.tac_obs IS NOT NULL
-ON CONFLICT (processo_legado_id) DO NOTHING;
-
 COMMENT ON TABLE public.tacs IS
 'TACs vinculados a processos de origem; um processo pode possuir vários TACs.';
-
 COMMENT ON COLUMN public.tacs.cadastrado_epad IS
 'Indica se este TAC individual foi cadastrado no ePAD. Não corresponde a processos.cad_epad.';
-
 COMMENT ON COLUMN public.tacs.processo_legado_id IS
 'Identifica o TAC único migrado dos campos legados de processos; NULL para novos TACs.';
-
 COMMENT ON COLUMN public.tacs.status_legado IS
 'Valor original de processos.tac_sit preservado na migração.';
 
 COMMIT;
 
--- Conferência pós-migração:
--- A consulta abaixo deve retornar zero linhas para registros legados não migrados.
--- SELECT p.id, p.sei, p.tac_numero_processo, p.tac_sit
--- FROM public.processos p
--- LEFT JOIN public.tacs t ON t.processo_legado_id = p.id
--- WHERE (
---       p.tac_sit IS NOT NULL
---    OR p.tac_numero_processo IS NOT NULL
---    OR p.tac_status_data IS NOT NULL
---    OR p.tac_data_limite IS NOT NULL
---    OR p.tac_obs IS NOT NULL
--- ) AND t.id IS NULL;
+-- Verificação básica:
+-- SELECT column_name, data_type
+-- FROM information_schema.columns
+-- WHERE table_schema = 'public' AND table_name = 'tacs'
+-- ORDER BY ordinal_position;
