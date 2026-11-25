@@ -217,15 +217,16 @@
                         </div>
                     </div>
                 </div>
- <div class="bg-white p-6 rounded-lg shadow mb-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clipboard-clock" class="w-5 h-5 mr-2"></i> Controle de Prazo das Diligências</h3>
+ <section id="dashboard-diligencias-section" class="bg-white p-3 rounded-lg shadow mb-3">
+                    <button type="button" onclick="toggleDiligenciasDashboard()" class="w-full flex items-center justify-between text-left text-base font-bold mb-2 text-gray-800"><span class="flex items-center"><i data-lucide="clipboard-clock" class="w-4 h-4 mr-2"></i> Controle de Prazo das Diligências</span><span id="diligencias-dashboard-toggle-label" class="text-xs text-blue-700">Expandir</span></button><div id="diligencias-dashboard-content" class="hidden">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-4">
                         <div class="p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-sm text-green-700">Dentro do Prazo</p><p id="prazodil-ok" class="text-2xl font-bold text-green-800">...</p></div>
                         <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-700">Próximas do Vencimento</p><p id="prazodil-alerta" class="text-2xl font-bold text-yellow-800">...</p></div>
                         <div class="p-4 bg-red-50 rounded-lg border border-red-200"><p class="text-sm text-red-700">Vencidas</p><p id="prazodil-vencido" class="text-2xl font-bold text-red-800">...</p></div>
                     </div>
                     <div id="diligencias-list-dashboard" class="overflow-y-auto max-h-48 text-sm scrollbar-thin">Carregando...</div>
-                </div>
+                    </div>
+                </section>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
@@ -2016,6 +2017,7 @@ function setupConfiguracoesView() {
             document.getElementById('prazodil-ok').innerText = dilOk; document.getElementById('prazodil-alerta').innerText = dilAlerta; document.getElementById('prazodil-vencido').innerText = dilVencido;
             diligenceTasks.sort((a, b) => a.days - b.days);
             document.getElementById('diligencias-list-dashboard').innerHTML = diligenceTasks.length ? diligenceTasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${escapeHTML(t.p.sei)}</span><span class="text-gray-600 truncate block w-56">${escapeHTML(t.d.doc_solicitante || 'Diligência')}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencida (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma diligência crítica.</p>';
+            const dilContent=document.getElementById('diligencias-dashboard-content'); const dilLabel=document.getElementById('diligencias-dashboard-toggle-label'); const hasDiligences=(dilOk+dilAlerta+dilVencido)>0; if(dilContent)dilContent.classList.toggle('hidden',!hasDiligences); if(dilLabel)dilLabel.textContent=hasDiligences?'Recolher':'Expandir';
 
 
           const atRiskProcesses = [];
@@ -2049,6 +2051,8 @@ function setupConfiguracoesView() {
             document.getElementById('chart-status').innerHTML = Object.keys(statusCounts).map(k => `<div class="flex items-center text-sm mb-1"><span class="w-40">${k}</span><div class="flex-1 bg-gray-100 rounded h-4"><div class="bg-blue-500 h-full" style="width: ${(processos.length ? (statusCounts[k]/processos.length)*100 : 0)}%"></div></div><span class="ml-2 font-bold">${statusCounts[k]}</span></div>`).join('');
             loadTacDashboardData();
         }
+
+        function toggleDiligenciasDashboard(){const el=document.getElementById('diligencias-dashboard-content');const label=document.getElementById('diligencias-dashboard-toggle-label');if(!el)return;el.classList.toggle('hidden');if(label)label.textContent=el.classList.contains('hidden')?'Expandir':'Recolher';}
 
         async function loadTacDashboardData() {
             const list = document.getElementById('tac-dash-prazos-list');
