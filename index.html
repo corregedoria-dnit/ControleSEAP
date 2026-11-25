@@ -735,6 +735,11 @@
                             <div><label class="text-xs font-bold">Data da assinatura (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-assinatura-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-assinatura-end" class="border rounded px-2 py-2 w-full"></div></div>
                             <div><label class="text-xs font-bold">Data da publicação (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-publicacao-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-publicacao-end" class="border rounded px-2 py-2 w-full"></div></div>
                             <div><label class="text-xs font-bold">Data limite de cumprimento (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-limite-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-limite-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data do status (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-status-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-status-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data de finalização (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-finalizacao-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-finalizacao-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Prazo de cumprimento (dias)</label><div class="flex gap-1"><input type="number" min="0" id="rep-tac-prazo-min" placeholder="Mín." class="border rounded px-2 py-2 w-full"><input type="number" min="0" id="rep-tac-prazo-max" placeholder="Máx." class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Comunicação da chefia</label><input id="rep-tac-comunicacao" class="border rounded px-2 py-2 w-full mask-sei"></div>
+                            <div><label class="text-xs font-bold">Observações contêm</label><input id="rep-tac-observacoes" class="border rounded px-2 py-2 w-full"></div>
                             <div><label class="text-xs font-bold">Status</label><select id="rep-tac-status" class="border rounded px-2 py-2 w-full"><option value="">Todos</option><option>Em negociação</option><option>TAC proposto e aceito</option><option>Celebrado</option><option>TAC proposto e não aceito</option><option>Finalizado</option></select></div>
                             <div><label class="text-xs font-bold">Número do TAC</label><input id="rep-tac-numero" class="border rounded px-2 py-2 w-full"></div>
                             <div><label class="text-xs font-bold">Processo de origem (SEI)</label><input id="rep-tac-origem" class="border rounded px-2 py-2 w-full mask-sei"></div>
@@ -3076,7 +3081,9 @@ async function generateSituationReport() {
                 proposta:[document.getElementById('rep-tac-start')?.value||'',document.getElementById('rep-tac-end')?.value||''],
                 assinatura:[document.getElementById('rep-tac-assinatura-start')?.value||'',document.getElementById('rep-tac-assinatura-end')?.value||''],
                 publicacao:[document.getElementById('rep-tac-publicacao-start')?.value||'',document.getElementById('rep-tac-publicacao-end')?.value||''],
-                limite:[document.getElementById('rep-tac-limite-start')?.value||'',document.getElementById('rep-tac-limite-end')?.value||'']
+                limite:[document.getElementById('rep-tac-limite-start')?.value||'',document.getElementById('rep-tac-limite-end')?.value||''],
+                statusData:[document.getElementById('rep-tac-status-start')?.value||'',document.getElementById('rep-tac-status-end')?.value||''],
+                finalizacao:[document.getElementById('rep-tac-finalizacao-start')?.value||'',document.getElementById('rep-tac-finalizacao-end')?.value||'']
             };
             for(const [name,range] of Object.entries(dateFilters)){
                 if(range[0]&&range[1]&&range[0]>range[1]){showToast('A data inicial de '+name+' não pode ser posterior à data final.','error');return;}
@@ -3095,10 +3102,15 @@ async function generateSituationReport() {
                     const prazo=t.data_finalizacao?'finalizado':!t.data_limite?'sem-data':diffDays(today,t.data_limite)<0?'vencido':'vigente';
                     return inRange(t.data_proposta,dateFilters.proposta)&&inRange(t.data_assinatura,dateFilters.assinatura)
                     &&inRange(t.data_publicacao,dateFilters.publicacao)&&inRange(t.data_limite,dateFilters.limite)
+                    &&inRange(t.data_status,dateFilters.statusData)&&inRange(t.data_finalizacao,dateFilters.finalizacao)
                     &&(!get('rep-tac-status')||st===get('rep-tac-status'))
                     &&(!get('rep-tac-numero')||(t.numero_processo||'').toLowerCase().includes(get('rep-tac-numero').toLowerCase()))
                     &&(!get('rep-tac-origem')||(p?.sei||'').includes(get('rep-tac-origem')))
                     &&(!get('rep-tac-pad')||(t.processo_pad||'').includes(get('rep-tac-pad')))
+                    &&(!get('rep-tac-comunicacao')||(t.processo_comunicacao_chefia||'').includes(get('rep-tac-comunicacao')))
+                    &&(!get('rep-tac-observacoes')||(t.observacoes||'').toLowerCase().includes(get('rep-tac-observacoes').toLowerCase()))
+                    &&(!get('rep-tac-prazo-min')||(Number(t.prazo_dias)>=Number(get('rep-tac-prazo-min'))))
+                    &&(!get('rep-tac-prazo-max')||(Number(t.prazo_dias)<=Number(get('rep-tac-prazo-max'))))
                     &&(!get('rep-tac-origem-pad')||(t.origem_pad?'sim':'nao')===get('rep-tac-origem-pad'))
                     &&(!get('rep-tac-epad')||(t.cadastrado_epad?'sim':'nao')===get('rep-tac-epad'))
                     &&(!get('rep-tac-prazo')||prazo===get('rep-tac-prazo'));
