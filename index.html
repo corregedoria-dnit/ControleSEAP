@@ -946,6 +946,7 @@ let currentRelatedProcesses = [];
 let currentDiligencias = [];
 let currentTacs = [];
 let dashboardTacs = [];
+let tacsCacheLoaded = false;
 let editingTacId = null;
 let loadedTacsProcessId = null;
 let currentView = 'cards';
@@ -1306,6 +1307,8 @@ if (error) {
                 return p;
             });
 
+            // Carrega os TACs vinculados antes de renderizar qualquer modo da aba Processos.
+            await refreshTacsCache();
             setOnlineStatus('Online', 'online');
 
             try {
@@ -1322,6 +1325,10 @@ if (error) {
                 .channel('public:processos')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'processos' }, () => {
                     fetchProcessos(); // Atualiza toda a tela de todos automaticamente
+                })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'tacs' }, async () => {
+                    await refreshTacsCache({ renderDashboard: true });
+                    if (!document.getElementById('page-processos')?.classList.contains('hidden')) refreshProcessos();
                 })
                 .subscribe((status) => {
                     if (status === 'SUBSCRIBED') {
@@ -2068,27 +2075,41 @@ function setupConfiguracoesView() {
             loadTacDashboardData();
         }
 
-        function getTacsForProcess(processId){return (dashboardTacs||[]).filter(t=>String(t.processo_origem_id)===String(processId));}
+        function getTacsForProcess(processId){return tacsCacheLoaded ? (dashboardTacs||[]).filter(t=>String(t.processo_origem_id)===String(processId)) : [];}
         function renderCopyableProcessNumbers(values){const list=Array.isArray(values)?values:[];return list.length?list.map(v=>'<button type="button" data-copy-process-number="'+escapeHTML(v)+'" class="text-blue-700 hover:underline mr-2">'+escapeHTML(v)+'</button>').join(''):'—';}
         function renderTacsCompact(processId){const list=getTacsForProcess(processId);if(!list.length)return '—';return list.map(t=>'<div class="text-xs mb-1"><b>'+escapeHTML(t.numero_processo||'TAC sem número')+'</b> · '+escapeHTML(t.status||'Sem status')+'<br><span class="text-gray-500">Proposta: '+formatDate(t.data_proposta)+' · Assinatura: '+formatDate(t.data_assinatura)+' · Limite: '+formatDate(t.data_limite)+'</span></div>').join('');}
         function renderTacsDetailHtml(processId){const list=getTacsForProcess(processId);if(!list.length)return '<p class="text-gray-500">Nenhum TAC cadastrado para este processo.</p>';const copy=v=>v?'<button type="button" data-copy-process-number="'+escapeHTML(v)+'" class="text-blue-700 hover:underline">'+escapeHTML(v)+'</button>':'—';return list.map(t=>'<div class="border-t py-2"><p><b>Nº TAC:</b> '+copy(t.numero_processo)+' · <b>Status:</b> '+escapeHTML(t.status||'—')+'</p><p><b>Proposta:</b> '+formatDate(t.data_proposta)+' · <b>Assinatura:</b> '+formatDate(t.data_assinatura)+' · <b>Publicação:</b> '+formatDate(t.data_publicacao)+'</p><p><b>Prazo de cumprimento:</b> '+(t.prazo_dias??'—')+' dias · <b>Data limite:</b> '+formatDate(t.data_limite)+' · <b>Finalização:</b> '+formatDate(t.data_finalizacao)+'</p>'+(t.origem_pad?'<p><b>Processo PAD:</b> '+copy(t.processo_pad)+'</p>':'')+'<p><b>Comunicação da chefia:</b> '+copy(t.processo_comunicacao_chefia)+' · <b>ePAD:</b> '+(t.cadastrado_epad?'Sim':'Não')+'</p><p><b>Observações:</b> '+escapeHTML(t.observacoes||'—')+'</p></div>').join('');}
         function copyMaskedValue(value){const v=String(value||'').trim();if(!v)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(()=>showToast('Número copiado para a área de transferência.','success')).catch(()=>showToast('Não foi possível copiar automaticamente.','error'));}else{const el=document.createElement('textarea');el.value=v;document.body.appendChild(el);el.select();try{document.execCommand('copy');showToast('Número copiado para a área de transferência.','success');}catch(e){showToast('Não foi possível copiar automaticamente.','error');}el.remove();}}
         function toggleDiligenciasDashboard(){const el=document.getElementById('diligencias-dashboard-content');const label=document.getElementById('diligencias-dashboard-toggle-label');if(!el)return;el.classList.toggle('hidden');if(label)label.textContent=el.classList.contains('hidden')?'Expandir':'Recolher';}
 
-        async function loadTacDashboardData() {
-            const list = document.getElementById('tac-dash-prazos-list');
-            if (!supabaseClient) { if (list) list.innerHTML = '<p class="text-red-600">Conexão com o banco indisponível.</p>'; return; }
-            if (list) list.innerHTML = '<p class="text-gray-500">Carregando TACs...</p>';
+        async function refreshTacsCache({ renderDashboard = false } = {}) {
+            if (!supabaseClient) {
+                tacsCacheLoaded = false;
+                return false;
+            }
             try {
                 const { data, error } = await supabaseClient.from('tacs')
-                    .select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, status, data_proposta, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes')
+                    .select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, status, data_proposta, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes, created_at, updated_at')
                     .order('data_limite', { ascending: true, nullsFirst: false });
                 if (error) throw error;
                 dashboardTacs = Array.isArray(data) ? data : [];
-                renderTacDashboard();
+                tacsCacheLoaded = true;
+                if (renderDashboard) renderTacDashboard();
+                return true;
             } catch (error) {
-                console.error('Erro ao carregar indicadores de TAC:', error);
+                console.error('Erro ao carregar TACs:', error);
+                tacsCacheLoaded = false;
+                const list = document.getElementById('tac-dash-prazos-list');
                 if (list) list.innerHTML = '<p class="text-red-600">Não foi possível carregar os TACs. Verifique a tabela e as permissões de leitura.</p>';
+                return false;
+            }
+        }
+
+        async function loadTacDashboardData() {
+            const list = document.getElementById('tac-dash-prazos-list');
+            if (list) list.innerHTML = '<p class="text-gray-500">Carregando TACs...</p>';
+            const loaded = await refreshTacsCache({ renderDashboard: true });
+            if (!loaded) {
                 ['negociacao','aceitos','celebrados','finalizados','nao-aceitos','no-prazo','proximos','vencidos'].forEach(key => {
                     const el = document.getElementById('tac-dash-' + key); if (el) el.textContent = '—';
                 });
@@ -2173,7 +2194,8 @@ function setupConfiguracoesView() {
                 if (search) {
                     const matchGlobal = Object.values(p).some(val => val && typeof val === 'string' && matchesMaskedText(val, search))
                         || (p.acusados && matchesMaskedText(p.acusados.join(' '), search))
-                        || matchesMaskedText(getRelatedProcessesDisplay(p), search);
+                        || matchesMaskedText(getRelatedProcessesDisplay(p), search)
+                        || matchesMaskedText(getTacsForProcess(p.id).map(t => t.numero_processo || '').join(' '), search);
                     if (!matchGlobal) return false;
                 }
                 if (isPriorityFilterActive && !p.prioritario) return false;
@@ -2373,7 +2395,10 @@ filtered.sort((a, b) => {
                 const request=editingTacId?supabaseClient.from('tacs').update(payload).eq('id',editingTacId):supabaseClient.from('tacs').insert([payload]);
                 const {error}=await request; if(error)throw error;
                 showToast(editingTacId?'TAC atualizado com sucesso.':'TAC cadastrado com sucesso.','success');
-                resetTacForm(); await loadTacsForProcess(processId);
+                resetTacForm();
+                await loadTacsForProcess(processId);
+                await refreshTacsCache({ renderDashboard: true });
+                refreshProcessos();
             } catch(error) {
                 console.error('Erro ao salvar TAC:',error);
                 showToast('Não foi possível salvar o TAC. Confira a migração SQL e as permissões de acesso.','error');
@@ -2385,7 +2410,10 @@ filtered.sort((a, b) => {
             const {error}=await supabaseClient.from('tacs').delete().eq('id',tacId);
             if(error){console.error('Erro ao excluir TAC:',error);showToast('Não foi possível excluir o TAC.','error');return;}
             if(String(editingTacId)===String(tacId))resetTacForm();
-            showToast('TAC excluído.','success'); await loadTacsForProcess(processId);
+            showToast('TAC excluído.','success');
+            await loadTacsForProcess(processId);
+            await refreshTacsCache({ renderDashboard: true });
+            refreshProcessos();
         }
 
         function toggleTacDetails(forceShow = null) {
@@ -3574,11 +3602,18 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
             XLSX.writeFile(wb, 'Relatorio_Completo.xlsx');
         }
 
-        function exportBackup() {
-            const backupData = { config: config, processos: processos };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const el = document.createElement('a'); el.setAttribute("href", dataStr); el.setAttribute("download", "backup_corregedoria_" + new Date().toISOString().split('T')[0] + ".json");
-            document.body.appendChild(el); el.click(); el.remove(); showToast("Backup exportado!");
+        async function exportBackup() {
+            try {
+                const { data: tacRows, error } = await supabaseClient.from('tacs').select('*');
+                if (error) throw error;
+                const backupData = { version: 2, exported_at: new Date().toISOString(), config, processos, tacs: tacRows || [] };
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                const el = document.createElement('a'); el.setAttribute("href", dataStr); el.setAttribute("download", "backup_corregedoria_" + new Date().toISOString().split('T')[0] + ".json");
+                document.body.appendChild(el); el.click(); el.remove(); showToast("Backup exportado com processos e TACs!");
+            } catch (error) {
+                console.error('Erro ao exportar backup:', error);
+                showToast('Não foi possível exportar o backup completo, incluindo TACs.', 'error');
+            }
         }
 
         function importBackup(event) {
@@ -3590,7 +3625,11 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
                     if (importedData.processos && Array.isArray(importedData.processos)) {
                         for(const p of importedData.processos) { await saveProcessToSupabase(p); }
                     }
-                    showToast("Backup importado. Recarregando..."); setTimeout(() => window.location.reload(), 2000);
+                    if (Array.isArray(importedData.tacs) && importedData.tacs.length) {
+                        const { error } = await supabaseClient.from('tacs').upsert(importedData.tacs, { onConflict: 'id' });
+                        if (error) throw error;
+                    }
+                    showToast("Backup importado, incluindo TACs. Recarregando..."); setTimeout(() => window.location.reload(), 2000);
                 } catch (err) { alert("Erro ao ler JSON válido."); }
             };
             reader.readAsText(file); event.target.value = '';
