@@ -185,33 +185,33 @@
                
  <div class="bg-white p-6 rounded-lg shadow mb-6">
                     <h3 class="text-lg font-bold mb-4 flex items-center text-gray-800"><i data-lucide="file-clock" class="w-5 h-5 mr-2"></i> Controle de Prazo da Nota Técnica</h3>
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                        <div class="p-4 bg-green-50 rounded-lg border border-green-200">
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-center">
+                        <div class="p-2 bg-green-50 rounded-lg border border-green-200">
                            <p class="text-sm text-green-700">Dentro do Prazo</p>
-                           <p id="prazont-ok" class="text-2xl font-bold text-green-800">...</p>
+                           <p id="prazont-ok" class="text-xl font-bold text-green-800">...</p>
                         </div>
-                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <div class="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
                            <p class="text-sm text-yellow-700">Próximos do Vencimento</p>
-                           <p id="prazont-alerta" class="text-2xl font-bold text-yellow-800">...</p>
+                           <p id="prazont-alerta" class="text-xl font-bold text-yellow-800">...</p>
                         </div>
-                        <div class="p-4 bg-red-50 rounded-lg border border-red-200">
+                        <div class="p-2 bg-red-50 rounded-lg border border-red-200">
                            <p class="text-sm text-red-700">Vencidos</p>
-                           <p id="prazont-vencido" class="text-2xl font-bold text-red-800">...</p>
+                           <p id="prazont-vencido" class="text-xl font-bold text-red-800">...</p>
                         </div>
                     </div>
                 </div>
 
-                <section id="dashboard-tac-section" class="bg-white p-6 rounded-lg shadow mb-6">
+                <section id="dashboard-tac-section" class="bg-white p-3 rounded-lg shadow mb-3">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                         <h3 class="text-lg font-bold flex items-center text-purple-800"><i data-lucide="file-check-2" class="w-5 h-5 mr-2"></i> Acompanhamento de Termos de Ajustamento de Conduta (TAC)</h3>
                         <button type="button" onclick="loadTacDashboardData()" class="text-sm text-blue-700 hover:underline">Atualizar TACs</button>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-4">
-                        <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200"><p class="text-xs text-indigo-700">Em negociação</p><p id="tac-dash-negociacao" class="text-2xl font-bold text-indigo-900">...</p></div>
-                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200"><p class="text-xs text-blue-700">Propostos e aceitos</p><p id="tac-dash-aceitos" class="text-2xl font-bold text-blue-900">...</p></div>
-                        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200"><p class="text-xs text-purple-700">Celebrados</p><p id="tac-dash-celebrados" class="text-2xl font-bold text-purple-900">...</p></div>
-                        <div class="p-3 bg-green-50 rounded-lg border border-green-200"><p class="text-xs text-green-700">Finalizados</p><p id="tac-dash-finalizados" class="text-2xl font-bold text-green-900">...</p></div>
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><p class="text-xs text-gray-700">Não aceitos</p><p id="tac-dash-nao-aceitos" class="text-2xl font-bold text-gray-900">...</p></div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+                        <div class="p-2 bg-indigo-50 rounded-lg border border-indigo-200"><p class="text-xs text-indigo-700">Em negociação</p><p id="tac-dash-negociacao" class="text-xl font-bold text-indigo-900">...</p></div>
+                        <div class="p-2 bg-blue-50 rounded-lg border border-blue-200"><p class="text-xs text-blue-700">Propostos e aceitos</p><p id="tac-dash-aceitos" class="text-xl font-bold text-blue-900">...</p></div>
+                        <div class="p-2 bg-purple-50 rounded-lg border border-purple-200"><p class="text-xs text-purple-700">Celebrados</p><p id="tac-dash-celebrados" class="text-xl font-bold text-purple-900">...</p></div>
+                        <div class="p-2 bg-green-50 rounded-lg border border-green-200"><p class="text-xs text-green-700">Finalizados</p><p id="tac-dash-finalizados" class="text-xl font-bold text-green-900">...</p></div>
+                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-200"><p class="text-xs text-gray-700">Não aceitos</p><p id="tac-dash-nao-aceitos" class="text-xl font-bold text-gray-900">...</p></div>
                     </div>
                     <div><h4 class="font-semibold text-gray-700 text-sm mb-2">Prazos de cumprimento que exigem atenção</h4>
                         <div id="tac-dash-prazos-list" class="overflow-y-auto max-h-64 text-sm"><p class="text-gray-500">Carregando TACs...</p></div>
