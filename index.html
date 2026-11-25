@@ -332,7 +332,7 @@
                             <div><label class="block text-xs font-bold text-gray-600">Cadastro ePAD?</label><select id="fp-cad_epad" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="fp-epad_detalhes" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
-                            <div><label class="block text-xs font-bold text-gray-600">Status do TAC</label><select id="fp-tac_sit" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
+                            <div><label class="block text-xs font-bold text-gray-600">Status do TAC</label><select id="fp-tac_sit" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
                               <div><label class="block text-xs font-bold text-gray-600">Número processo TAC</label><input type="text" id="fp-tac_numero_processo" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm mask-sei"></div>
                             <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-600">Observações do TAC</label><input type="text" id="fp-tac_obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
@@ -537,7 +537,7 @@
                                         <option value="Em negociação">Em negociação</option>
                                         <option value="TAC proposto e aceito">TAC proposto e aceito</option>
                                         <option value="Celebrado">Celebrado</option>
-                                        <option value="Recusado">Recusado</option>
+                                        <option value="TAC proposto e não aceito">TAC proposto e não aceito</option>
                                         <option value="Finalizado">Finalizado</option>
                                         </select>
                                     </div>
@@ -669,7 +669,7 @@
                             <div><label class="text-xs font-bold text-gray-600">Detalhes Inquérito</label><input type="text" id="f-inq-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Cadastrado no ePAD</label><select id="f-epad" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="f-epad-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Status do TAC</label><select id="f-tac-status" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="Recusado">Recusado</option><option value="Finalizado">Finalizado</option></select></div>
+                            <div><label class="text-xs font-bold text-gray-600">Status do TAC</label><select id="f-tac-status" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
                              <div><label class="text-xs font-bold text-gray-600">Número processo TAC</label><input type="text" id="f-tac-numero-processo" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Observações TAC</label><input type="text" id="f-tac-obs" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Observações Gerais</label><input type="text" id="f-obs" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
@@ -2896,7 +2896,7 @@ async function generateSituationReport() {
                 label: status,
                 items: filtered.filter(p => getStatusFromProcess(p) === status)
             }));
-            const tacSituations = ['Em negociação', 'TAC proposto e aceito', 'Celebrado', 'Recusado', 'Finalizado'];
+            const tacSituations = ['Em negociação', 'TAC proposto e aceito', 'Celebrado', 'TAC proposto e não aceito', 'Finalizado'];
             const tacGroups = tacSituations.map(status => ({
                 label: status,
                 items: filtered.filter(p => processHasResultado(p, 'Para celebrar TAC') && normalizeText(getTacStatusFromProcess(p)) === normalizeText(status))
@@ -3434,7 +3434,8 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
             lastManagerialSections = {
                 acervo_geral: uniqueProcessesByIdentity([...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList]),
                 noticias_irregularidade: uniqueProcessesByIdentity([...noticiasAnalisePreliminarList, ...noticiasProcessosAnalisadosList, ...noticiasArquivadosPreliminarList, ...noticiasEncaminhadosJuizoList, ...noticiasEncaminhadosJuizoJuntadoList]),
-                juizo_admissibilidade: juizoAnalisadosList
+                juizo_admissibilidade: juizoAnalisadosList,
+                tacs_celebrados: signedTacs
             };            document.getElementById('report-content').innerHTML = html;
             document.getElementById('report-output').classList.remove('hidden');
         }
@@ -3463,7 +3464,7 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
                     if (typeof value === 'object') return JSON.stringify(value);
                     return value;
                 };
-                const dbFieldOrder = Array.from(new Set(processos.flatMap(p => Object.keys(p || {}))));
+                const dbFieldOrder = Array.from(new Set([...processos.flatMap(p => Object.keys(p || {})), 'numero_processo', 'processo_origem_id', 'status', 'data_assinatura', 'data_proposta', 'data_publicacao', 'data_limite', 'data_finalizacao']));
                 const mapRows = (list) => list.map(record => {
                     const row = {};
                     dbFieldOrder.forEach(field => {
