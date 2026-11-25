@@ -182,54 +182,52 @@
                     </div>
                 </div>
 
-                <section id="dashboard-tac-section" class="bg-white p-6 rounded-lg shadow mb-6">
+               
+ <div class="bg-white p-6 rounded-lg shadow mb-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center text-gray-800"><i data-lucide="file-clock" class="w-5 h-5 mr-2"></i> Controle de Prazo da Nota Técnica</h3>
+                     <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-center">
+                        <div class="p-2 bg-green-50 rounded-lg border border-green-200">
+                           <p class="text-sm text-green-700">Dentro do Prazo</p>
+                           <p id="prazont-ok" class="text-xl font-bold text-green-800">...</p>
+                        </div>
+                        <div class="p-2 bg-yellow-50 rounded-lg border border-yellow-200">
+                           <p class="text-sm text-yellow-700">Próximos do Vencimento</p>
+                           <p id="prazont-alerta" class="text-xl font-bold text-yellow-800">...</p>
+                        </div>
+                        <div class="p-2 bg-red-50 rounded-lg border border-red-200">
+                           <p class="text-sm text-red-700">Vencidos</p>
+                           <p id="prazont-vencido" class="text-xl font-bold text-red-800">...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <section id="dashboard-tac-section" class="bg-white p-3 rounded-lg shadow mb-3">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
                         <h3 class="text-lg font-bold flex items-center text-purple-800"><i data-lucide="file-check-2" class="w-5 h-5 mr-2"></i> Acompanhamento de Termos de Ajustamento de Conduta (TAC)</h3>
                         <button type="button" onclick="loadTacDashboardData()" class="text-sm text-blue-700 hover:underline">Atualizar TACs</button>
                     </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 mb-4">
-                        <div class="p-3 bg-indigo-50 rounded-lg border border-indigo-200"><p class="text-xs text-indigo-700">Em negociação</p><p id="tac-dash-negociacao" class="text-2xl font-bold text-indigo-900">...</p></div>
-                        <div class="p-3 bg-blue-50 rounded-lg border border-blue-200"><p class="text-xs text-blue-700">Propostos e aceitos</p><p id="tac-dash-aceitos" class="text-2xl font-bold text-blue-900">...</p></div>
-                        <div class="p-3 bg-purple-50 rounded-lg border border-purple-200"><p class="text-xs text-purple-700">Celebrados</p><p id="tac-dash-celebrados" class="text-2xl font-bold text-purple-900">...</p></div>
-                        <div class="p-3 bg-green-50 rounded-lg border border-green-200"><p class="text-xs text-green-700">Finalizados</p><p id="tac-dash-finalizados" class="text-2xl font-bold text-green-900">...</p></div>
-                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200"><p class="text-xs text-gray-700">Não aceitos</p><p id="tac-dash-nao-aceitos" class="text-2xl font-bold text-gray-900">...</p></div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-center mb-4">
-                        <div class="p-3 rounded-lg border border-green-200 bg-green-50"><p class="text-sm text-green-700">Dentro do prazo</p><p id="tac-dash-no-prazo" class="text-2xl font-bold text-green-800">...</p></div>
-                        <div class="p-3 rounded-lg border border-yellow-200 bg-yellow-50"><p class="text-sm text-yellow-700">Vencem em até 30 dias</p><p id="tac-dash-proximos" class="text-2xl font-bold text-yellow-800">...</p></div>
-                        <div class="p-3 rounded-lg border border-red-200 bg-red-50"><p class="text-sm text-red-700">Prazo vencido</p><p id="tac-dash-vencidos" class="text-2xl font-bold text-red-800">...</p></div>
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+                        <div class="p-2 bg-indigo-50 rounded-lg border border-indigo-200"><p class="text-xs text-indigo-700">Em negociação</p><p id="tac-dash-negociacao" class="text-xl font-bold text-indigo-900">...</p></div>
+                        <div class="p-2 bg-blue-50 rounded-lg border border-blue-200"><p class="text-xs text-blue-700">Propostos e aceitos</p><p id="tac-dash-aceitos" class="text-xl font-bold text-blue-900">...</p></div>
+                        <div class="p-2 bg-purple-50 rounded-lg border border-purple-200"><p class="text-xs text-purple-700">Celebrados</p><p id="tac-dash-celebrados" class="text-xl font-bold text-purple-900">...</p></div>
+                        <div class="p-2 bg-green-50 rounded-lg border border-green-200"><p class="text-xs text-green-700">Finalizados</p><p id="tac-dash-finalizados" class="text-xl font-bold text-green-900">...</p></div>
+                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-200"><p class="text-xs text-gray-700">Não aceitos</p><p id="tac-dash-nao-aceitos" class="text-xl font-bold text-gray-900">...</p></div>
                     </div>
                     <div><h4 class="font-semibold text-gray-700 text-sm mb-2">Prazos de cumprimento que exigem atenção</h4>
                         <div id="tac-dash-prazos-list" class="overflow-y-auto max-h-64 text-sm"><p class="text-gray-500">Carregando TACs...</p></div>
                     </div>
                 </section>
 
-                <div class="bg-white p-6 rounded-lg shadow mb-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center text-gray-800"><i data-lucide="file-clock" class="w-5 h-5 mr-2"></i> Controle de Prazo da Nota Técnica</h3>
-                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                        <div class="p-4 bg-green-50 rounded-lg border border-green-200">
-                           <p class="text-sm text-green-700">Dentro do Prazo</p>
-                           <p id="prazont-ok" class="text-2xl font-bold text-green-800">...</p>
-                        </div>
-                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-                           <p class="text-sm text-yellow-700">Próximos do Vencimento</p>
-                           <p id="prazont-alerta" class="text-2xl font-bold text-yellow-800">...</p>
-                        </div>
-                        <div class="p-4 bg-red-50 rounded-lg border border-red-200">
-                           <p class="text-sm text-red-700">Vencidos</p>
-                           <p id="prazont-vencido" class="text-2xl font-bold text-red-800">...</p>
-                        </div>
-                    </div>
-                </div>
- <div class="bg-white p-6 rounded-lg shadow mb-6">
-                    <h3 class="text-lg font-bold mb-4 flex items-center text-gray-800"><i data-lucide="clipboard-clock" class="w-5 h-5 mr-2"></i> Controle de Prazo das Diligências</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-4">
-                        <div class="p-4 bg-green-50 rounded-lg border border-green-200"><p class="text-sm text-green-700">Dentro do Prazo</p><p id="prazodil-ok" class="text-2xl font-bold text-green-800">...</p></div>
-                        <div class="p-4 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-700">Próximas do Vencimento</p><p id="prazodil-alerta" class="text-2xl font-bold text-yellow-800">...</p></div>
-                        <div class="p-4 bg-red-50 rounded-lg border border-red-200"><p class="text-sm text-red-700">Vencidas</p><p id="prazodil-vencido" class="text-2xl font-bold text-red-800">...</p></div>
+ <section id="dashboard-diligencias-section" class="bg-white p-3 rounded-lg shadow mb-3">
+                    <button type="button" onclick="toggleDiligenciasDashboard()" class="w-full flex items-center justify-between text-left text-base font-bold mb-2 text-gray-800"><span class="flex items-center"><i data-lucide="clipboard-clock" class="w-4 h-4 mr-2"></i> Controle de Prazo das Diligências</span><span id="diligencias-dashboard-toggle-label" class="text-xs text-blue-700">Expandir</span></button><div id="diligencias-dashboard-content" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2 text-center mb-3">
+                        <div class="p-2 bg-green-50 rounded-lg border border-green-200"><p class="text-sm text-green-700">Dentro do Prazo</p><p id="prazodil-ok" class="text-xl font-bold text-green-800">...</p></div>
+                        <div class="p-2 bg-yellow-50 rounded-lg border border-yellow-200"><p class="text-sm text-yellow-700">Próximas do Vencimento</p><p id="prazodil-alerta" class="text-xl font-bold text-yellow-800">...</p></div>
+                        <div class="p-2 bg-red-50 rounded-lg border border-red-200"><p class="text-sm text-red-700">Vencidas</p><p id="prazodil-vencido" class="text-xl font-bold text-red-800">...</p></div>
                     </div>
                     <div id="diligencias-list-dashboard" class="overflow-y-auto max-h-48 text-sm scrollbar-thin">Carregando...</div>
-                </div>
+                    </div>
+                </section>
 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div class="lg:col-span-2 bg-white p-6 rounded-lg shadow">
@@ -732,11 +730,26 @@
                     <div id="filters-tacs" class="report-filters hidden animate-fadeIn">
                         <h3 class="font-semibold mb-2">Relatório de Termos de Ajustamento de Conduta</h3>
                         <p class="text-sm text-gray-600 mb-3">Cada TAC é contabilizado individualmente, inclusive quando houver vários TACs vinculados ao mesmo processo de origem.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div><label class="text-xs font-bold text-gray-600">Data da proposta (De):</label><input type="date" id="rep-tac-start" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data da proposta (Até):</label><input type="date" id="rep-tac-end" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div class="flex items-end space-x-4 pb-1"><label><input type="radio" name="rep-tac-type" value="sintetico" checked> Sintético</label><label><input type="radio" name="rep-tac-type" value="analitico"> Analítico</label></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4 p-3 border rounded bg-gray-50">
+                            <div><label class="text-xs font-bold">Data da proposta (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data da assinatura (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-assinatura-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-assinatura-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data da publicação (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-publicacao-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-publicacao-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data limite de cumprimento (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-limite-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-limite-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data do status (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-status-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-status-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data de finalização (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-finalizacao-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-finalizacao-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Prazo de cumprimento (dias)</label><div class="flex gap-1"><input type="number" min="0" id="rep-tac-prazo-min" placeholder="Mín." class="border rounded px-2 py-2 w-full"><input type="number" min="0" id="rep-tac-prazo-max" placeholder="Máx." class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Comunicação da chefia</label><input id="rep-tac-comunicacao" class="border rounded px-2 py-2 w-full mask-sei"></div>
+                            <div><label class="text-xs font-bold">Observações contêm</label><input id="rep-tac-observacoes" class="border rounded px-2 py-2 w-full"></div>
+                            <div><label class="text-xs font-bold">Status</label><select id="rep-tac-status" class="border rounded px-2 py-2 w-full"><option value="">Todos</option><option>Em negociação</option><option>TAC proposto e aceito</option><option>Celebrado</option><option>TAC proposto e não aceito</option><option>Finalizado</option></select></div>
+                            <div><label class="text-xs font-bold">Número do TAC</label><input id="rep-tac-numero" class="border rounded px-2 py-2 w-full"></div>
+                            <div><label class="text-xs font-bold">Processo de origem (SEI)</label><input id="rep-tac-origem" class="border rounded px-2 py-2 w-full mask-sei"></div>
+                            <div><label class="text-xs font-bold">Processo PAD</label><input id="rep-tac-pad" class="border rounded px-2 py-2 w-full mask-sei"></div>
+                            <div><label class="text-xs font-bold">Origem PAD</label><select id="rep-tac-origem-pad" class="border rounded px-2 py-2 w-full"><option value="">Todas</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold">Cadastrado no ePAD</label><select id="rep-tac-epad" class="border rounded px-2 py-2 w-full"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold">Situação do prazo</label><select id="rep-tac-prazo" class="border rounded px-2 py-2 w-full"><option value="">Todas</option><option value="vencido">Vencido</option><option value="vigente">Dentro do prazo</option><option value="sem-data">Sem data limite</option><option value="finalizado">Finalizado</option></select></div>
+                            <div class="flex items-end gap-4 pb-2"><label><input type="radio" name="rep-tac-type" value="sintetico" checked> Sintético</label><label><input type="radio" name="rep-tac-type" value="analitico"> Analítico</label></div>
                         </div>
+                        <div class="mb-4 p-3 border rounded"><p class="text-sm font-semibold mb-2">Campos que devem aparecer no relatório e na exportação</p><div id="rep-tac-field-selector" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm"></div></div>
                         <button onclick="generateTacReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório de TACs</button>
                     </div>
 
@@ -811,12 +824,12 @@
                             <div class="flex justify-between"><label class="text-sm">Advertência:</label><input type="number" id="conf-crit-adv" class="border w-20 px-2 py-1"></div>
                             <div class="flex justify-between"><label class="text-sm">Suspensão:</label><input type="number" id="conf-crit-susp" class="border w-20 px-2 py-1"></div>
                             <div class="flex justify-between"><label class="text-sm">Demissão:</label><input type="number" id="conf-crit-dem" class="border w-20 px-2 py-1"></div>
-                            <div class="flex justify-between"><label class="text-sm">Conclusão NT:</label><input type="number" id="conf-crit-task" class="border w-20 px-2 py-1"></div></div>
+                            <div class="flex justify-between"><label class="text-sm">Conclusão NT:</label><input type="number" id="conf-crit-task" class="border w-20 px-2 py-1"></div><div class="flex justify-between"><label class="text-sm">Cumprimento TAC:</label><input type="number" id="conf-crit-tac" class="border w-20 px-2 py-1"></div></div>
                             <div class="space-y-2"><h4 class="text-sm font-bold text-yellow-600">Prioridade Alta</h4>
                             <div class="flex justify-between"><label class="text-sm">Advertência:</label><input type="number" id="conf-high-adv" class="border w-20 px-2 py-1"></div>
                             <div class="flex justify-between"><label class="text-sm">Suspensão:</label><input type="number" id="conf-high-susp" class="border w-20 px-2 py-1"></div>
                             <div class="flex justify-between"><label class="text-sm">Demissão:</label><input type="number" id="conf-high-dem" class="border w-20 px-2 py-1"></div>
-                            <div class="flex justify-between"><label class="text-sm">Conclusão NT:</label><input type="number" id="conf-high-task" class="border w-20 px-2 py-1"></div></div>
+                            <div class="flex justify-between"><label class="text-sm">Conclusão NT:</label><input type="number" id="conf-high-task" class="border w-20 px-2 py-1"></div><div class="flex justify-between"><label class="text-sm">Cumprimento TAC:</label><input type="number" id="conf-high-tac" class="border w-20 px-2 py-1"></div></div>
                         </div>
                     </div>
                     <div class="mt-6 flex justify-end"><button onclick="saveConfigs()" class="bg-blue-600 text-white px-6 py-2 rounded">Salvar Configurações</button></div>
@@ -948,7 +961,7 @@ const DEFAULT_CONFIG = {
   itemsPerPage: 20,
   pjYears: 5,
   pf: { adv: 180, susp: 2, dem: 5 },
-  alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15 } }
+  alerts: { crit: { adv: 30, susp: 60, dem: 90, task: 5, tac: 5 }, high: { adv: 60, susp: 120, dem: 180, task: 15, tac: 15 } }
 };
 let config = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
@@ -994,13 +1007,13 @@ function normalizeConfig(rawConfig = {}) {
                 adv: readConfigNumber(merged.alerts.crit.adv, DEFAULT_CONFIG.alerts.crit.adv),
                 susp: readConfigNumber(merged.alerts.crit.susp, DEFAULT_CONFIG.alerts.crit.susp),
                 dem: readConfigNumber(merged.alerts.crit.dem, DEFAULT_CONFIG.alerts.crit.dem),
-                task: readConfigNumber(merged.alerts.crit.task, DEFAULT_CONFIG.alerts.crit.task)
+                task: readConfigNumber(merged.alerts.crit.task, DEFAULT_CONFIG.alerts.crit.task), tac: readConfigNumber(merged.alerts.crit.tac, DEFAULT_CONFIG.alerts.crit.tac)
             },
             high: {
                 adv: readConfigNumber(merged.alerts.high.adv, DEFAULT_CONFIG.alerts.high.adv),
                 susp: readConfigNumber(merged.alerts.high.susp, DEFAULT_CONFIG.alerts.high.susp),
                 dem: readConfigNumber(merged.alerts.high.dem, DEFAULT_CONFIG.alerts.high.dem),
-                task: readConfigNumber(merged.alerts.high.task, DEFAULT_CONFIG.alerts.high.task)
+                task: readConfigNumber(merged.alerts.high.task, DEFAULT_CONFIG.alerts.high.task), tac: readConfigNumber(merged.alerts.high.tac, DEFAULT_CONFIG.alerts.high.tac)
             }
         }
     };
@@ -1418,13 +1431,13 @@ if (error) {
             config.pf.susp = readConfigNumber(document.getElementById('conf-pf-susp').value, DEFAULT_CONFIG.pf.susp);
             config.pf.dem = readConfigNumber(document.getElementById('conf-pf-dem').value, DEFAULT_CONFIG.pf.dem);
             config.alerts.crit = {
-                task: readConfigNumber(document.getElementById('conf-crit-task').value, DEFAULT_CONFIG.alerts.crit.task),
+                task: readConfigNumber(document.getElementById('conf-crit-task').value, DEFAULT_CONFIG.alerts.crit.task), tac: readConfigNumber(document.getElementById('conf-crit-tac').value, DEFAULT_CONFIG.alerts.crit.tac),
                 adv: readConfigNumber(document.getElementById('conf-crit-adv').value, DEFAULT_CONFIG.alerts.crit.adv),
                 susp: readConfigNumber(document.getElementById('conf-crit-susp').value, DEFAULT_CONFIG.alerts.crit.susp),
                 dem: readConfigNumber(document.getElementById('conf-crit-dem').value, DEFAULT_CONFIG.alerts.crit.dem)
             };
             config.alerts.high = {
-                task: readConfigNumber(document.getElementById('conf-high-task').value, DEFAULT_CONFIG.alerts.high.task),
+                task: readConfigNumber(document.getElementById('conf-high-task').value, DEFAULT_CONFIG.alerts.high.task), tac: readConfigNumber(document.getElementById('conf-high-tac').value, DEFAULT_CONFIG.alerts.high.tac),
                 adv: readConfigNumber(document.getElementById('conf-high-adv').value, DEFAULT_CONFIG.alerts.high.adv),
                 susp: readConfigNumber(document.getElementById('conf-high-susp').value, DEFAULT_CONFIG.alerts.high.susp),
                 dem: readConfigNumber(document.getElementById('conf-high-dem').value, DEFAULT_CONFIG.alerts.high.dem)
@@ -2020,6 +2033,7 @@ function setupConfiguracoesView() {
             document.getElementById('prazodil-ok').innerText = dilOk; document.getElementById('prazodil-alerta').innerText = dilAlerta; document.getElementById('prazodil-vencido').innerText = dilVencido;
             diligenceTasks.sort((a, b) => a.days - b.days);
             document.getElementById('diligencias-list-dashboard').innerHTML = diligenceTasks.length ? diligenceTasks.map(t => `<div class="flex justify-between items-center border-b py-2 text-sm ${t.p.prioritario ? 'priority-highlight' : ''}"><div><span class="font-mono">${escapeHTML(t.p.sei)}</span><span class="text-gray-600 truncate block w-56">${escapeHTML(t.d.doc_solicitante || 'Diligência')}</span></div><div class="${t.crit ? 'text-red-600 font-bold' : 'text-yellow-600 font-bold'}">${t.days < 0 ? `Vencida (${-t.days}d)` : t.days + ' dias'}</div></div>`).join('') : '<p class="text-gray-500 text-sm">Nenhuma diligência crítica.</p>';
+            const dilContent=document.getElementById('diligencias-dashboard-content'); const dilLabel=document.getElementById('diligencias-dashboard-toggle-label'); const hasDiligences=(dilOk+dilAlerta+dilVencido)>0; if(dilContent)dilContent.classList.toggle('hidden',!hasDiligences); if(dilLabel)dilLabel.textContent=hasDiligences?'Recolher':'Expandir';
 
 
           const atRiskProcesses = [];
@@ -2054,13 +2068,20 @@ function setupConfiguracoesView() {
             loadTacDashboardData();
         }
 
+        function getTacsForProcess(processId){return (dashboardTacs||[]).filter(t=>String(t.processo_origem_id)===String(processId));}
+        function renderCopyableProcessNumbers(values){const list=Array.isArray(values)?values:[];return list.length?list.map(v=>'<button type="button" data-copy-process-number="'+escapeHTML(v)+'" class="text-blue-700 hover:underline mr-2">'+escapeHTML(v)+'</button>').join(''):'—';}
+        function renderTacsCompact(processId){const list=getTacsForProcess(processId);if(!list.length)return '—';return list.map(t=>'<div class="text-xs mb-1"><b>'+escapeHTML(t.numero_processo||'TAC sem número')+'</b> · '+escapeHTML(t.status||'Sem status')+'<br><span class="text-gray-500">Proposta: '+formatDate(t.data_proposta)+' · Assinatura: '+formatDate(t.data_assinatura)+' · Limite: '+formatDate(t.data_limite)+'</span></div>').join('');}
+        function renderTacsDetailHtml(processId){const list=getTacsForProcess(processId);if(!list.length)return '<p class="text-gray-500">Nenhum TAC cadastrado para este processo.</p>';const copy=v=>v?'<button type="button" data-copy-process-number="'+escapeHTML(v)+'" class="text-blue-700 hover:underline">'+escapeHTML(v)+'</button>':'—';return list.map(t=>'<div class="border-t py-2"><p><b>Nº TAC:</b> '+copy(t.numero_processo)+' · <b>Status:</b> '+escapeHTML(t.status||'—')+'</p><p><b>Proposta:</b> '+formatDate(t.data_proposta)+' · <b>Assinatura:</b> '+formatDate(t.data_assinatura)+' · <b>Publicação:</b> '+formatDate(t.data_publicacao)+'</p><p><b>Prazo de cumprimento:</b> '+(t.prazo_dias??'—')+' dias · <b>Data limite:</b> '+formatDate(t.data_limite)+' · <b>Finalização:</b> '+formatDate(t.data_finalizacao)+'</p>'+(t.origem_pad?'<p><b>Processo PAD:</b> '+copy(t.processo_pad)+'</p>':'')+'<p><b>Comunicação da chefia:</b> '+copy(t.processo_comunicacao_chefia)+' · <b>ePAD:</b> '+(t.cadastrado_epad?'Sim':'Não')+'</p><p><b>Observações:</b> '+escapeHTML(t.observacoes||'—')+'</p></div>').join('');}
+        function copyMaskedValue(value){const v=String(value||'').trim();if(!v)return;if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(v).then(()=>showToast('Número copiado para a área de transferência.','success')).catch(()=>showToast('Não foi possível copiar automaticamente.','error'));}else{const el=document.createElement('textarea');el.value=v;document.body.appendChild(el);el.select();try{document.execCommand('copy');showToast('Número copiado para a área de transferência.','success');}catch(e){showToast('Não foi possível copiar automaticamente.','error');}el.remove();}}
+        function toggleDiligenciasDashboard(){const el=document.getElementById('diligencias-dashboard-content');const label=document.getElementById('diligencias-dashboard-toggle-label');if(!el)return;el.classList.toggle('hidden');if(label)label.textContent=el.classList.contains('hidden')?'Expandir':'Recolher';}
+
         async function loadTacDashboardData() {
             const list = document.getElementById('tac-dash-prazos-list');
             if (!supabaseClient) { if (list) list.innerHTML = '<p class="text-red-600">Conexão com o banco indisponível.</p>'; return; }
             if (list) list.innerHTML = '<p class="text-gray-500">Carregando TACs...</p>';
             try {
                 const { data, error } = await supabaseClient.from('tacs')
-                    .select('id, processo_origem_id, numero_processo, status, data_proposta, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao')
+                    .select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, status, data_proposta, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes')
                     .order('data_limite', { ascending: true, nullsFirst: false });
                 if (error) throw error;
                 dashboardTacs = Array.isArray(data) ? data : [];
@@ -2078,8 +2099,8 @@ function setupConfiguracoesView() {
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const active = dashboardTacs.filter(t => t.status === 'Celebrado' && !t.data_finalizacao && t.data_limite);
             const overdue = active.filter(t => diffDays(today, t.data_limite) < 0);
-            const upcoming = active.filter(t => { const d = diffDays(today, t.data_limite); return d >= 0 && d <= 30; });
-            const inTime = active.filter(t => diffDays(today, t.data_limite) > 30);
+            const upcoming = active.filter(t => { const d = diffDays(today, t.data_limite); return d >= 0 && d <= config.alerts.high.tac; });
+            const inTime = active.filter(t => diffDays(today, t.data_limite) > config.alerts.high.tac);
             const count = status => dashboardTacs.filter(t => t.status === status).length;
             const values = {
                 'negociacao': count('Em negociação'), 'aceitos': count('TAC proposto e aceito'),
@@ -2098,7 +2119,8 @@ function setupConfiguracoesView() {
             list.innerHTML = alerts.map(({tac, days}) => {
                 const sei = byId.get(String(tac.processo_origem_id))?.sei || 'Processo de origem não localizado';
                 const label = days < 0 ? `Vencido há ${Math.abs(days)} dia(s)` : days === 0 ? 'Vence hoje' : `Vence em ${days} dia(s)`;
-                const color = days < 0 ? 'text-red-700 font-semibold' : 'text-yellow-700 font-semibold';
+                const critical = days <= config.alerts.crit.tac;
+                const color = days < 0 || critical ? 'text-red-700 font-semibold' : 'text-yellow-700 font-semibold';
                 return `<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 border-b py-2">
                     <div><span class="font-mono">${escapeHTML(tac.numero_processo || 'TAC sem número')}</span>
                     <span class="text-gray-500 text-xs block">Origem: ${escapeHTML(sei)} · Proposta: ${formatDate(tac.data_proposta)} · Publicação: ${formatDate(tac.data_publicacao)}</span></div>
@@ -2191,12 +2213,12 @@ filtered.sort((a, b) => {
         }
 
         function renderTableView(container, data) {
-            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Data Análise Preliminar - SEAP</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">Status do TAC</th><th class="px-2 py-2">Data status TAC</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
+            let html = `<div class="table-container bg-white rounded-lg shadow w-full resizable-v"><table class="divide-y divide-gray-200 text-sm w-full"><thead class="bg-gray-50"><tr><th class="px-2 py-2">SEI</th><th class="px-2 py-2">Objeto</th><th class="px-2 py-2">Acusado(s)</th><th class="px-2 py-2">Data Análise Preliminar - SEAP</th><th class="px-2 py-2">Analista</th><th class="px-2 py-2">Data Distrib.</th><th class="px-2 py-2">Prazo NT</th><th class="px-2 py-2">Prescrição</th><th class="px-2 py-2">Data Entrega NT</th><th class="px-2 py-2">Status</th><th class="px-2 py-2">TAC(s) vinculados</th><th class="px-2 py-2">Ações</th></tr></thead><tbody class="divide-y divide-gray-200">`;
 
             data.forEach(p => {
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'; const prescricaoStr = getPrescriptionDisplay(p); const tacStatus = getTacStatusFromProcess(p);
 
-                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap">${p.sei}</td><td class="px-2 py-2 whitespace-normal break-words max-w-[260px]">${p.objeto || '—'}</td><td class="px-2 py-2 whitespace-normal break-words max-w-[240px]">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_analise_preliminar)}</td><td class="px-2 py-2 whitespace-normal break-words">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-normal break-words text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-normal break-words">${tacStatus === 'Não aplicável' ? '—' : tacStatus}</td><td class="px-2 py-2 whitespace-nowrap">${tacStatus === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</td><td class="px-2 py-2 whitespace-nowrap"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
+                html += `<tr class="${p.prioritario ? 'priority-highlight' : ''}"><td class="px-2 py-2 font-mono whitespace-nowrap"><button type="button" data-copy-process-number="${p.sei || ''}" title="Copiar SEI" class="hover:text-blue-700">${p.sei || '—'}</button></td><td class="px-2 py-2 whitespace-normal break-words max-w-[260px]">${p.objeto || '—'}</td><td class="px-2 py-2 whitespace-normal break-words max-w-[240px]">${acusadosStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_analise_preliminar)}</td><td class="px-2 py-2 whitespace-normal break-words">${p.analista||'—'}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_distribuicao)}</td><td class="px-2 py-2 whitespace-nowrap font-semibold">${formatDate(p.prazo_nt_data)}</td><td class="px-2 py-2 whitespace-normal break-words text-xs">${prescricaoStr}</td><td class="px-2 py-2 whitespace-nowrap">${formatDate(p.data_entrega_nt)}</td><td class="px-2 py-2 whitespace-nowrap"><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></td><td class="px-2 py-2 whitespace-normal break-words">${renderTacsCompact(p.id)}</td><td class="px-2 py-2 whitespace-nowrap"><button onclick="editProcess('${p.id}')" class="text-blue-600 mr-2"><i data-lucide="edit" class="w-4 h-4"></i></button><button onclick="deleteProcess('${p.id}')" class="text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></td></tr>`;
 
             });
             html += `</tbody></table></div>`; container.innerHTML = html;
@@ -2207,7 +2229,7 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 const st = getStatusFromProcess(p); const card = document.createElement('div');
                 card.className = `bg-white p-5 rounded-lg shadow border flex flex-col min-h-[360px] max-h-[460px] ${p.prioritario ? 'priority-highlight border-yellow-400' : ''}`;
-                card.innerHTML = `<div class="overflow-y-auto pr-1"><div class="flex justify-between items-start mb-2"><span class="font-mono text-gray-700">${p.sei}</span><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold mb-2 whitespace-normal break-words">${p.objeto || '—'}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="whitespace-normal break-words">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Data de Análise Preliminar - SEAP:</b> ${formatDate(p.data_analise_preliminar)}</p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</p><p><b>Data do status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</p><p><b>Resultado:</b> <span class="whitespace-normal break-words">${getOutcomeSummary(p)}</span></p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição:</b> ${getPrescriptionDisplay(p)}</p></div><div class="flex items-center flex-wrap gap-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
+                card.innerHTML = `<div class="overflow-y-auto pr-1"><div class="flex justify-between items-start mb-2"><button type="button" data-copy-process-number="${p.sei || ''}" title="Copiar SEI" class="font-mono text-gray-700 hover:text-blue-700">${p.sei || '—'}</button><div class="flex items-center space-x-2">${p.prioritario ? '<span class="text-xs bg-yellow-400 text-yellow-900 px-2 py-0.5 rounded-full font-bold">PRIORITÁRIO</span>' : ''}<button onclick="deleteProcess('${p.id}')" class="text-gray-400 hover:text-red-600"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div></div><p class="font-semibold mb-2 whitespace-normal break-words">${p.objeto || '—'}</p><div class="text-sm text-gray-700 space-y-1 mb-3"><p><b>Acusado(s):</b> <span class="whitespace-normal break-words">${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</span></p><p><b>Data de Análise Preliminar - SEAP:</b> ${formatDate(p.data_analise_preliminar)}</p><p><b>Status:</b> <span class="status-badge ${getStatusClass(st)}">${st}</span></p><p><b>TAC(s) vinculados:</b> ${renderTacsCompact(p.id)}</p><p><b>Resultado:</b> <span class="whitespace-normal break-words">${getOutcomeSummary(p)}</span></p></div><div class="text-xs bg-gray-50 p-2 rounded border space-y-1 mb-3"><p><b>Prazo NT:</b> ${formatDate(p.prazo_nt_data)}</p><p><b>Prescrição:</b> ${getPrescriptionDisplay(p)}</p></div><div class="flex items-center flex-wrap gap-2 text-xs">${p.op_policial ? '<span class="bg-red-100 text-red-800 px-2 py-0.5 rounded-full font-medium">Op. Policial</span>' : ''}${p.cad_epad ? '<span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full font-medium">ePAD</span>' : ''}</div></div><div class="text-right mt-4 pt-3 border-t"><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm font-semibold">Ver Detalhes</button></div>`;
                   container.appendChild(card);
             });
         }
@@ -2218,7 +2240,7 @@ filtered.sort((a, b) => {
             data.forEach(p => {
                 const item = document.createElement('div'); item.className = `list-item relative group ${p.prioritario ? 'priority-highlight' : ''}`; item.onclick = () => showDetailInSplit(p, item);
                 const acusadosStr = p.acusados && p.acusados.length ? p.acusados.join(', ') : 'Não informado';
-                  item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900">${p.sei} ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold whitespace-normal break-words">${p.objeto || '—'}</div><div class="text-xs text-gray-600 whitespace-normal break-words mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500"><b>Análise Preliminar - SEAP:</b> ${formatDate(p.data_analise_preliminar)}</div><div class="text-xs text-gray-500"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500"><b>IPS?:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500"><b>Status:</b> ${getStatusFromProcess(p)}</div><div class="text-xs text-gray-500 whitespace-normal break-words"><b>Status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : getTacStatusFromProcess(p)}</div><div class="text-xs text-gray-500 whitespace-normal break-words"><b>Número processo TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : (p.tac_numero_processo || '—')}</div><div class="text-xs text-gray-500"><b>Data status TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</div>`;
+                  item.innerHTML = `<button onclick="event.stopPropagation(); deleteProcess('${p.id}')" class="absolute top-2 right-2 text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100"><i data-lucide="trash-2" class="w-4 h-4"></i></button><div class="font-mono text-sm text-blue-900"><button type="button" data-copy-process-number="${p.sei || ''}" title="Copiar SEI" class="hover:text-blue-700">${p.sei || '—'}</button> ${p.prioritario ? '⭐' : ''}</div><div class="text-sm font-semibold whitespace-normal break-words">${p.objeto || '—'}</div><div class="text-xs text-gray-600 whitespace-normal break-words mt-1"><b>Acusado:</b> ${acusadosStr}</div><div class="text-xs text-gray-500"><b>Análise Preliminar - SEAP:</b> ${formatDate(p.data_analise_preliminar)}</div><div class="text-xs text-gray-500"><b>Analista:</b> ${p.analista||'N/D'}</div><div class="text-xs text-gray-500"><b>IPS?:</b> ${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</div><div class="text-xs text-gray-500"><b>Status:</b> ${getStatusFromProcess(p)}</div><div class="text-xs text-gray-500 whitespace-normal break-words"><b>TAC(s) vinculados:</b> ${renderTacsCompact(p.id)}</div>`;
                 listContainer.appendChild(item);
             });
         }
@@ -2228,7 +2250,7 @@ filtered.sort((a, b) => {
             const detailContainer = document.getElementById('split-detail-view');
             const prescriptionItems = getPrescriptionEntries(p).filter(entry => entry.value);
             const prescriptionGridCols = prescriptionItems.length >= 4 ? 4 : prescriptionItems.length >= 3 ? 3 : 2;
-             detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p>${p.sei || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p>${p.doc_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p>${p.juntado || '—'}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${getRelatedProcessesDisplay(p)}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid gap-2 grid-cols-${prescriptionGridCols}">${prescriptionItems.length ? prescriptionItems.map(entry => `<div><b>${entry.label}:</b> ${formatDate(entry.value)}</div>`).join('') : '<div>—</div>'}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><b>Status do TAC:</b> <span class="font-bold">${getTacStatusFromProcess(p)}</span><p><b>Número processo TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : (p.tac_numero_processo || '—')}</p><p><b>Data do status do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_status_data)}</p><p><b>Data limite para cumprimento do TAC:</b> ${getTacStatusFromProcess(p) === 'Não aplicável' ? '—' : formatDate(p.tac_data_limite)}</p>${processHasResultado(p, 'Para celebrar TAC') && p.tac_obs ? `<p class="mt-1 text-xs text-gray-600"><b>Obs. TAC:</b> ${p.tac_obs}</p>` : ''}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
+             detailContainer.innerHTML = `<div class="flex justify-between items-start border-b pb-4 mb-4"><h2 class="text-xl font-bold">${p.objeto || 'Sem objeto'} ${p.prioritario ? '<span class="text-xs bg-yellow-300 text-yellow-800 px-2 py-1 rounded-full align-middle ml-2">PRIORITÁRIO</span>' : ''}</h2><button onclick="editProcess('${p.id}')" class="text-blue-600 text-sm border px-3 py-1 rounded hover:bg-blue-50">Editar</button></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Identificação</h3><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Processo SEI</p><p><button type="button" data-copy-process-number="${p.sei || ''}" title="Copiar SEI" class="hover:text-blue-700">${p.sei || '—'}</button></p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrada</p><p>${formatDate(p.data_ent)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Conhecimento Fato</p><p>${formatDate(p.data_conhecimento)}</p></div><div><p class="font-bold text-xs text-gray-500">Unidade de Origem</p><p>${p.unidade_origem || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Documento de Origem</p><p><button type="button" data-copy-process-number="${p.doc_origem || ''}" class="hover:text-blue-700">${p.doc_origem || '—'}</button></p></div><div><p class="font-bold text-xs text-gray-500">Juntado a Processo</p><p><button type="button" data-copy-process-number="${p.juntado || ''}" class="hover:text-blue-700">${p.juntado || '—'}</button></p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Processos Relacionados</p><p>${renderCopyableProcessNumbers(getRelatedProcesses(p))}</p></div><div class="md:col-span-3"><p class="font-bold text-xs text-gray-500">Acusado(s)</p><p>${p.acusados && p.acusados.length ? p.acusados.join(', ') : '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Tipo de Pessoa</p><p>${p.tipo_acusado || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Penalidades Aplicáveis</p><p>${p.penalidades || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div><div class="mt-4 p-3 bg-gray-50 rounded border grid grid-cols-2 gap-3 text-sm"><div><b>Op. Policial:</b> ${p.op_policial ? `<span class="font-bold text-red-700">Sim</span> (${p.op_policial_detalhes || 'N/D'})` : 'Não'}</div><div><b>Possui Inquérito:</b> ${p.possui_inquerito ? `<span class="font-bold">Sim</span> (${p.inquerito_detalhes || 'N/D'})` : 'Não'}</div><div><b>Cadastro no ePAD:</b> ${p.cad_epad ? `<span class="font-bold">Sim</span> (${p.epad_detalhes || 'N/D'})` : 'Não'}</div></div><div class="mt-4 p-3 bg-yellow-50 rounded border text-sm"><h4 class="font-bold mb-1">Prazos Prescricionais</h4><div class="grid gap-2 grid-cols-${prescriptionGridCols}">${prescriptionItems.length ? prescriptionItems.map(entry => `<div><b>${entry.label}:</b> ${formatDate(entry.value)}</div>`).join('') : '<div>—</div>'}</div></div></div><div class="mb-6"><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Distribuição e Análise</h3><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Análise Preliminar de Admissibilidade pelo SEAP</h4><div><p class="font-bold text-xs text-gray-500">Data de Análise Preliminar - SEAP</p><p>${formatDate(p.data_analise_preliminar)}</p></div></div><div class="mb-4 p-3 bg-gray-50 rounded border text-sm"><h4 class="font-semibold text-gray-700 mb-2">Distribuição para Análise após Análise Preliminar de Admissibilidade</h4><div class="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-3"><div><p class="font-bold text-xs text-gray-500">Status</p><p><span class="status-badge ${getStatusClass(getStatusFromProcess(p))}">${getStatusFromProcess(p)}</span></p></div><div><p class="font-bold text-xs text-gray-500">Analista Responsável</p><p>${p.analista || '—'}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Distribuição</p><p>${formatDate(p.data_distribuicao)}</p></div><div><p class="font-bold text-xs text-gray-500">Prazo para Conclusão da NT</p><p class="font-bold">${formatDate(p.prazo_nt_data)}</p></div><div><p class="font-bold text-xs text-gray-500">Data de Entrega da NT</p><p>${formatDate(p.data_entrega_nt)}</p></div><div><p class="font-bold text-xs text-gray-500">IPS?</p><p>${p.ips === true ? 'Sim' : p.ips === false ? 'Não' : 'Não informado'}</p></div></div></div></div><div><h3 class="text-lg font-semibold text-gray-700 mb-2 border-b">Resultado e Observações</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 text-sm"><div><p class="font-bold text-xs text-gray-500">Resultado</p><p>${getOutcomeSummary(p)}</p></div><div><p class="font-bold text-xs text-gray-500">Data Assinatura Despacho</p><p class="font-bold text-green-700">${formatDate(getDespachoDateForStatus(p))}</p></div><div class="md:col-span-2"><p class="font-bold text-xs text-gray-500">Documento de Resposta</p><p>${p.doc_resp || '—'}</p></div></div><div class="mt-2 text-sm">${(p.resultados_acusados || []).length > 1 ? `<p class="font-bold text-xs text-gray-500 mb-1">Resultados individuais</p>${p.resultados_acusados.map(item => `<p>• <b>${item.acusado || 'Acusado'}</b>: ${item.resultado || 'Não definida'} (${formatDate(item.data_despacho)})</p>`).join('')}` : ''}</div><div class="mt-4 p-3 bg-blue-50 rounded border text-sm"><h4 class="font-bold mb-2">Termos de Ajustamento de Conduta vinculados</h4>${renderTacsDetailHtml(p.id)}</div><div class="mt-4 text-sm"><p class="font-bold text-xs text-gray-500">Observações Gerais</p><p class="p-2 bg-gray-50 rounded border mt-1 min-h-[50px]">${p.obs || 'Nenhuma observação.'}</p></div></div>`;
         }
         function resetForm() { document.getElementById('process-form').reset(); document.getElementById('process-id').value=''; currentAccused=[]; currentAccusedOutcomes=[]; currentRelatedProcesses=[]; currentDiligencias=[]; currentTacs=[]; editingTacId=null; loadedTacsProcessId=null; renderAccused(); renderProcessosRelacionados(); renderDiligencias(); renderTacsList(); resetTacForm(); document.getElementById('process-status-manual').value='Cadastrado'; document.getElementById('process-ips').value=''; ['policial-details', 'inquerito-details', 'epad-details', 'tac-details', 'tac-deadline-wrap', 'tacs-manager-panel'].forEach(id => document.getElementById(id)?.classList.add('hidden')); renderAccusedDecisionFields(); }
         function addAcusado() { const v = document.getElementById('input-acusado').value; if(v){ currentAccused.push(v); currentAccusedOutcomes.push({ acusado: v, resultado: 'Não definida', data_despacho: '' }); document.getElementById('input-acusado').value=''; renderAccused(); renderAccusedDecisionFields(); }}
@@ -2451,7 +2473,7 @@ filtered.sort((a, b) => {
         }
 
         function loadConfigsToForm() {
-            document.getElementById('conf-org-name').value = config.orgName; document.getElementById('conf-subtitle').value = config.subtitle; document.getElementById('conf-default-unit').value = config.defaultUnit || ''; document.getElementById('conf-items-page').value = config.itemsPerPage || 20; document.getElementById('conf-pj-years').value = config.pjYears || 5; document.getElementById('conf-pf-adv').value = config.pf?.adv || 180; document.getElementById('conf-pf-susp').value = config.pf?.susp || 2; document.getElementById('conf-pf-dem').value = config.pf?.dem || 5; document.getElementById('conf-crit-task').value = config.alerts.crit.task; document.getElementById('conf-crit-adv').value = config.alerts.crit.adv; document.getElementById('conf-crit-susp').value = config.alerts.crit.susp; document.getElementById('conf-crit-dem').value = config.alerts.crit.dem; document.getElementById('conf-high-task').value = config.alerts.high.task; document.getElementById('conf-high-adv').value = config.alerts.high.adv; document.getElementById('conf-high-susp').value = config.alerts.high.susp; document.getElementById('conf-high-dem').value = config.alerts.high.dem;
+            document.getElementById('conf-org-name').value = config.orgName; document.getElementById('conf-subtitle').value = config.subtitle; document.getElementById('conf-default-unit').value = config.defaultUnit || ''; document.getElementById('conf-items-page').value = config.itemsPerPage || 20; document.getElementById('conf-pj-years').value = config.pjYears || 5; document.getElementById('conf-pf-adv').value = config.pf?.adv || 180; document.getElementById('conf-pf-susp').value = config.pf?.susp || 2; document.getElementById('conf-pf-dem').value = config.pf?.dem || 5; document.getElementById('conf-crit-task').value = config.alerts.crit.task; document.getElementById('conf-crit-tac').value = config.alerts.crit.tac; document.getElementById('conf-crit-adv').value = config.alerts.crit.adv; document.getElementById('conf-crit-susp').value = config.alerts.crit.susp; document.getElementById('conf-crit-dem').value = config.alerts.crit.dem; document.getElementById('conf-high-task').value = config.alerts.high.task; document.getElementById('conf-high-tac').value = config.alerts.high.tac; document.getElementById('conf-high-adv').value = config.alerts.high.adv; document.getElementById('conf-high-susp').value = config.alerts.high.susp; document.getElementById('conf-high-dem').value = config.alerts.high.dem;
         }
 
         async function fetchUsers() {
@@ -3029,40 +3051,28 @@ async function generateSituationReport() {
             document.getElementById('report-output').classList.remove('hidden');
         }
 
-        async function generateTacReport() {
-            const loaded = await refreshProcessosForReportGeneration();
-            if (!loaded) return;
-            if (!supabaseClient) { showToast('Conexão com o banco indisponível.', 'error'); return; }
-            closeReport();
-            const start = document.getElementById('rep-tac-start')?.value || '';
-            const end = document.getElementById('rep-tac-end')?.value || '';
-            if (start && end && start > end) { showToast('A data inicial não pode ser posterior à data final.', 'error'); return; }
-            const isAnalytic = document.querySelector('input[name="rep-tac-type"]:checked')?.value === 'analitico';
-            try {
-                const { data, error } = await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, data_proposta, status, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes').order('data_proposta', { ascending: true, nullsFirst: false });
-                if (error) throw error;
-                const byId = new Map((processos || []).map(p => [String(p.id), p]));
-                const rows = (Array.isArray(data) ? data : []).filter(t => (!start || (t.data_proposta && t.data_proposta >= start)) && (!end || (t.data_proposta && t.data_proposta <= end)));
-                const groups = ['Em negociação','TAC proposto e aceito','Celebrado','TAC proposto e não aceito','Finalizado'];
-                const esc = v => escapeHTML(v === null || v === undefined || v === '' ? '—' : String(v));
-                const tableFor = list => {
-                    if (!list.length) return '<p class="text-xs text-gray-500 py-2">Nenhum TAC nesta categoria.</p>';
-                    if (!isAnalytic) return '';
-                    const heads = ['Processo do TAC','Processo de origem','Processo PAD','Comunicação da chefia','ePAD','Data da proposta','Data do status','Assinatura','Publicação','Prazo (dias)','Data limite','Finalização','Observações'];
-                    let out = '<div class="overflow-auto mt-2"><table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr>' + heads.map(h => '<th class="border p-1">'+h+'</th>').join('') + '</tr></thead><tbody>';
-                    list.forEach(t => { const p = byId.get(String(t.processo_origem_id)); const vals = [t.numero_processo,p?.sei,t.origem_pad?t.processo_pad:'—',t.processo_comunicacao_chefia,t.cadastrado_epad?'Sim':'Não',t.data_proposta,t.data_status,t.data_assinatura,t.data_publicacao,t.prazo_dias,t.data_limite,t.data_finalizacao,t.observacoes]; out += '<tr>'+vals.map(v => '<td class="border p-1">'+esc(v)+'</td>').join('')+'</tr>'; });
-                    return out + '</tbody></table></div>';
-                };
-                const counts = groups.map(g => rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g).length);
-                let html = '<div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">' + groups.map((g,i) => '<div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-600">'+g+'</p><p class="text-xl font-bold">'+counts[i]+'</p></div>').join('') + '</div>';
-                html += '<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório de Termos de Ajustamento de Conduta</h2><p class="text-sm text-gray-500">Período da proposta: '+(start?formatDate(start):'início')+' a '+(end?formatDate(end):'sem limite')+'</p></div>';
-                groups.forEach(g => { const list = rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g); html += '<section class="report-section"><h3 class="report-header">'+g+' ('+list.length+')</h3>'+tableFor(list)+'</section>'; });
-                lastReportData = rows; lastReportIsManagerial = false;
-                lastReportExportFields = [{label:'Número do TAC',get:t=>t.numero_processo},{label:'Processo de origem',get:t=>byId.get(String(t.processo_origem_id))?.sei||''},{label:'Origem PAD',get:t=>t.origem_pad?'Sim':'Não'},{label:'Processo PAD',get:t=>t.processo_pad},{label:'Processo de comunicação da chefia',get:t=>t.processo_comunicacao_chefia},{label:'Cadastrado no ePAD',get:t=>t.cadastrado_epad?'Sim':'Não'},{label:'Status',get:t=>t.status === 'Recusado'?'TAC proposto e não aceito':t.status},{label:'Data do status',get:t=>t.data_status},{label:'Data da proposta',get:t=>t.data_proposta},{label:'Data da assinatura',get:t=>t.data_assinatura},{label:'Data da publicação',get:t=>t.data_publicacao},{label:'Prazo (dias)',get:t=>t.prazo_dias},{label:'Data limite',get:t=>t.data_limite},{label:'Data de finalização',get:t=>t.data_finalizacao},{label:'Observações',get:t=>t.observacoes}];
-                document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
-            } catch (error) { console.error('Erro ao gerar relatório de TACs:', error); showToast('Não foi possível gerar o relatório de TACs. Verifique a tabela e as permissões de leitura.', 'error'); }
+        const TAC_REPORT_FIELDS = [
+            ['numero_processo','Número do TAC'],['processo_origem','Processo de origem'],['origem_pad','Origem PAD'],['processo_pad','Processo PAD'],
+            ['processo_comunicacao_chefia','Processo de comunicação da chefia'],['cadastrado_epad','Cadastrado no ePAD'],['status','Status'],
+            ['data_proposta','Data da proposta'],['data_status','Data do status'],['data_assinatura','Data da assinatura'],['data_publicacao','Data da publicação'],
+            ['prazo_dias','Prazo de cumprimento (dias)'],['data_limite','Data limite de cumprimento'],['data_finalizacao','Data de finalização'],['observacoes','Observações']
+        ];
+        function initTacReportFieldSelector() {
+            const el=document.getElementById('rep-tac-field-selector'); if(!el)return;
+            let saved=[]; try{saved=JSON.parse(localStorage.getItem('tac_report_fields')||'[]');}catch(e){}
+            const chosen=new Set(Array.isArray(saved)&&saved.length?saved:TAC_REPORT_FIELDS.map(x=>x[0]));
+            el.innerHTML=TAC_REPORT_FIELDS.map(([key,label])=>'<label class="flex items-center gap-2"><input type="checkbox" class="rep-tac-field" value="'+key+'" '+(chosen.has(key)?'checked':'')+'> '+label+'</label>').join('');
+            el.querySelectorAll('.rep-tac-field').forEach(input=>input.addEventListener('change',()=>{
+                const fields=Array.from(el.querySelectorAll('.rep-tac-field:checked')).map(x=>x.value);
+                localStorage.setItem('tac_report_fields',JSON.stringify(fields));
+            }));
         }
- function toDateOnlyUtc(value) {
+        function getSelectedTacReportFields(){
+            const selected=Array.from(document.querySelectorAll('.rep-tac-field:checked')).map(x=>x.value);
+            return selected.length?selected:TAC_REPORT_FIELDS.map(x=>x[0]);
+        }
+
+        function toDateOnlyUtc(value) {
             if (!value) return null;
 
             if (value instanceof Date) {
@@ -3425,6 +3435,82 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
             document.getElementById('report-output').classList.remove('hidden');
         }
 
+        
+
+        async function generateTacReport() {
+            const loaded=await refreshProcessosForReportGeneration();
+            if(!loaded)return;
+            if(!supabaseClient){showToast('Conexão com o banco indisponível.','error');return;}
+            closeReport();
+            const dateFilters={
+                proposta:[document.getElementById('rep-tac-start')?.value||'',document.getElementById('rep-tac-end')?.value||''],
+                assinatura:[document.getElementById('rep-tac-assinatura-start')?.value||'',document.getElementById('rep-tac-assinatura-end')?.value||''],
+                publicacao:[document.getElementById('rep-tac-publicacao-start')?.value||'',document.getElementById('rep-tac-publicacao-end')?.value||''],
+                limite:[document.getElementById('rep-tac-limite-start')?.value||'',document.getElementById('rep-tac-limite-end')?.value||''],
+                statusData:[document.getElementById('rep-tac-status-start')?.value||'',document.getElementById('rep-tac-status-end')?.value||''],
+                finalizacao:[document.getElementById('rep-tac-finalizacao-start')?.value||'',document.getElementById('rep-tac-finalizacao-end')?.value||'']
+            };
+            for(const [name,range] of Object.entries(dateFilters)){
+                if(range[0]&&range[1]&&range[0]>range[1]){showToast('A data inicial de '+name+' não pode ser posterior à data final.','error');return;}
+            }
+            const analytic=document.querySelector('input[name="rep-tac-type"]:checked')?.value==='analitico';
+            const get=id=>document.getElementById(id)?.value?.trim()||'';
+            try{
+                const {data,error}=await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, data_proposta, status, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes').order('data_proposta',{ascending:true,nullsFirst:false});
+                if(error)throw error;
+                const byId=new Map((processos||[]).map(p=>[String(p.id),p]));
+                const inRange=(v,r)=>!r[0]&&!r[1]||!!v&&(!r[0]||v>=r[0])&&(!r[1]||v<=r[1]);
+                const today=new Date();today.setHours(0,0,0,0);
+                const rows=(data||[]).filter(t=>{
+                    const p=byId.get(String(t.processo_origem_id));
+                    const st=t.status==='Recusado'?'TAC proposto e não aceito':t.status;
+                    const prazo=t.data_finalizacao?'finalizado':!t.data_limite?'sem-data':diffDays(today,t.data_limite)<0?'vencido':'vigente';
+                    return inRange(t.data_proposta,dateFilters.proposta)&&inRange(t.data_assinatura,dateFilters.assinatura)
+                    &&inRange(t.data_publicacao,dateFilters.publicacao)&&inRange(t.data_limite,dateFilters.limite)
+                    &&inRange(t.data_status,dateFilters.statusData)&&inRange(t.data_finalizacao,dateFilters.finalizacao)
+                    &&(!get('rep-tac-status')||st===get('rep-tac-status'))
+                    &&(!get('rep-tac-numero')||(t.numero_processo||'').toLowerCase().includes(get('rep-tac-numero').toLowerCase()))
+                    &&(!get('rep-tac-origem')||(p?.sei||'').includes(get('rep-tac-origem')))
+                    &&(!get('rep-tac-pad')||(t.processo_pad||'').includes(get('rep-tac-pad')))
+                    &&(!get('rep-tac-comunicacao')||(t.processo_comunicacao_chefia||'').includes(get('rep-tac-comunicacao')))
+                    &&(!get('rep-tac-observacoes')||(t.observacoes||'').toLowerCase().includes(get('rep-tac-observacoes').toLowerCase()))
+                    &&(!get('rep-tac-prazo-min')||(Number(t.prazo_dias)>=Number(get('rep-tac-prazo-min'))))
+                    &&(!get('rep-tac-prazo-max')||(Number(t.prazo_dias)<=Number(get('rep-tac-prazo-max'))))
+                    &&(!get('rep-tac-origem-pad')||(t.origem_pad?'sim':'nao')===get('rep-tac-origem-pad'))
+                    &&(!get('rep-tac-epad')||(t.cadastrado_epad?'sim':'nao')===get('rep-tac-epad'))
+                    &&(!get('rep-tac-prazo')||prazo===get('rep-tac-prazo'));
+                });
+                const groups=['Em negociação','TAC proposto e aceito','Celebrado','TAC proposto e não aceito','Finalizado'];
+                const labels=Object.fromEntries(TAC_REPORT_FIELDS);
+                const value=(key,t)=>{
+                    const p=byId.get(String(t.processo_origem_id));
+                    const map={numero_processo:t.numero_processo,processo_origem:p?.sei,origem_pad:t.origem_pad?'Sim':'Não',
+                    processo_pad:t.origem_pad?t.processo_pad:'—',processo_comunicacao_chefia:t.processo_comunicacao_chefia,
+                    cadastrado_epad:t.cadastrado_epad?'Sim':'Não',status:t.status==='Recusado'?'TAC proposto e não aceito':t.status,
+                    data_proposta:t.data_proposta,data_status:t.data_status,data_assinatura:t.data_assinatura,data_publicacao:t.data_publicacao,
+                    prazo_dias:t.prazo_dias,data_limite:t.data_limite,data_finalizacao:t.data_finalizacao,observacoes:t.observacoes};
+                    return map[key]??'';
+                };
+                const fields=getSelectedTacReportFields();
+                const esc=v=>escapeHTML(v===null||v===undefined||v===''?'—':String(v));
+                const table=list=>{
+                    if(!list.length)return '<p class="text-xs text-gray-500 py-2">Nenhum TAC nesta categoria.</p>';
+                    if(!analytic)return '';
+                    return '<div class="overflow-auto mt-2"><table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr>'+fields.map(k=>'<th class="border p-1">'+labels[k]+'</th>').join('')+'</tr></thead><tbody>'+
+                    list.map(t=>'<tr>'+fields.map(k=>'<td class="border p-1">'+esc(value(k,t))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+                };
+                let html='<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório de Termos de Ajustamento de Conduta</h2><p class="text-sm text-gray-500">Registros encontrados: '+rows.length+'</p></div>';
+                html+='<div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">'+groups.map(g=>'<div class="p-3 border rounded bg-gray-50"><p class="text-xs">'+g+'</p><p class="text-xl font-bold">'+rows.filter(t=>(t.status==='Recusado'?'TAC proposto e não aceito':t.status)===g).length+'</p></div>').join('')+'</div>';
+                groups.forEach(g=>{const list=rows.filter(t=>(t.status==='Recusado'?'TAC proposto e não aceito':t.status)===g);html+='<section class="report-section"><h3 class="report-header">'+g+' ('+list.length+')</h3>'+table(list)+'</section>';});
+                const others=rows.filter(t=>!groups.includes(t.status==='Recusado'?'TAC proposto e não aceito':t.status));
+                if(others.length)html+='<section class="report-section"><h3 class="report-header">Outros status ('+others.length+')</h3>'+table(others)+'</section>';
+                lastReportData=rows;lastReportIsManagerial=false;
+                lastReportExportFields=fields.map(k=>({label:labels[k],get:t=>value(k,t)}));
+                document.getElementById('report-content').innerHTML=html;
+                document.getElementById('report-output').classList.remove('hidden');
+            }catch(error){console.error('Erro ao gerar relatório de TACs:',error);showToast('Erro ao gerar relatório de TACs. Verifique conexão e permissões da tabela.','error');}
+        }
+
         function exportToWord() {
             const sourceHTML = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>Export</title></head><body>" + document.getElementById("report-content").innerHTML + "</body></html>";
             const el = document.createElement("a"); el.href = 'data:application/vnd.ms-word;charset=utf-8,' + encodeURIComponent(sourceHTML); el.download = 'relatorio.doc'; el.click();
@@ -3512,6 +3598,8 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
 
         // --- INICIALIZAÇÃO DE UI ---
         document.addEventListener('DOMContentLoaded', () => {
+            document.addEventListener('click', event => { const btn=event.target.closest('[data-copy-process-number]'); if(btn) copyMaskedValue(btn.getAttribute('data-copy-process-number')); });
+            initTacReportFieldSelector();
             lucide.createIcons();
             Inputmask({ mask: "99999.999999/9999-99", placeholder: "_", showMaskOnHover: false, showMaskOnFocus: true }).mask(document.querySelectorAll(".mask-sei"));
             setViewMode(localStorage.getItem('correg_view_mode') || 'cards');
