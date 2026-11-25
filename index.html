@@ -3047,6 +3047,8 @@ async function generateSituationReport() {
         }
 
         async function generateTacReport() {
+            const loaded = await refreshProcessosForReportGeneration();
+            if (!loaded) return;
             if (!supabaseClient) { showToast('Conexão com o banco indisponível.', 'error'); return; }
             closeReport();
             const start = document.getElementById('rep-tac-start')?.value || '';
@@ -3073,7 +3075,7 @@ async function generateSituationReport() {
                 html += '<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório de Termos de Ajustamento de Conduta</h2><p class="text-sm text-gray-500">Período da proposta: '+(start?formatDate(start):'início')+' a '+(end?formatDate(end):'sem limite')+'</p></div>';
                 groups.forEach(g => { const list = rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g); html += '<section class="report-section"><h3 class="report-header">'+g+' ('+list.length+')</h3>'+tableFor(list)+'</section>'; });
                 lastReportData = rows; lastReportIsManagerial = false;
-                lastReportExportFields = [{label:'Número do TAC',get:t=>t.numero_processo},{label:'Processo de origem',get:t=>byId.get(String(t.processo_origem_id))?.sei||''},{label:'Status',get:t=>t.status === 'Recusado'?'TAC proposto e não aceito':t.status},{label:'Data da proposta',get:t=>t.data_proposta},{label:'Data da assinatura',get:t=>t.data_assinatura},{label:'Data da publicação',get:t=>t.data_publicacao},{label:'Data limite',get:t=>t.data_limite},{label:'Data de finalização',get:t=>t.data_finalizacao}];
+                lastReportExportFields = [{label:'Número do TAC',get:t=>t.numero_processo},{label:'Processo de origem',get:t=>byId.get(String(t.processo_origem_id))?.sei||''},{label:'Origem PAD',get:t=>t.origem_pad?'Sim':'Não'},{label:'Processo PAD',get:t=>t.processo_pad},{label:'Processo de comunicação da chefia',get:t=>t.processo_comunicacao_chefia},{label:'Cadastrado no ePAD',get:t=>t.cadastrado_epad?'Sim':'Não'},{label:'Status',get:t=>t.status === 'Recusado'?'TAC proposto e não aceito':t.status},{label:'Data do status',get:t=>t.data_status},{label:'Data da proposta',get:t=>t.data_proposta},{label:'Data da assinatura',get:t=>t.data_assinatura},{label:'Data da publicação',get:t=>t.data_publicacao},{label:'Prazo (dias)',get:t=>t.prazo_dias},{label:'Data limite',get:t=>t.data_limite},{label:'Data de finalização',get:t=>t.data_finalizacao},{label:'Observações',get:t=>t.observacoes}];
                 document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
             } catch (error) { console.error('Erro ao gerar relatório de TACs:', error); showToast('Não foi possível gerar o relatório de TACs. Verifique a tabela e as permissões de leitura.', 'error'); }
         }
