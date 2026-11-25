@@ -332,9 +332,9 @@
                             <div><label class="block text-xs font-bold text-gray-600">Cadastro ePAD?</label><select id="fp-cad_epad" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todos</option><option value="true">Sim</option><option value="false">Não</option></select></div>
                             <div><label class="block text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="fp-epad_detalhes" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
 
-                            <div><label class="block text-xs font-bold text-gray-600">Status do TAC</label><select id="fp-tac_sit" onchange="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"><option value="">Todas</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
-                              <div><label class="block text-xs font-bold text-gray-600">Número processo TAC</label><input type="text" id="fp-tac_numero_processo" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm mask-sei"></div>
-                            <div class="md:col-span-2"><label class="block text-xs font-bold text-gray-600">Observações do TAC</label><input type="text" id="fp-tac_obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
+                            
+                              
+                            
 
                             <div class="md:col-span-3 lg:col-span-4"><label class="block text-xs font-bold text-gray-600">Observações Gerais</label><input type="text" id="fp-obs" oninput="refreshProcessos()" class="w-full border rounded px-2 py-1 mt-1 text-sm"></div>
                         </div>
@@ -669,14 +669,14 @@
                             <div><label class="text-xs font-bold text-gray-600">Detalhes Inquérito</label><input type="text" id="f-inq-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
                             <div><label class="text-xs font-bold text-gray-600">Cadastrado no ePAD</label><select id="f-epad" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
                             <div><label class="text-xs font-bold text-gray-600">Processo ePAD</label><input type="text" id="f-epad-det" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Status do TAC</label><select id="f-tac-status" class="border rounded px-2 py-1 w-full mt-1 text-sm"><option value="">Todos</option><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
-                             <div><label class="text-xs font-bold text-gray-600">Número processo TAC</label><input type="text" id="f-tac-numero-processo" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Observações TAC</label><input type="text" id="f-tac-obs" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            
+                             
+                            
                             <div><label class="text-xs font-bold text-gray-600">Observações Gerais</label><input type="text" id="f-obs" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data status TAC (De)</label><input type="date" id="f-tac-status-data-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data status TAC (Até)</label><input type="date" id="f-tac-status-data-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data limite TAC (De)</label><input type="date" id="f-tac-limite-de" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data limite TAC (Até)</label><input type="date" id="f-tac-limite-ate" class="border rounded px-2 py-1 w-full mt-1 text-sm"></div>
+                            
+                            
+                            
+                            
                         </div>
                         <button onclick="generateGeneralReport()" class="bg-blue-600 text-white px-4 py-2 rounded w-full md:w-auto">Gerar Relatório Geral</button>
                     </div>
@@ -2145,7 +2145,7 @@ function setupConfiguracoesView() {
             const fpDataEnt = getVal('fp-data_ent'), fpDataConhecimento = getVal('fp-data_conhecimento'), fpDataDistribuicao = getVal('fp-data_distribuicao'), fpPrazoNtData = getVal('fp-prazo_nt_data'), fpDataEntregaNt = getVal('fp-data_entrega_nt'), fpDataDespacho = getVal('fp-data_despacho'), fpDataAnalisePreliminar = getVal('fp-data_analise_preliminar');
             const fpUnidadeOrigem = getValLower('fp-unidade_origem'), fpDocOrigem = getValLower('fp-doc_origem'), fpJuntado = getValLower('fp-juntado'), fpRelacionados = getValLower('fp-relacionados'), fpDocResp = getValLower('fp-doc_resp');
             const fpOpPolicial = getVal('fp-op_policial'), fpOpPolicialDetalhes = getValLower('fp-op_policial_detalhes'), fpPossuiInquerito = getVal('fp-possui_inquerito'), fpInqueritoDetalhes = getValLower('fp-inquerito_detalhes'), fpCadEpad = getVal('fp-cad_epad'), fpEpadDetalhes = getValLower('fp-epad_detalhes');
-            const fpTacSit = getVal('fp-tac_sit'), fpTacNumeroProcesso = getValLower('fp-tac_numero_processo'), fpTacObs = getValLower('fp-tac_obs'), fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips'), fpStatusManual = getVal('fp-status_manual');
+            const fpObs = getValLower('fp-obs'), fpIps = getVal('fp-ips'), fpStatusManual = getVal('fp-status_manual');
 
             const filtered = processos.filter(p => {
                 if (search) {
@@ -2160,8 +2160,7 @@ function setupConfiguracoesView() {
                 if (fpUnidadeOrigem && (!p.unidade_origem || !p.unidade_origem.toLowerCase().includes(fpUnidadeOrigem))) return false; if (fpDocOrigem && !matchesMaskedText(p.doc_origem, fpDocOrigem)) return false; if (fpJuntado && !matchesMaskedText(p.juntado, fpJuntado)) return false; if (fpRelacionados && !matchesMaskedText(getRelatedProcessesDisplay(p), fpRelacionados)) return false; if (fpDocResp && !matchesMaskedText(p.doc_resp, fpDocResp)) return false;
                 if (fpOpPolicial && String(!!p.op_policial) !== fpOpPolicial) return false; if (fpPossuiInquerito && String(!!p.possui_inquerito) !== fpPossuiInquerito) return false; if (fpCadEpad && String(!!p.cad_epad) !== fpCadEpad) return false;
                 if (fpOpPolicialDetalhes && !matchesMaskedText(p.op_policial_detalhes, fpOpPolicialDetalhes)) return false; if (fpInqueritoDetalhes && !matchesMaskedText(p.inquerito_detalhes, fpInqueritoDetalhes)) return false; if (fpEpadDetalhes && !matchesMaskedText(p.epad_detalhes, fpEpadDetalhes)) return false;
-                if ((fpTacSit || fpTacNumeroProcesso || fpTacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
-                if (fpTacSit && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(fpTacSit)) return false; if (fpTacNumeroProcesso && !matchesMaskedText(p.tac_numero_processo, fpTacNumeroProcesso)) return false; if (fpTacObs && (!p.tac_obs || !p.tac_obs.toLowerCase().includes(fpTacObs))) return false; if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
+                if (fpObs && (!p.obs || !p.obs.toLowerCase().includes(fpObs))) return false;
                 if (fpIps && String(!!p.ips) !== fpIps) return false;
                 if (fpStatusManual && p.status_manual !== fpStatusManual) return false;
                 return true;
@@ -2792,9 +2791,6 @@ filtered.sort((a, b) => {
                 ips: val('f-ips'),
                 prioritario: val('f-prioritario'),
                 statusManual: val('f-status-manual'),
-                tacStatus: val('f-tac-status'),
-                tacNumeroProcesso: valLower('f-tac-numero-processo'),
-                tacObs: valLower('f-tac-obs'),
                 obs: valLower('f-obs'),
                 dataEntDe: val('f-data-de'),
                 dataEntAte: val('f-data-ate'),
@@ -2810,10 +2806,6 @@ filtered.sort((a, b) => {
                 despachoAte: val('f-data-despacho-ate'),
                 analisePreliminarDe: val('f-data-analise-preliminar-de'),
                 analisePreliminarAte: val('f-data-analise-preliminar-ate'),
-                tacStatusDataDe: val('f-tac-status-data-de'),
-                tacStatusDataAte: val('f-tac-status-data-ate'),
-                tacLimiteDe: val('f-tac-limite-de'),
-                tacLimiteAte: val('f-tac-limite-ate')
             };
 
             filtered = filtered.filter((p) => {
@@ -2867,17 +2859,7 @@ filtered.sort((a, b) => {
                 if (filters.epad === 'sim' && p.cad_epad !== true) return false;
                 if (filters.epad === 'nao' && p.cad_epad !== false) return false;
                 if (filters.epadDetalhes && !matchesMaskedText(p.epad_detalhes, filters.epadDetalhes)) return false;
-                if ((filters.tacStatus || filters.tacNumeroProcesso || filters.tacObs) && !processHasResultado(p, 'Para celebrar TAC')) return false;
-                if (filters.tacStatus && normalizeText(getTacStatusFromProcess(p)) !== normalizeText(filters.tacStatus)) return false;
-                if (filters.tacNumeroProcesso && !matchesMaskedText(p.tac_numero_processo, filters.tacNumeroProcesso)) return false;
-                if (!includesText(p.tac_obs, filters.tacObs)) return false;
                 if (!includesText(p.obs, filters.obs)) return false;
-                if (!inRange(p.tac_status_data, filters.tacStatusDataDe, filters.tacStatusDataAte)) {
-                    if (filters.tacStatusDataDe || filters.tacStatusDataAte) return false;
-                }
-                if (!inRange(p.tac_data_limite, filters.tacLimiteDe, filters.tacLimiteAte)) {
-                    if (filters.tacLimiteDe || filters.tacLimiteAte) return false;
-                }
                 return true;
             });
             let html = `<h2 class="text-2xl font-bold text-center mb-4">Relatório Geral de Processos (${filtered.length})</h2>${renderAnalyticTable(filtered)}`;
@@ -2896,11 +2878,12 @@ async function generateSituationReport() {
                 label: status,
                 items: filtered.filter(p => getStatusFromProcess(p) === status)
             }));
+            if (!supabaseClient) { showToast('Conexão com o banco indisponível.', 'error'); return; }
+            let tacRows = [];
+            try { const result = await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, status, data_proposta, data_assinatura, data_publicacao, data_limite, data_finalizacao'); if (result.error) throw result.error; tacRows = result.data || []; }
+            catch (error) { console.error('Erro ao carregar TACs:', error); showToast('Não foi possível consultar os TACs para o relatório.', 'error'); return; }
             const tacSituations = ['Em negociação', 'TAC proposto e aceito', 'Celebrado', 'TAC proposto e não aceito', 'Finalizado'];
-            const tacGroups = tacSituations.map(status => ({
-                label: status,
-                items: filtered.filter(p => processHasResultado(p, 'Para celebrar TAC') && normalizeText(getTacStatusFromProcess(p)) === normalizeText(status))
-            }));
+            const tacGroups = tacSituations.map(status => ({ label: status, items: tacRows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === status) }));
 
             let html = `<h2 class="text-2xl font-bold text-center mb-2">Relatório por Situação dos Processos</h2><p class="text-center text-sm mb-4">Total filtrado: ${filtered.length} processos</p>`;
             html += '<div class="report-section"><h3 class="report-header">Situação dos processos</h3>';
@@ -2908,10 +2891,10 @@ async function generateSituationReport() {
                 html += `<div class="report-item"><span>${group.label}</span><span class="font-bold">${group.items.length}</span></div>`;
                 if (isAnalytic) html += renderAnalyticTable(group.items);
             });
-            html += '</div><div class="report-section"><h3 class="report-header">Situação de TAC</h3>';
+            html += '</div><div class="report-section"><h3 class="report-header">Situação dos TACs (cadastro individual)</h3>';
             tacGroups.forEach(group => {
                 html += `<div class="report-item"><span>${group.label}</span><span class="font-bold">${group.items.length}</span></div>`;
-                if (isAnalytic) html += renderAnalyticTable(group.items);
+                if (isAnalytic && group.items.length) { const byId = new Map(processos.map(p => [String(p.id), p])); html += '<div class="overflow-auto"><table class="report-table w-full text-xs border"><thead><tr><th class="border p-1">Nº TAC</th><th class="border p-1">Processo de origem</th><th class="border p-1">Proposta</th><th class="border p-1">Assinatura</th><th class="border p-1">Publicação</th><th class="border p-1">Data limite</th></tr></thead><tbody>' + group.items.map(t => '<tr><td class="border p-1">'+escapeHTML(t.numero_processo || '—')+'</td><td class="border p-1">'+escapeHTML(byId.get(String(t.processo_origem_id))?.sei || '—')+'</td><td class="border p-1">'+formatDate(t.data_proposta)+'</td><td class="border p-1">'+formatDate(t.data_assinatura)+'</td><td class="border p-1">'+formatDate(t.data_publicacao)+'</td><td class="border p-1">'+formatDate(t.data_limite)+'</td></tr>').join('') + '</tbody></table></div>'; }
             });
             html += '</div>';
             setLastReport(filtered, false);
