@@ -729,11 +729,21 @@
                     <div id="filters-tacs" class="report-filters hidden animate-fadeIn">
                         <h3 class="font-semibold mb-2">Relatório de Termos de Ajustamento de Conduta</h3>
                         <p class="text-sm text-gray-600 mb-3">Cada TAC é contabilizado individualmente, inclusive quando houver vários TACs vinculados ao mesmo processo de origem.</p>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div><label class="text-xs font-bold text-gray-600">Data da proposta (De):</label><input type="date" id="rep-tac-start" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div><label class="text-xs font-bold text-gray-600">Data da proposta (Até):</label><input type="date" id="rep-tac-end" class="border rounded px-3 py-2 w-full mt-1"></div>
-                            <div class="flex items-end space-x-4 pb-1"><label><input type="radio" name="rep-tac-type" value="sintetico" checked> Sintético</label><label><input type="radio" name="rep-tac-type" value="analitico"> Analítico</label></div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-3 mb-4 p-3 border rounded bg-gray-50">
+                            <div><label class="text-xs font-bold">Data da proposta (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data da assinatura (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-assinatura-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-assinatura-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data da publicação (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-publicacao-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-publicacao-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Data limite de cumprimento (De/Até)</label><div class="flex gap-1"><input type="date" id="rep-tac-limite-start" class="border rounded px-2 py-2 w-full"><input type="date" id="rep-tac-limite-end" class="border rounded px-2 py-2 w-full"></div></div>
+                            <div><label class="text-xs font-bold">Status</label><select id="rep-tac-status" class="border rounded px-2 py-2 w-full"><option value="">Todos</option><option>Em negociação</option><option>TAC proposto e aceito</option><option>Celebrado</option><option>TAC proposto e não aceito</option><option>Finalizado</option></select></div>
+                            <div><label class="text-xs font-bold">Número do TAC</label><input id="rep-tac-numero" class="border rounded px-2 py-2 w-full"></div>
+                            <div><label class="text-xs font-bold">Processo de origem (SEI)</label><input id="rep-tac-origem" class="border rounded px-2 py-2 w-full mask-sei"></div>
+                            <div><label class="text-xs font-bold">Processo PAD</label><input id="rep-tac-pad" class="border rounded px-2 py-2 w-full mask-sei"></div>
+                            <div><label class="text-xs font-bold">Origem PAD</label><select id="rep-tac-origem-pad" class="border rounded px-2 py-2 w-full"><option value="">Todas</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold">Cadastrado no ePAD</label><select id="rep-tac-epad" class="border rounded px-2 py-2 w-full"><option value="">Todos</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
+                            <div><label class="text-xs font-bold">Situação do prazo</label><select id="rep-tac-prazo" class="border rounded px-2 py-2 w-full"><option value="">Todas</option><option value="vencido">Vencido</option><option value="vigente">Dentro do prazo</option><option value="sem-data">Sem data limite</option><option value="finalizado">Finalizado</option></select></div>
+                            <div class="flex items-end gap-4 pb-2"><label><input type="radio" name="rep-tac-type" value="sintetico" checked> Sintético</label><label><input type="radio" name="rep-tac-type" value="analitico"> Analítico</label></div>
                         </div>
+                        <div class="mb-4 p-3 border rounded"><p class="text-sm font-semibold mb-2">Campos que devem aparecer no relatório e na exportação</p><div id="rep-tac-field-selector" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2 text-sm"></div></div>
                         <button onclick="generateTacReport()" class="bg-blue-600 text-white px-4 py-2 rounded">Gerar Relatório de TACs</button>
                     </div>
 
@@ -3029,400 +3039,92 @@ async function generateSituationReport() {
             document.getElementById('report-output').classList.remove('hidden');
         }
 
+        const TAC_REPORT_FIELDS = [
+            ['numero_processo','Número do TAC'],['processo_origem','Processo de origem'],['origem_pad','Origem PAD'],['processo_pad','Processo PAD'],
+            ['processo_comunicacao_chefia','Processo de comunicação da chefia'],['cadastrado_epad','Cadastrado no ePAD'],['status','Status'],
+            ['data_proposta','Data da proposta'],['data_status','Data do status'],['data_assinatura','Data da assinatura'],['data_publicacao','Data da publicação'],
+            ['prazo_dias','Prazo de cumprimento (dias)'],['data_limite','Data limite de cumprimento'],['data_finalizacao','Data de finalização'],['observacoes','Observações']
+        ];
+        function initTacReportFieldSelector() {
+            const el=document.getElementById('rep-tac-field-selector'); if(!el)return;
+            let saved=[]; try{saved=JSON.parse(localStorage.getItem('tac_report_fields')||'[]');}catch(e){}
+            const chosen=new Set(Array.isArray(saved)&&saved.length?saved:TAC_REPORT_FIELDS.map(x=>x[0]));
+            el.innerHTML=TAC_REPORT_FIELDS.map(([key,label])=>'<label class="flex items-center gap-2"><input type="checkbox" class="rep-tac-field" value="'+key+'" '+(chosen.has(key)?'checked':'')+'> '+label+'</label>').join('');
+            el.querySelectorAll('.rep-tac-field').forEach(input=>input.addEventListener('change',()=>{
+                const fields=Array.from(el.querySelectorAll('.rep-tac-field:checked')).map(x=>x.value);
+                localStorage.setItem('tac_report_fields',JSON.stringify(fields));
+            }));
+        }
+        function getSelectedTacReportFields(){
+            const selected=Array.from(document.querySelectorAll('.rep-tac-field:checked')).map(x=>x.value);
+            return selected.length?selected:TAC_REPORT_FIELDS.map(x=>x[0]);
+        }
+
         async function generateTacReport() {
-            const loaded = await refreshProcessosForReportGeneration();
-            if (!loaded) return;
-            if (!supabaseClient) { showToast('Conexão com o banco indisponível.', 'error'); return; }
+            const loaded=await refreshProcessosForReportGeneration();
+            if(!loaded)return;
+            if(!supabaseClient){showToast('Conexão com o banco indisponível.','error');return;}
             closeReport();
-            const start = document.getElementById('rep-tac-start')?.value || '';
-            const end = document.getElementById('rep-tac-end')?.value || '';
-            if (start && end && start > end) { showToast('A data inicial não pode ser posterior à data final.', 'error'); return; }
-            const isAnalytic = document.querySelector('input[name="rep-tac-type"]:checked')?.value === 'analitico';
-            try {
-                const { data, error } = await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, data_proposta, status, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes').order('data_proposta', { ascending: true, nullsFirst: false });
-                if (error) throw error;
-                const byId = new Map((processos || []).map(p => [String(p.id), p]));
-                const rows = (Array.isArray(data) ? data : []).filter(t => (!start || (t.data_proposta && t.data_proposta >= start)) && (!end || (t.data_proposta && t.data_proposta <= end)));
-                const groups = ['Em negociação','TAC proposto e aceito','Celebrado','TAC proposto e não aceito','Finalizado'];
-                const esc = v => escapeHTML(v === null || v === undefined || v === '' ? '—' : String(v));
-                const tableFor = list => {
-                    if (!list.length) return '<p class="text-xs text-gray-500 py-2">Nenhum TAC nesta categoria.</p>';
-                    if (!isAnalytic) return '';
-                    const heads = ['Processo do TAC','Processo de origem','Processo PAD','Comunicação da chefia','ePAD','Data da proposta','Data do status','Assinatura','Publicação','Prazo (dias)','Data limite','Finalização','Observações'];
-                    let out = '<div class="overflow-auto mt-2"><table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr>' + heads.map(h => '<th class="border p-1">'+h+'</th>').join('') + '</tr></thead><tbody>';
-                    list.forEach(t => { const p = byId.get(String(t.processo_origem_id)); const vals = [t.numero_processo,p?.sei,t.origem_pad?t.processo_pad:'—',t.processo_comunicacao_chefia,t.cadastrado_epad?'Sim':'Não',t.data_proposta,t.data_status,t.data_assinatura,t.data_publicacao,t.prazo_dias,t.data_limite,t.data_finalizacao,t.observacoes]; out += '<tr>'+vals.map(v => '<td class="border p-1">'+esc(v)+'</td>').join('')+'</tr>'; });
-                    return out + '</tbody></table></div>';
+            const dateFilters={
+                proposta:[document.getElementById('rep-tac-start')?.value||'',document.getElementById('rep-tac-end')?.value||''],
+                assinatura:[document.getElementById('rep-tac-assinatura-start')?.value||'',document.getElementById('rep-tac-assinatura-end')?.value||''],
+                publicacao:[document.getElementById('rep-tac-publicacao-start')?.value||'',document.getElementById('rep-tac-publicacao-end')?.value||''],
+                limite:[document.getElementById('rep-tac-limite-start')?.value||'',document.getElementById('rep-tac-limite-end')?.value||'']
+            };
+            for(const [name,range] of Object.entries(dateFilters)){
+                if(range[0]&&range[1]&&range[0]>range[1]){showToast('A data inicial de '+name+' não pode ser posterior à data final.','error');return;}
+            }
+            const analytic=document.querySelector('input[name="rep-tac-type"]:checked')?.value==='analitico';
+            const get=id=>document.getElementById(id)?.value?.trim()||'';
+            try{
+                const {data,error}=await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, data_proposta, status, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes').order('data_proposta',{ascending:true,nullsFirst:false});
+                if(error)throw error;
+                const byId=new Map((processos||[]).map(p=>[String(p.id),p]));
+                const inRange=(v,r)=>!r[0]&&!r[1]||!!v&&(!r[0]||v>=r[0])&&(!r[1]||v<=r[1]);
+                const today=new Date();today.setHours(0,0,0,0);
+                const rows=(data||[]).filter(t=>{
+                    const p=byId.get(String(t.processo_origem_id));
+                    const st=t.status==='Recusado'?'TAC proposto e não aceito':t.status;
+                    const prazo=t.data_finalizacao?'finalizado':!t.data_limite?'sem-data':diffDays(today,t.data_limite)<0?'vencido':'vigente';
+                    return inRange(t.data_proposta,dateFilters.proposta)&&inRange(t.data_assinatura,dateFilters.assinatura)
+                    &&inRange(t.data_publicacao,dateFilters.publicacao)&&inRange(t.data_limite,dateFilters.limite)
+                    &&(!get('rep-tac-status')||st===get('rep-tac-status'))
+                    &&(!get('rep-tac-numero')||(t.numero_processo||'').toLowerCase().includes(get('rep-tac-numero').toLowerCase()))
+                    &&(!get('rep-tac-origem')||(p?.sei||'').includes(get('rep-tac-origem')))
+                    &&(!get('rep-tac-pad')||(t.processo_pad||'').includes(get('rep-tac-pad')))
+                    &&(!get('rep-tac-origem-pad')||(t.origem_pad?'sim':'nao')===get('rep-tac-origem-pad'))
+                    &&(!get('rep-tac-epad')||(t.cadastrado_epad?'sim':'nao')===get('rep-tac-epad'))
+                    &&(!get('rep-tac-prazo')||prazo===get('rep-tac-prazo'));
+                });
+                const groups=['Em negociação','TAC proposto e aceito','Celebrado','TAC proposto e não aceito','Finalizado'];
+                const labels=Object.fromEntries(TAC_REPORT_FIELDS);
+                const value=(key,t)=>{
+                    const p=byId.get(String(t.processo_origem_id));
+                    const map={numero_processo:t.numero_processo,processo_origem:p?.sei,origem_pad:t.origem_pad?'Sim':'Não',
+                    processo_pad:t.origem_pad?t.processo_pad:'—',processo_comunicacao_chefia:t.processo_comunicacao_chefia,
+                    cadastrado_epad:t.cadastrado_epad?'Sim':'Não',status:t.status==='Recusado'?'TAC proposto e não aceito':t.status,
+                    data_proposta:t.data_proposta,data_status:t.data_status,data_assinatura:t.data_assinatura,data_publicacao:t.data_publicacao,
+                    prazo_dias:t.prazo_dias,data_limite:t.data_limite,data_finalizacao:t.data_finalizacao,observacoes:t.observacoes};
+                    return map[key]??'';
                 };
-                const counts = groups.map(g => rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g).length);
-                let html = '<div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">' + groups.map((g,i) => '<div class="p-3 border rounded bg-gray-50"><p class="text-xs text-gray-600">'+g+'</p><p class="text-xl font-bold">'+counts[i]+'</p></div>').join('') + '</div>';
-                html += '<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório de Termos de Ajustamento de Conduta</h2><p class="text-sm text-gray-500">Período da proposta: '+(start?formatDate(start):'início')+' a '+(end?formatDate(end):'sem limite')+'</p></div>';
-                groups.forEach(g => { const list = rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g); html += '<section class="report-section"><h3 class="report-header">'+g+' ('+list.length+')</h3>'+tableFor(list)+'</section>'; });
-                lastReportData = rows; lastReportIsManagerial = false;
-                lastReportExportFields = [{label:'Número do TAC',get:t=>t.numero_processo},{label:'Processo de origem',get:t=>byId.get(String(t.processo_origem_id))?.sei||''},{label:'Origem PAD',get:t=>t.origem_pad?'Sim':'Não'},{label:'Processo PAD',get:t=>t.processo_pad},{label:'Processo de comunicação da chefia',get:t=>t.processo_comunicacao_chefia},{label:'Cadastrado no ePAD',get:t=>t.cadastrado_epad?'Sim':'Não'},{label:'Status',get:t=>t.status === 'Recusado'?'TAC proposto e não aceito':t.status},{label:'Data do status',get:t=>t.data_status},{label:'Data da proposta',get:t=>t.data_proposta},{label:'Data da assinatura',get:t=>t.data_assinatura},{label:'Data da publicação',get:t=>t.data_publicacao},{label:'Prazo (dias)',get:t=>t.prazo_dias},{label:'Data limite',get:t=>t.data_limite},{label:'Data de finalização',get:t=>t.data_finalizacao},{label:'Observações',get:t=>t.observacoes}];
-                document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
-            } catch (error) { console.error('Erro ao gerar relatório de TACs:', error); showToast('Não foi possível gerar o relatório de TACs. Verifique a tabela e as permissões de leitura.', 'error'); }
-        }
- function toDateOnlyUtc(value) {
-            if (!value) return null;
-
-            if (value instanceof Date) {
-                if (Number.isNaN(value.getTime())) return null;
-                return Date.UTC(value.getFullYear(), value.getMonth(), value.getDate());
-            }
-
-            if (typeof value === 'string') {
-                const match = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
-                if (match) {
-                    return Date.UTC(
-                        Number(match[1]),
-                        Number(match[2]) - 1,
-                        Number(match[3])
-                    );
-                }
-            }
-
-            const parsed = new Date(value);
-            if (Number.isNaN(parsed.getTime())) return null;
-            return Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
-        }
-
-         function diffDays(d1, d2) {
-           const start = toDateOnlyUtc(d1);
-            const end = toDateOnlyUtc(d2);
-            if (start === null || end === null) return 0;
-            return Math.round((end - start) / (1000 * 3600 * 24));
-        }
-
-         function getFieldValue(process, field) {
-            return typeof field === 'function' ? field(process) : process[field];
-        }
-
-        function calculateAverageDays(list, startField, endField) {
-            const durations = list.map(p => {
-                const startDate = getFieldValue(p, startField);
-                const endDate = getFieldValue(p, endField);
-                if (!startDate || !endDate) return null;
-                return diffDays(startDate, endDate);
-            }).filter(d => d !== null);
-            if (durations.length === 0) return 0;
-            return Math.round(durations.reduce((acc, curr) => acc + curr, 0) / durations.length);
-        }
-function getMonthlyPeriodMatcher(startStr, endStr) {
-            return (dateValue) => {
-                if (!dateValue) return false;
-                if (startStr && dateValue < startStr) return false;
-                if (endStr && dateValue > endStr) return false;
-                return true;
-            };
-        }
-
-        function getManagerialPreliminarAnalyzedProcesses(source, isWithinPeriod) {
-            const byPreliminar = (p) => isWithinPeriod(p.data_analise_preliminar);
-            const noticiasArquivadosPreliminarList = source.filter(p =>
-                processHasResultado(p, 'Arquivado após análise preliminar')
-                && byPreliminar(p)
-            );
-            const noticiasEncaminhadosJuizoList = source.filter(p =>
-                ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
-                && byPreliminar(p)
-            );
-            const noticiasEncaminhadosJuizoJuntadoList = source.filter(p =>
-                p.juntado && p.juntado.trim().length > 0
-                && byPreliminar(p)
-            );
-            return uniqueProcessesByIdentity([
-                ...noticiasArquivadosPreliminarList,
-                ...noticiasEncaminhadosJuizoList,
-                ...noticiasEncaminhadosJuizoJuntadoList
-            ]);
-        }
-
-        function getManagerialJuizoAnalyzedProcesses(source, isWithinPeriod) {
-            return source.filter(p =>
-                ['Concluído', 'TAC'].includes(getStatusFromProcess(p))
-                && !processHasResultado(p, 'Arquivado após análise preliminar')
-                && isWithinPeriod(getDespachoDateForStatus(p))
-            );
-        }
-        function uniqueProcessesByIdentity(list) {
-            const map = new Map();
-            list.forEach((p) => {
-                if (!p) return;
-                const key = (p.sei && p.sei.trim()) || p.id || JSON.stringify([p.objeto, p.data_ent, p.data_analise_preliminar]);
-                if (!map.has(key)) map.set(key, p);
-            });
-            return Array.from(map.values());
-        }
-
-       function buildOutcomeRowsByResult(processList, targetResult, splitMultiAccused = true, despachoDateFilter = null) {
-            const rows = [];
-            processList.forEach(p => {
-                const accused = Array.isArray(p.acusados) ? p.acusados : [];
-                const outcomes = normalizeAccusedOutcomes(accused, p.resultados_acusados || []);
-               const shouldSplitByAccused = splitMultiAccused && processHasDifferentAccusedResults(p);
-                const accusedDisplay = accused.length ? accused.join(', ') : '—';
-
-                if (shouldSplitByAccused) {
-                    outcomes.forEach(item => {
-                        const result = item.resultado && item.resultado !== 'Não definida'
-                            ? item.resultado
-                            : (p.resultado || 'Não definida');
-                      if (normalizeText(result) === normalizeText(targetResult)) {
-                            const despachoDate = item.data_despacho || p.data_despacho || '';
-                            if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
-                            rows.push({
-                                sei: `${p.sei || '—'}${processHasDifferentAccusedResults(p) ? '*' : ''}`,
-                                objeto: p.objeto || '—',
-                                acusado: item.acusado || '—',
-                                data_conhecimento: p.data_conhecimento || '',
-                                status: getStatusFromProcess(p),
-                                resultado: result,
-                                tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
-                                data_despacho: despachoDate
-                            });
-                        }
-                    });
-                } else {
-                    const singleOutcome = outcomes[0] || {};
-                    const result = singleOutcome.resultado && singleOutcome.resultado !== 'Não definida'
-                        ? singleOutcome.resultado
-                        : (p.resultado || 'Não definida');
-                    if (normalizeText(result) === normalizeText(targetResult)) {
-                        const despachoDate = singleOutcome.data_despacho || p.data_despacho || '';
-                        if (despachoDateFilter && !despachoDateFilter(despachoDate)) return;
-                        rows.push({
-                            sei: p.sei || '—',
-                            objeto: p.objeto || '—',
-                           acusado: accusedDisplay,
-                            data_conhecimento: p.data_conhecimento || '',
-                            status: getStatusFromProcess(p),
-                            resultado: result,
-                            tac_sit: getTacStatusFromProcess(p) === 'Não aplicável' ? '' : getTacStatusFromProcess(p),
-                            data_despacho: despachoDate
-                        });
-                    }
-                }
-            });
-            return rows;
-        }
-
-        function isTacProcess(process) {
-           return processHasResultado(process, 'Para celebrar TAC')
-                || normalizeText(getStatusFromProcess(process)) === normalizeText('TAC')
-                || normalizeText(process.status_manual) === normalizeText('TAC');
-        }
-
-        function buildTacRowsBySituation(processList, targetSituation) {
-            return buildOutcomeRowsByResult(
-                processList.filter(p => isTacProcess(p) && normalizeText(getTacStatusFromProcess(p)) === normalizeText(targetSituation)),
-                'Para celebrar TAC',
-                true
-            );
-        }
-
-        function buildManagerialDifferentResultsFootnote(processList, isAnalytic) {
-            const mixedProcesses = uniqueProcessesByIdentity(processList).filter(processHasDifferentAccusedResults);
-            if (!mixedProcesses.length) return '';
-            const items = mixedProcesses.map(p => {
-                const details = getDefinedAccusedOutcomes(p)
-                    .map(item => `<li>${item.acusado}: ${item.resultado}</li>`)
-                    .join('');
-                return `<li><span class="font-mono">${p.sei || '—'}</span> possui mais de um acusado com resultados diferentes.${isAnalytic ? ` Resultado por acusado:<ul class="list-disc pl-5 mt-1">${details}</ul>` : ''}</li>`;
-            }).join('');
-            const analyticHint = isAnalytic
-                ? ' Os processos marcados com asterisco (*) aparecem nas categorias correspondentes a cada resultado individual.'
-                : ' Gere o relatório analítico para visualizar o resultado de cada acusado separadamente.';
-            return `<div class="mt-4 p-3 border-l-4 border-yellow-500 bg-yellow-50 text-sm"><p class="font-semibold">* Processos com múltiplos acusados e resultados diferentes</p><p class="mb-2">${analyticHint}</p><ul class="list-disc pl-5 space-y-1">${items}</ul></div>`;
-        }
-
-        function getManagerialSummaryRow(p) {
-            const accused = Array.isArray(p.acusados) ? p.acusados : [];
-            const outcomes = normalizeAccusedOutcomes(accused, p.resultados_acusados || []);
-            const firstOutcome = outcomes[0] || {};
-            const resultado = firstOutcome.resultado && firstOutcome.resultado !== 'Não definida'
-                ? firstOutcome.resultado
-                : (p.resultado || 'Não definida');
-            return {
-                sei: p.sei || '—',
-                objeto: p.objeto || '—',
-                acusado: accused[0] || '—',
-                data_conhecimento: p.data_conhecimento || '',
-                status: getStatusFromProcess(p),
-                resultado
-            };
-        }
-
-        function renderManagerialFixedTable(data, mode = 'statusResultado') {
-            if (!data || data.length === 0) return '';
-            if (mode === 'seiOnly') {
-                const uniqueSeis = Array.from(new Set(data.map(p => (p?.sei || '').trim()).filter(Boolean))).sort((a, b) => a.localeCompare(b, 'pt-BR'));
-                if (!uniqueSeis.length) return '';
-                return `<div class="analytic-list border-t mt-2 pt-2"><ul class="list-disc pl-5 space-y-1 text-xs">${uniqueSeis.map(sei => `<li class="font-mono">${sei}</li>`).join('')}</ul></div>`;
-            }
-            const statusHeader = mode === 'tac' ? 'Status do TAC' : 'Status do processo';
-            const resultHeader = mode === 'tac' ? '' : '<th class="border p-1">Resultado</th>';
-            let html = `<div class="analytic-list border-t mt-2 pt-2"><div class="overflow-auto max-h-[60vh]"><table class="report-table w-full min-w-max text-xs border"><thead class="bg-gray-100"><tr><th class="border p-1">Nº SEI</th><th class="border p-1">Objeto</th><th class="border p-1">Acusado</th><th class="border p-1">Data de conhecimento do fato</th><th class="border p-1">${statusHeader}</th>${resultHeader}</tr></thead><tbody>`;
-            data.forEach(p => {
-                if (p && Object.prototype.hasOwnProperty.call(p, 'acusado') && !Object.prototype.hasOwnProperty.call(p, 'acusados')) {
-                    if (mode === 'tac') {
-                        const tacStatus = p.tac_sit || '—';
-                        html += `<tr><td class="border p-1 font-mono">${p.sei || '—'}</td><td class="border p-1">${p.objeto || '—'}</td><td class="border p-1">${p.acusado || '—'}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1">${tacStatus}</td></tr>`;
-                    } else {
-                        html += `<tr><td class="border p-1 font-mono">${p.sei || '—'}</td><td class="border p-1">${p.objeto || '—'}</td><td class="border p-1">${p.acusado || '—'}</td><td class="border p-1">${formatDate(p.data_conhecimento)}</td><td class="border p-1">${p.status || '—'}</td><td class="border p-1">${p.resultado || '—'}</td></tr>`;
-                    }
-                    return;
-                }
-                const summary = getManagerialSummaryRow(p);
-                if (mode === 'tac') {
-                    html += `<tr><td class="border p-1 font-mono">${summary.sei}</td><td class="border p-1">${summary.objeto}</td><td class="border p-1">${summary.acusado}</td><td class="border p-1">${formatDate(summary.data_conhecimento)}</td><td class="border p-1">${getTacStatusFromProcess(p)}</td></tr>`;
-                } else {
-                    html += `<tr><td class="border p-1 font-mono">${summary.sei}</td><td class="border p-1">${summary.objeto}</td><td class="border p-1">${summary.acusado}</td><td class="border p-1">${formatDate(summary.data_conhecimento)}</td><td class="border p-1">${summary.status}</td><td class="border p-1">${summary.resultado}</td></tr>`;
-                }
-            });
-            return html + '</tbody></table></div></div>';
-        }
-
-         async function generateManagerialReport() {
-            const loaded = await refreshProcessosForReportGeneration();
-            if (!loaded) return;
-            closeReport();
-            const startStr = document.getElementById('rep-man-start').value;
-            const endStr = document.getElementById('rep-man-end').value;
-            const type = document.querySelector('input[name="rep-man-type"]:checked').value;
-            const isAnalytic = type === 'analitico';
-            if (!supabaseClient) { showToast('Conexão com o banco indisponível.', 'error'); return; }
-            let tacRecords = [];
-            try { const result = await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, status, data_assinatura, data_proposta, data_publicacao, data_limite, data_finalizacao'); if (result.error) throw result.error; tacRecords = result.data || []; }
-            catch (error) { console.error('Erro ao carregar TACs para o relatório gerencial:', error); showToast('Não foi possível consultar os TACs. Relatório não gerado para evitar totais incompletos.', 'error'); return; }
-
-            const isWithinPeriod = getMonthlyPeriodMatcher(startStr, endStr);
-            const byConhecimento = (p) => isWithinPeriod(p.data_conhecimento);
-             const byPreliminar = (p) => isWithinPeriod(p.data_analise_preliminar);
-            const byDespacho = (p) => isWithinPeriod(getDespachoDateForStatus(p));
-
-            const filtered = processos.filter(byConhecimento);
-            const renderRow = (label, data, analyticList, mode = 'statusResultado') => `<div class="report-item"><span>${label}</span><span class="font-bold">${data}</span></div>` + (isAnalytic ? renderManagerialFixedTable(analyticList, mode) : '');
-            const renderResultRow = (label, result, processList, mode = 'statusResultado') => {
-                const analyticRows = isAnalytic && mode === 'statusResultado'
-                    ? buildOutcomeRowsByResult(processList, result, true)
-                    : processList;
-                return renderRow(label, processList.length, analyticRows, mode);
-            };
-
-              const acervoAnalisePreliminarList = processos.filter(p =>
-                normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
-            );
-            const acervoJuizoAdmissibilidadeList = processos.filter(p =>
-                ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
-            );
-             const noticiasAnalisePreliminarList = processos.filter(p =>
-                normalizeText(getStatusFromProcess(p)) === normalizeText('Cadastrado')
-                && byPreliminar(p)
-            );
-            const noticiasArquivadosPreliminarList = processos.filter(p =>
-                processHasResultado(p, 'Arquivado após análise preliminar')
-                && byPreliminar(p)
-            );
-            const noticiasEncaminhadosJuizoList = processos.filter(p =>
-                ['Aguardando Distribuição', 'Em análise', 'Pendente de análise do(a) Corregedor(a)'].includes(getStatusFromProcess(p))
-                && byPreliminar(p)
-            );
-            const noticiasEncaminhadosJuizoJuntadoList = processos.filter(p =>
-                p.juntado && p.juntado.trim().length > 0
-                && byPreliminar(p)
-            );
-           const noticiasProcessosAnalisadosList = getManagerialPreliminarAnalyzedProcesses(processos, isWithinPeriod);
-            const avgNoticiasAnalisePreliminar = calculateAverageDays(noticiasProcessosAnalisadosList, 'data_conhecimento', 'data_analise_preliminar');
-
-            const juizoAnalisadosList = getManagerialJuizoAnalyzedProcesses(processos, isWithinPeriod);
-            const juizoAnalisadosIps = juizoAnalisadosList.filter(p => p.ips === true);
-            const juizoAnalisadosNaoIps = juizoAnalisadosList.filter(p => p.ips === false);
-            const juizoAnalisadosTotal = juizoAnalisadosIps.length + juizoAnalisadosNaoIps.length;
-            const juizoArquivadosList = processos.filter(p =>
-                processHasResultado(p, 'Arquivado após juízo de admissibilidade')
-                && byDespacho(p)
-            );
-            const juizoTacList = processos.filter(p =>
-            processHasResultado(p, 'Para celebrar TAC')
-                && byDespacho(p)
-            );
-           
-            const juizoPadList = processos.filter(p =>
-                processHasResultado(p, 'Instauração de PAD')
-                && byDespacho(p)
-            );
-            const juizoParList = processos.filter(p =>
-                processHasResultado(p, 'Instauração de PAR')
-                && byDespacho(p)
-            );
-             
-            const juizoSinpaList = processos.filter(p =>
-                processHasResultado(p, 'Instauração de SINPA')
-                && byDespacho(p)
-            );
-            const juizoSinacList = processos.filter(p =>
-                processHasResultado(p, 'Instauração de SINAC')
-                && byDespacho(p)
-            );
-            const juizoSinveList = processos.filter(p =>
-                processHasResultado(p, 'Instauração de SINVE')
-                && byDespacho(p)
-            );
-            const juizoMinTransportesList = processos.filter(p =>
-                processHasResultado(p, 'Encaminhado para o Min. dos Transportes')
-                && byPreliminar(p)
-            );
-
-            const avgJuizoAnalysis = calculateAverageDays(juizoAnalisadosList, 'data_analise_preliminar', getDespachoDateForStatus);
-
-            let html = `<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório Gerencial - ${(startStr || endStr) ? `${formatDate(startStr)} a ${formatDate(endStr)}` : "Todo o período"}</h2></div>`
-                  + `<div class="report-section"><div class="report-header">Acervo Geral de Processos</div>`
-                + `${renderRow('Análise Preliminar', acervoAnalisePreliminarList.length, acervoAnalisePreliminarList, 'statusResultado')}`
-                + `${renderRow('Juízo de Admissibilidade', acervoJuizoAdmissibilidadeList.length, acervoJuizoAdmissibilidadeList, 'statusResultado')}</div>`
-                + `<div class="report-section"><div class="report-header">Notícias de Irregularidade</div><div class="report-sub-header">Análise Preliminar</div>`
-                 + `${renderRow('Processos Analisados', noticiasProcessosAnalisadosList.length, [], 'seiOnly')}`
-                + `${renderRow('Tempo médio de análise (em dias)', avgNoticiasAnalisePreliminar, [])}`
-                + `<div class="report-sub-header">Resultados</div>`
-                + `${renderResultRow('Processos arquivados', 'Arquivado após análise preliminar', noticiasArquivadosPreliminarList, 'statusResultado')}`
-                + `${renderRow('Processos encaminhados para Juízo', noticiasEncaminhadosJuizoList.length, noticiasEncaminhadosJuizoList, 'statusResultado')}`
-                 + `${renderRow('Processos encaminhados para Juízo - juntado a processo já existente', noticiasEncaminhadosJuizoJuntadoList.length, noticiasEncaminhadosJuizoJuntadoList, 'statusResultado')}</div>`
-                   + `<div class="report-section"><div class="report-header">Juízo de Admissibilidade</div>`
-                + `<div class="report-sub-header">Processos Analisados</div>`
-               + `${renderRow('Total de Processos Analisados (IPS e não IPS)', juizoAnalisadosTotal, [])}`
-                + `${renderRow('Tempo médio de análise (em dias)', avgJuizoAnalysis, [])}`
-                + `${renderRow('Processos Analisados - IPS', juizoAnalisadosIps.length, juizoAnalisadosIps, 'statusResultado')}`
-               + `${renderRow('Processos Analisados - não IPS', juizoAnalisadosNaoIps.length, juizoAnalisadosNaoIps, 'statusResultado')}`
-                + `<div class="report-sub-header">Resultados</div>`
-                + `${renderResultRow('Processos Arquivados', 'Arquivado após juízo de admissibilidade', juizoArquivadosList, 'statusResultado')}`
-                + `${renderResultRow('Processos para negociação de Termo de Ajustamento de Conduta (TAC)', 'Para celebrar TAC', juizoTacList, 'statusResultado')}`
-                + `${renderResultRow('Instauração de Processo Administrativo Disciplinar (PAD)', 'Instauração de PAD', juizoPadList, 'statusResultado')}`
-                + `${renderResultRow('Instauração de Procedimento Administrativo de Responsabilização (PAR)', 'Instauração de PAR', juizoParList, 'statusResultado')}`
-               + `${renderResultRow('Instauração de Sindicâncias Patrimoniais (SINPA)', 'Instauração de SINPA', juizoSinpaList, 'statusResultado')}`
-                + `${renderResultRow('Instauração de Sindicâncias Acusatórias (SINAC)', 'Instauração de SINAC', juizoSinacList, 'statusResultado')}`
-                + `${renderResultRow('Instauração de Sindicâncias Investigativas (SINVE)', 'Instauração de SINVE', juizoSinveList, 'statusResultado')}`
-                + `${renderResultRow('Ministério dos Transportes', 'Encaminhado para o Min. dos Transportes', juizoMinTransportesList, 'statusResultado')}</div>`
-                + `<div class="report-section"><div class="report-header">Termos de Ajustamento de Conduta</div><p class="text-sm text-gray-600">Os TACs celebrados são contabilizados individualmente pela data de assinatura no período selecionado.</p></div>`;
-
-            const signedTacs = tacRecords.filter(t => t.status === 'Celebrado' && t.data_assinatura && isWithinPeriod(t.data_assinatura));
-            const tacAnalytic = isAnalytic && signedTacs.length ? '<div class="analytic-list"><table class="report-table w-full text-xs border"><thead><tr><th class="border p-1">Nº do TAC</th><th class="border p-1">Processo de origem</th><th class="border p-1">Data da assinatura</th><th class="border p-1">Data da publicação</th></tr></thead><tbody>' + signedTacs.map(t => { const p = processos.find(x => String(x.id) === String(t.processo_origem_id)); return '<tr><td class="border p-1">'+escapeHTML(t.numero_processo || '—')+'</td><td class="border p-1">'+escapeHTML(p?.sei || '—')+'</td><td class="border p-1">'+formatDate(t.data_assinatura)+'</td><td class="border p-1">'+formatDate(t.data_publicacao)+'</td></tr>'; }).join('') + '</tbody></table></div>' : '';
-            html += '<div class="report-section"><div class="report-header">Termos de Ajustamento de Conduta (TAC)</div><div class="report-item"><span>TACs celebrados no período (data de assinatura)</span><span class="font-bold">' + signedTacs.length + '</span></div>' + tacAnalytic + '</div>';
-            const managerialReportProcesses = uniqueProcessesByIdentity([
-                ...acervoAnalisePreliminarList,
-                ...acervoJuizoAdmissibilidadeList,
-                ...noticiasProcessosAnalisadosList,
-                ...juizoAnalisadosList,
-                ...juizoTacList
-            ]);
-            html += buildManagerialDifferentResultsFootnote(managerialReportProcesses, isAnalytic);
-
-             setLastReport(filtered, true);
-            lastManagerialSections = {
-                acervo_geral: uniqueProcessesByIdentity([...acervoAnalisePreliminarList, ...acervoJuizoAdmissibilidadeList]),
-                noticias_irregularidade: uniqueProcessesByIdentity([...noticiasAnalisePreliminarList, ...noticiasProcessosAnalisadosList, ...noticiasArquivadosPreliminarList, ...noticiasEncaminhadosJuizoList, ...noticiasEncaminhadosJuizoJuntadoList]),
-                juizo_admissibilidade: juizoAnalisadosList,
-                tacs_celebrados: signedTacs
-            };            document.getElementById('report-content').innerHTML = html;
-            document.getElementById('report-output').classList.remove('hidden');
+                const fields=getSelectedTacReportFields();
+                const esc=v=>escapeHTML(v===null||v===undefined||v===''?'—':String(v));
+                const table=list=>{
+                    if(!list.length)return '<p class="text-xs text-gray-500 py-2">Nenhum TAC nesta categoria.</p>';
+                    if(!analytic)return '';
+                    return '<div class="overflow-auto mt-2"><table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr>'+fields.map(k=>'<th class="border p-1">'+labels[k]+'</th>').join('')+'</tr></thead><tbody>'+
+                    list.map(t=>'<tr>'+fields.map(k=>'<td class="border p-1">'+esc(value(k,t))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+                };
+                let html='<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório de Termos de Ajustamento de Conduta</h2><p class="text-sm text-gray-500">Registros encontrados: '+rows.length+'</p></div>';
+                html+='<div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">'+groups.map(g=>'<div class="p-3 border rounded bg-gray-50"><p class="text-xs">'+g+'</p><p class="text-xl font-bold">'+rows.filter(t=>(t.status==='Recusado'?'TAC proposto e não aceito':t.status)===g).length+'</p></div>').join('')+'</div>';
+                groups.forEach(g=>{const list=rows.filter(t=>(t.status==='Recusado'?'TAC proposto e não aceito':t.status)===g);html+='<section class="report-section"><h3 class="report-header">'+g+' ('+list.length+')</h3>'+table(list)+'</section>';});
+                const others=rows.filter(t=>!groups.includes(t.status==='Recusado'?'TAC proposto e não aceito':t.status));
+                if(others.length)html+='<section class="report-section"><h3 class="report-header">Outros status ('+others.length+')</h3>'+table(others)+'</section>';
+                lastReportData=rows;lastReportIsManagerial=false;
+                lastReportExportFields=fields.map(k=>({label:labels[k],get:t=>value(k,t)}));
+                document.getElementById('report-content').innerHTML=html;
+                document.getElementById('report-output').classList.remove('hidden');
+            }catch(error){console.error('Erro ao gerar relatório de TACs:',error);showToast('Erro ao gerar relatório de TACs. Verifique conexão e permissões da tabela.','error');}
         }
 
         function exportToWord() {
@@ -3512,6 +3214,7 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
 
         // --- INICIALIZAÇÃO DE UI ---
         document.addEventListener('DOMContentLoaded', () => {
+            initTacReportFieldSelector();
             lucide.createIcons();
             Inputmask({ mask: "99999.999999/9999-99", placeholder: "_", showMaskOnHover: false, showMaskOnFocus: true }).mask(document.querySelectorAll(".mask-sei"));
             setViewMode(localStorage.getItem('correg_view_mode') || 'cards');
