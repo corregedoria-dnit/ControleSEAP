@@ -3514,8 +3514,8 @@ function getMonthlyPeriodMatcher(startStr, endStr) {
                     &&(!get('rep-tac-pad')||(t.processo_pad||'').includes(get('rep-tac-pad')))
                     &&(!get('rep-tac-comunicacao')||(t.processo_comunicacao_chefia||'').includes(get('rep-tac-comunicacao')))
                     &&(!get('rep-tac-observacoes')||(t.observacoes||'').toLowerCase().includes(get('rep-tac-observacoes').toLowerCase()))
-                    &&(!get('rep-tac-prazo-min')||(Number(t.prazo_meses)>=Number(get('rep-tac-prazo-min'))))
-                    &&(!get('rep-tac-prazo-max')||(Number(t.prazo_meses)<=Number(get('rep-tac-prazo-max'))))
+                    &&(!get('rep-tac-prazo-min')||(Number(getTacPrazoMeses(t))>=Number(get('rep-tac-prazo-min'))))
+                    &&(!get('rep-tac-prazo-max')||(Number(getTacPrazoMeses(t))<=Number(get('rep-tac-prazo-max'))))
                     &&(!get('rep-tac-origem-pad')||(t.origem_pad?'sim':'nao')===get('rep-tac-origem-pad'))
                     &&(!get('rep-tac-epad')||(t.cadastrado_epad?'sim':'nao')===get('rep-tac-epad'))
                     &&(!get('rep-tac-prazo')||prazo===get('rep-tac-prazo'));
