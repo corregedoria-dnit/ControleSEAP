@@ -572,8 +572,8 @@
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data da proposta</label><input id="tac-form-data-proposta" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Status do TAC</label><select id="tac-form-status" class="w-full border rounded px-3 py-2 text-sm"><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data do status</label><input id="tac-form-data-status" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" onchange="syncTacAfterSignatureChange()" class="w-full border rounded px-3 py-2 text-sm"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de publicação</label><input id="tac-form-data-publicacao" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de publicação</label><input id="tac-form-data-publicacao" type="date" onchange="syncTacAfterPublicationChange()" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Prazo para cumprimento (meses)</label><input id="tac-form-prazo-meses" type="number" min="0" step="0.01" oninput="syncTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2 text-sm" placeholder="Meses"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data limite para cumprimento</label><input id="tac-form-data-limite" type="date" onchange="syncTacMonthsFromDeadline()" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de finalização</label><input id="tac-form-data-finalizacao" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
@@ -2326,33 +2326,34 @@ filtered.sort((a, b) => {
         }
         function getTacPrazoMeses(tac) {
             if (tac?.prazo_meses !== null && tac?.prazo_meses !== undefined && tac?.prazo_meses !== '') return Number(tac.prazo_meses);
-            return tac?.data_assinatura && tac?.data_limite ? calculateTacMonths(tac.data_assinatura, tac.data_limite) : null;
+            return tac?.data_publicacao && tac?.data_limite ? calculateTacMonths(tac.data_publicacao, tac.data_limite) : null;
         }
         function syncTacDeadlineFromMonths() {
-            const assinatura = document.getElementById('tac-form-data-assinatura')?.value;
+            const publicacao = document.getElementById('tac-form-data-publicacao')?.value;
             const prazo = document.getElementById('tac-form-prazo-meses')?.value;
             const limite = document.getElementById('tac-form-data-limite');
-            if (!limite || !assinatura) return;
+            if (!limite || !publicacao) return;
             if (prazo === '') {
                 if (limite.value) syncTacMonthsFromDeadline();
                 return;
             }
-            limite.value = addTacMonths(assinatura, prazo);
+            limite.value = addTacMonths(publicacao, prazo);
         }
         function syncTacMonthsFromDeadline() {
-            const assinatura = document.getElementById('tac-form-data-assinatura')?.value;
+            const publicacao = document.getElementById('tac-form-data-publicacao')?.value;
             const limite = document.getElementById('tac-form-data-limite')?.value;
             const prazo = document.getElementById('tac-form-prazo-meses');
             if (!prazo) return;
-            if (!assinatura || !limite) { prazo.value = ''; return; }
-            const months = calculateTacMonths(assinatura, limite);
+            if (!publicacao || !limite) { prazo.value = ''; return; }
+            const months = calculateTacMonths(publicacao, limite);
             prazo.value = months === null ? '' : String(months);
-            if (months === null) showToast('A data limite não pode ser anterior à data de assinatura do TAC.', 'error');
+            if (months === null) showToast('A data limite não pode ser anterior à data de publicação do TAC.', 'error');
         }
-        function syncTacAfterSignatureChange() {
+        function syncTacAfterPublicationChange() {
+            const prazo = document.getElementById('tac-form-prazo-meses')?.value;
             const limite = document.getElementById('tac-form-data-limite')?.value;
-            if (limite) syncTacMonthsFromDeadline();
-            else syncTacDeadlineFromMonths();
+            if (prazo !== '') syncTacDeadlineFromMonths();
+            else if (limite) syncTacMonthsFromDeadline();
         }
 
         function toggleTacOriginPad() {
@@ -2415,8 +2416,11 @@ filtered.sort((a, b) => {
             document.getElementById('tac-form-data-status').value=tac.data_status||'';
             document.getElementById('tac-form-data-assinatura').value=tac.data_assinatura||'';
             document.getElementById('tac-form-data-publicacao').value=tac.data_publicacao||'';
-            document.getElementById('tac-form-prazo-meses').value=getTacPrazoMeses(tac)??'';
-            document.getElementById('tac-form-data-limite').value=tac.data_limite||'';
+            const prazoMeses=getTacPrazoMeses(tac);
+            document.getElementById('tac-form-prazo-meses').value=prazoMeses??'';
+            document.getElementById('tac-form-data-limite').value=tac.data_publicacao&&prazoMeses!==null
+                ? (addTacMonths(tac.data_publicacao,prazoMeses)||tac.data_limite||'')
+                : (tac.data_limite||'');
             document.getElementById('tac-form-data-finalizacao').value=tac.data_finalizacao||'';
             document.getElementById('tac-form-observacoes').value=tac.observacoes||'';
             document.getElementById('tac-editor-title').textContent='Editar TAC';
@@ -2436,11 +2440,12 @@ filtered.sort((a, b) => {
             if(originPad&&!processoPad){showToast('Informe o número do processo PAD de origem.','error');return;}
             if(prazoInformado!==null&&(!Number.isFinite(prazoInformado)||prazoInformado<0)){showToast('O prazo deve ser informado em meses, sem valor negativo.','error');return;}
             const dataAssinatura=document.getElementById('tac-form-data-assinatura').value||null;
+            const dataPublicacao=document.getElementById('tac-form-data-publicacao').value||null;
             let dataLimite=document.getElementById('tac-form-data-limite').value||null;
-            if((prazoInformado!==null||dataLimite)&&!dataAssinatura){showToast('Informe a data de assinatura do TAC para calcular o prazo em meses.','error');return;}
-            if(!dataLimite&&dataAssinatura&&prazoInformado!==null)dataLimite=addTacMonths(dataAssinatura,prazoInformado)||null;
-            const prazoMeses=dataLimite?calculateTacMonths(dataAssinatura,dataLimite):prazoInformado;
-            if(dataLimite&&prazoMeses===null){showToast('A data limite não pode ser anterior à data de assinatura do TAC.','error');return;}
+            if((prazoInformado!==null||dataLimite)&&!dataPublicacao){showToast('Informe a data de publicação do TAC para calcular o prazo em meses.','error');return;}
+            if(!dataLimite&&dataPublicacao&&prazoInformado!==null)dataLimite=addTacMonths(dataPublicacao,prazoInformado)||null;
+            const prazoMeses=dataLimite?calculateTacMonths(dataPublicacao,dataLimite):prazoInformado;
+            if(dataLimite&&prazoMeses===null){showToast('A data limite não pode ser anterior à data de publicação do TAC.','error');return;}
             const dataFinalizacao=document.getElementById('tac-form-data-finalizacao').value||null;
             if(status==='Celebrado'&&!dataAssinatura){showToast('Informe a data de assinatura para um TAC celebrado.','error');return;}
             if(status==='Finalizado'&&!dataFinalizacao){showToast('Informe a data de finalização para um TAC finalizado.','error');return;}
@@ -2452,7 +2457,7 @@ filtered.sort((a, b) => {
                 cadastrado_epad:document.getElementById('tac-form-cadastrado-epad').value==='true',
                 data_proposta:document.getElementById('tac-form-data-proposta').value||null,
                 data_assinatura:dataAssinatura,
-                data_publicacao:document.getElementById('tac-form-data-publicacao').value||null,
+                data_publicacao:dataPublicacao,
                 status,
                 data_status:document.getElementById('tac-form-data-status').value||null,
                 prazo_meses:prazoMeses,data_limite:dataLimite,
