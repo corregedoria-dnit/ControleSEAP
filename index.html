@@ -566,7 +566,7 @@
                                     <div class="flex items-center justify-between mb-3"><h5 id="tac-editor-title" class="font-semibold text-gray-800">Cadastrar novo TAC</h5><button type="button" id="btn-tac-cancel-edit" onclick="resetTacForm()" class="hidden text-xs text-gray-600 hover:text-blue-700">Cancelar edição</button></div>
                                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Número do processo do TAC</label><input id="tac-form-numero-processo" type="text" class="w-full border rounded px-3 py-2 text-sm mask-sei" placeholder="00000.000000/0000-00"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Processo de origem</label><div id="tac-form-processo-origem-display" class="w-full border rounded px-3 py-2 text-sm bg-gray-100 min-h-[38px]">—</div></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Processo de Admissibilidade</label><div id="tac-form-processo-origem-display" class="w-full border rounded px-3 py-2 text-sm bg-gray-100 min-h-[38px]">—</div></div>
                                         <div class="flex items-center pt-5"><label class="flex items-center gap-2 text-sm"><input id="tac-form-origem-pad" type="checkbox" onchange="toggleTacOriginPad()"> Origem é um PAD</label></div>
                                         <div id="tac-form-processo-pad-wrap" class="hidden"><label class="block text-xs font-semibold text-gray-600 mb-1">Número do processo PAD</label><input id="tac-form-processo-pad" type="text" class="w-full border rounded px-3 py-2 text-sm mask-sei" placeholder="00000.000000/0000-00"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Processo de comunicação da chefia</label><input id="tac-form-processo-comunicacao" type="text" class="w-full border rounded px-3 py-2 text-sm mask-sei" placeholder="00000.000000/0000-00"></div>
@@ -574,10 +574,10 @@
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data da proposta</label><input id="tac-form-data-proposta" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Status do TAC</label><select id="tac-form-status" class="w-full border rounded px-3 py-2 text-sm"><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data do status</label><input id="tac-form-data-status" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" onchange="syncTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de publicação</label><input id="tac-form-data-publicacao" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Prazo para cumprimento (dias)</label><input id="tac-form-prazo-dias" type="number" min="0" step="1" class="w-full border rounded px-3 py-2 text-sm" placeholder="Dias"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data limite para cumprimento</label><input id="tac-form-data-limite" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Prazo para cumprimento (meses)</label><input id="tac-form-prazo-meses" type="number" min="0" step="0.01" oninput="syncTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2 text-sm" placeholder="Meses"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data limite para cumprimento</label><input id="tac-form-data-limite" type="date" onchange="syncTacMonthsFromDeadline()" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de finalização</label><input id="tac-form-data-finalizacao" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div class="md:col-span-2 lg:col-span-3"><label class="block text-xs font-semibold text-gray-600 mb-1">Observações do TAC</label><textarea id="tac-form-observacoes" rows="2" class="w-full border rounded px-3 py-2 text-sm" placeholder="Informações complementares"></textarea></div>
                                     </div>
@@ -2065,7 +2065,7 @@ function setupConfiguracoesView() {
             if (list) list.innerHTML = '<p class="text-gray-500">Carregando TACs...</p>';
             try {
                 const { data, error } = await supabaseClient.from('tacs')
-                    .select('id, processo_origem_id, numero_processo, status, data_proposta, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao')
+                    .select('id, processo_origem_id, numero_processo, status, data_proposta, data_assinatura, data_publicacao, prazo_meses, data_limite, data_finalizacao')
                     .order('data_limite', { ascending: true, nullsFirst: false });
                 if (error) throw error;
                 dashboardTacs = Array.isArray(data) ? data : [];
@@ -2148,7 +2148,7 @@ function setupConfiguracoesView() {
                 '<p><b>Processo PAD:</b> ' + escapeHTML(tac.processo_pad || '—') + ' · <b>Comunicação da chefia:</b> ' + escapeHTML(tac.processo_comunicacao_chefia || '—') + '</p>' +
                 '<p><b>ePAD:</b> ' + (tac.cadastrado_epad ? 'Sim' : 'Não') + ' · <b>Proposta:</b> ' + formatDate(tac.data_proposta) + ' · <b>Status em:</b> ' + formatDate(tac.data_status) + '</p>' +
                 '<p><b>Assinatura:</b> ' + formatDate(tac.data_assinatura) + ' · <b>Publicação:</b> ' + formatDate(tac.data_publicacao) + '</p>' +
-                '<p><b>Prazo:</b> ' + (tac.prazo_dias == null ? '—' : escapeHTML(tac.prazo_dias + ' dias')) + ' · <b>Data limite:</b> ' + formatDate(tac.data_limite) + ' · <b>Finalização:</b> ' + formatDate(tac.data_finalizacao) + '</p>' +
+                '<p><b>Prazo:</b> ' + (getTacPrazoMeses(tac) == null ? '—' : escapeHTML(getTacPrazoMeses(tac) + ' meses')) + ' · <b>Data limite:</b> ' + formatDate(tac.data_limite) + ' · <b>Finalização:</b> ' + formatDate(tac.data_finalizacao) + '</p>' +
                 '<p><b>Observações:</b> ' + escapeHTML(tac.observacoes || '—') + '</p></div>').join('');
         }
 
@@ -2272,6 +2272,61 @@ filtered.sort((a, b) => {
             return (currentAccusedOutcomes || []).some(item => normalizeText(item?.resultado) === normalizeText('Para celebrar TAC'));
         }
 
+        function parseTacDate(value) {
+            if (!value) return null;
+            const parts = String(value).slice(0,10).split('-').map(Number);
+            if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+            return new Date(parts[0], parts[1]-1, parts[2]);
+        }
+        function formatTacDate(date) {
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '';
+            return [date.getFullYear(), String(date.getMonth()+1).padStart(2,'0'), String(date.getDate()).padStart(2,'0')].join('-');
+        }
+        function addTacMonths(startValue, monthsValue) {
+            const start = parseTacDate(startValue), months = Number(monthsValue);
+            if (!start || !Number.isFinite(months) || months < 0) return '';
+            const whole = Math.floor(months), fraction = months - whole;
+            const monthStart = new Date(start.getFullYear(), start.getMonth()+whole, 1);
+            const lastDay = new Date(monthStart.getFullYear(), monthStart.getMonth()+1, 0).getDate();
+            const wholeDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), Math.min(start.getDate(), lastDay));
+            if (!fraction) return formatTacDate(wholeDate);
+            const nextStart = new Date(start.getFullYear(), start.getMonth()+whole+1, 1);
+            const nextLastDay = new Date(nextStart.getFullYear(), nextStart.getMonth()+1, 0).getDate();
+            const nextDate = new Date(nextStart.getFullYear(), nextStart.getMonth(), Math.min(start.getDate(), nextLastDay));
+            return formatTacDate(new Date(wholeDate.getTime()+Math.round((nextDate.getTime()-wholeDate.getTime())*fraction)));
+        }
+        function calculateTacMonths(startValue, endValue) {
+            const start = parseTacDate(startValue), end = parseTacDate(endValue);
+            if (!start || !end || end < start) return null;
+            let whole = (end.getFullYear()-start.getFullYear())*12 + end.getMonth()-start.getMonth();
+            let anchor = parseTacDate(addTacMonths(startValue, whole));
+            if (anchor > end) { whole--; anchor = parseTacDate(addTacMonths(startValue, whole)); }
+            const next = parseTacDate(addTacMonths(startValue, whole+1));
+            const fraction = (end.getTime()-anchor.getTime())/(next.getTime()-anchor.getTime());
+            return Math.round((whole+fraction)*100)/100;
+        }
+        function getTacPrazoMeses(tac) {
+            if (tac?.prazo_meses !== null && tac?.prazo_meses !== undefined && tac?.prazo_meses !== '') return Number(tac.prazo_meses);
+            return tac?.data_assinatura && tac?.data_limite ? calculateTacMonths(tac.data_assinatura, tac.data_limite) : null;
+        }
+        function syncTacDeadlineFromMonths() {
+            const assinatura=document.getElementById('tac-form-data-assinatura')?.value;
+            const prazo=document.getElementById('tac-form-prazo-meses')?.value;
+            const limite=document.getElementById('tac-form-data-limite');
+            if (!limite) return;
+            if (!assinatura || prazo==='') { if (prazo==='') limite.value=''; return; }
+            limite.value=addTacMonths(assinatura,prazo);
+        }
+        function syncTacMonthsFromDeadline() {
+            const assinatura=document.getElementById('tac-form-data-assinatura')?.value;
+            const limite=document.getElementById('tac-form-data-limite')?.value;
+            const prazo=document.getElementById('tac-form-prazo-meses');
+            if (!prazo) return;
+            if (!assinatura || !limite) { prazo.value=''; return; }
+            const months=calculateTacMonths(assinatura,limite);
+            prazo.value=months===null?'':String(months);
+            if (months===null) showToast('A data limite não pode ser anterior à data de assinatura do TAC.','error');
+        }
         function toggleTacOriginPad() {
             const isPad = !!document.getElementById('tac-form-origem-pad')?.checked;
             document.getElementById('tac-form-processo-pad-wrap')?.classList.toggle('hidden', !isPad);
@@ -2279,7 +2334,7 @@ filtered.sort((a, b) => {
         }
         function resetTacForm() {
             editingTacId = null;
-            ['tac-form-numero-processo','tac-form-processo-pad','tac-form-processo-comunicacao','tac-form-data-proposta','tac-form-data-status','tac-form-data-assinatura','tac-form-data-publicacao','tac-form-prazo-dias','tac-form-data-limite','tac-form-data-finalizacao','tac-form-observacoes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+            ['tac-form-numero-processo','tac-form-processo-pad','tac-form-processo-comunicacao','tac-form-data-proposta','tac-form-data-status','tac-form-data-assinatura','tac-form-data-publicacao','tac-form-prazo-meses','tac-form-data-limite','tac-form-data-finalizacao','tac-form-observacoes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
             document.getElementById('tac-form-origem-pad').checked=false;
             document.getElementById('tac-form-cadastrado-epad').value='false';
             document.getElementById('tac-form-status').value='Em negociação';
@@ -2306,14 +2361,14 @@ filtered.sort((a, b) => {
             if(!document.getElementById('process-id')?.value){container.innerHTML='<p class="text-sm text-gray-500">Salve o processo de origem para cadastrar TACs vinculados.</p>';return;}
             if(!currentTacs.length){container.innerHTML='<p class="text-sm text-gray-500 bg-white border rounded p-3">Nenhum TAC cadastrado para este processo.</p>';return;}
             container.innerHTML=currentTacs.map(tac=>{
-                const origin=tac.origem_pad?(tac.processo_pad||'PAD não informado'):(processos.find(p=>String(p.id)===String(tac.processo_origem_id))?.sei||'Processo de origem');
+                const origin=tac.origem_pad?(tac.processo_pad||'PAD não informado'):(processos.find(p=>String(p.id)===String(tac.processo_origem_id))?.sei||'Processo de Admissibilidade');
                 return `<div class="bg-white border rounded-lg p-3"><div class="flex flex-col md:flex-row md:items-start md:justify-between gap-2"><div class="min-w-0">
                     <div class="flex flex-wrap items-center gap-2"><span class="font-semibold text-gray-800">${escapeHTML(tac.numero_processo||'TAC sem número informado')}</span><span class="status-badge st-tac">${escapeHTML(tac.status||'Sem status')}</span></div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-5 gap-y-1 text-xs text-gray-600 mt-2">
-                    <p><b>Processo de origem:</b> ${escapeHTML(origin)}</p><p><b>Processo de comunicação da chefia:</b> ${escapeHTML(tac.processo_comunicacao_chefia||'—')}</p>
+                    <p><b>Processo de Admissibilidade:</b> ${escapeHTML(origin)}</p><p><b>Processo de comunicação da chefia:</b> ${escapeHTML(tac.processo_comunicacao_chefia||'—')}</p>
                     <p><b>TAC cadastrado no ePAD:</b> ${tac.cadastrado_epad?'Sim':'Não'}</p><p><b>Data da proposta:</b> ${formatDate(tac.data_proposta)}</p>
                     <p><b>Data do status:</b> ${formatDate(tac.data_status)}</p>
-                    <p><b>Data de assinatura:</b> ${formatDate(tac.data_assinatura)}</p><p><b>Data de publicação:</b> ${formatDate(tac.data_publicacao)}</p><p><b>Prazo:</b> ${tac.prazo_dias==null?'—':escapeHTML(tac.prazo_dias+' dias')}</p>
+                    <p><b>Data de assinatura:</b> ${formatDate(tac.data_assinatura)}</p><p><b>Data de publicação:</b> ${formatDate(tac.data_publicacao)}</p><p><b>Prazo:</b> ${getTacPrazoMeses(tac)==null?'—':escapeHTML(getTacPrazoMeses(tac)+' meses')}</p>
                     <p><b>Data limite:</b> ${formatDate(tac.data_limite)}</p><p><b>Data de finalização:</b> ${formatDate(tac.data_finalizacao)}</p></div>
                     ${tac.observacoes?`<p class="text-xs text-gray-600 mt-2 whitespace-pre-wrap"><b>Observações:</b> ${escapeHTML(tac.observacoes)}</p>`:''}</div>
                     <div class="flex gap-2 shrink-0"><button type="button" onclick="editTac('${escapeAttribute(tac.id)}')" class="text-blue-700 border border-blue-200 rounded px-3 py-1 text-xs hover:bg-blue-50">Editar</button><button type="button" onclick="deleteTac('${escapeAttribute(tac.id)}')" class="text-red-600 border border-red-200 rounded px-3 py-1 text-xs hover:bg-red-50">Excluir</button></div></div></div>`;
@@ -2332,7 +2387,7 @@ filtered.sort((a, b) => {
             document.getElementById('tac-form-data-status').value=tac.data_status||'';
             document.getElementById('tac-form-data-assinatura').value=tac.data_assinatura||'';
             document.getElementById('tac-form-data-publicacao').value=tac.data_publicacao||'';
-            document.getElementById('tac-form-prazo-dias').value=tac.prazo_dias??'';
+            document.getElementById('tac-form-prazo-meses').value=getTacPrazoMeses(tac)??'';
             document.getElementById('tac-form-data-limite').value=tac.data_limite||'';
             document.getElementById('tac-form-data-finalizacao').value=tac.data_finalizacao||'';
             document.getElementById('tac-form-observacoes').value=tac.observacoes||'';
@@ -2348,11 +2403,15 @@ filtered.sort((a, b) => {
             const originPad=document.getElementById('tac-form-origem-pad').checked;
             const processoPad=document.getElementById('tac-form-processo-pad').value.trim();
             const status=document.getElementById('tac-form-status').value;
-            const prazoRaw=document.getElementById('tac-form-prazo-dias').value;
-            const prazoDias=prazoRaw===''?null:Number(prazoRaw);
+            const prazoRaw=document.getElementById('tac-form-prazo-meses').value;
+            const prazoInformado=prazoRaw===''?null:Number(prazoRaw);
             if(originPad&&!processoPad){showToast('Informe o número do processo PAD de origem.','error');return;}
-            if(prazoDias!==null&&(!Number.isInteger(prazoDias)||prazoDias<0)){showToast('O prazo deve ser informado em dias inteiros, sem valor negativo.','error');return;}
             const dataAssinatura=document.getElementById('tac-form-data-assinatura').value||null;
+            const dataLimite=document.getElementById('tac-form-data-limite').value||null;
+            if(prazoInformado!==null&&(!Number.isFinite(prazoInformado)||prazoInformado<0)){showToast('O prazo deve ser informado em meses, sem valor negativo.','error');return;}
+            if((prazoInformado!==null||dataLimite)&&!dataAssinatura){showToast('Informe a data de assinatura do TAC para calcular o prazo em meses.','error');return;}
+            const prazoMeses=dataLimite?calculateTacMonths(dataAssinatura,dataLimite):prazoInformado;
+            if(dataLimite&&prazoMeses===null){showToast('A data limite não pode ser anterior à data de assinatura do TAC.','error');return;}
             const dataFinalizacao=document.getElementById('tac-form-data-finalizacao').value||null;
             if(status==='Celebrado'&&!dataAssinatura){showToast('Informe a data de assinatura para um TAC celebrado.','error');return;}
             if(status==='Finalizado'&&!dataFinalizacao){showToast('Informe a data de finalização para um TAC finalizado.','error');return;}
@@ -2367,7 +2426,7 @@ filtered.sort((a, b) => {
                 data_publicacao:document.getElementById('tac-form-data-publicacao').value||null,
                 status,
                 data_status:document.getElementById('tac-form-data-status').value||null,
-                prazo_dias:prazoDias,data_limite:document.getElementById('tac-form-data-limite').value||null,
+                prazo_meses:prazoMeses,data_limite:dataLimite,
                 data_finalizacao:dataFinalizacao,
                 observacoes:document.getElementById('tac-form-observacoes').value.trim()||null,
                 updated_at:new Date().toISOString()
@@ -3071,7 +3130,7 @@ async function generateSituationReport() {
             if (start && end && start > end) { showToast('A data inicial não pode ser posterior à data final.', 'error'); return; }
             const isAnalytic = document.querySelector('input[name="rep-tac-type"]:checked')?.value === 'analitico';
             try {
-                const { data, error } = await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, data_proposta, status, data_status, data_assinatura, data_publicacao, prazo_dias, data_limite, data_finalizacao, observacoes').order('data_proposta', { ascending: true, nullsFirst: false });
+                const { data, error } = await supabaseClient.from('tacs').select('id, processo_origem_id, numero_processo, origem_pad, processo_pad, processo_comunicacao_chefia, cadastrado_epad, data_proposta, status, data_status, data_assinatura, data_publicacao, prazo_meses, data_limite, data_finalizacao, observacoes').order('data_proposta', { ascending: true, nullsFirst: false });
                 if (error) throw error;
                 const byId = new Map((processos || []).map(p => [String(p.id), p]));
                 const rows = (Array.isArray(data) ? data : []).filter(t => (!start || (t.data_proposta && t.data_proposta >= start)) && (!end || (t.data_proposta && t.data_proposta <= end)));
@@ -3080,9 +3139,9 @@ async function generateSituationReport() {
                 const tableFor = list => {
                     if (!list.length) return '<p class="text-xs text-gray-500 py-2">Nenhum TAC nesta categoria.</p>';
                     if (!isAnalytic) return '';
-                    const heads = ['Processo do TAC','Processo de origem','Processo PAD','Comunicação da chefia','ePAD','Data da proposta','Data do status','Assinatura','Publicação','Prazo (dias)','Data limite','Finalização','Observações'];
+                    const heads = ['Processo do TAC','Processo de origem','Processo PAD','Comunicação da chefia','ePAD','Data da proposta','Data do status','Assinatura','Publicação','Prazo (meses)','Data limite','Finalização','Observações'];
                     let out = '<div class="overflow-auto mt-2"><table class="report-table w-full text-xs border"><thead class="bg-gray-100"><tr>' + heads.map(h => '<th class="border p-1">'+h+'</th>').join('') + '</tr></thead><tbody>';
-                    list.forEach(t => { const p = byId.get(String(t.processo_origem_id)); const vals = [t.numero_processo,p?.sei,t.origem_pad?t.processo_pad:'—',t.processo_comunicacao_chefia,t.cadastrado_epad?'Sim':'Não',t.data_proposta,t.data_status,t.data_assinatura,t.data_publicacao,t.prazo_dias,t.data_limite,t.data_finalizacao,t.observacoes]; out += '<tr>'+vals.map(v => '<td class="border p-1">'+esc(v)+'</td>').join('')+'</tr>'; });
+                    list.forEach(t => { const p = byId.get(String(t.processo_origem_id)); const vals = [t.numero_processo,p?.sei,t.origem_pad?t.processo_pad:'—',t.processo_comunicacao_chefia,t.cadastrado_epad?'Sim':'Não',t.data_proposta,t.data_status,t.data_assinatura,t.data_publicacao,getTacPrazoMeses(t),t.data_limite,t.data_finalizacao,t.observacoes]; out += '<tr>'+vals.map(v => '<td class="border p-1">'+esc(v)+'</td>').join('')+'</tr>'; });
                     return out + '</tbody></table></div>';
                 };
                 const counts = groups.map(g => rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g).length);
@@ -3090,7 +3149,7 @@ async function generateSituationReport() {
                 html += '<div class="text-center mb-6"><h2 class="text-xl font-bold">Relatório de Termos de Ajustamento de Conduta</h2><p class="text-sm text-gray-500">Período da proposta: '+(start?formatDate(start):'início')+' a '+(end?formatDate(end):'sem limite')+'</p></div>';
                 groups.forEach(g => { const list = rows.filter(t => (t.status === 'Recusado' ? 'TAC proposto e não aceito' : t.status) === g); html += '<section class="report-section"><h3 class="report-header">'+g+' ('+list.length+')</h3>'+tableFor(list)+'</section>'; });
                 lastReportData = rows; lastReportIsManagerial = false;
-                lastReportExportFields = [{label:'Número do TAC',get:t=>t.numero_processo},{label:'Processo de origem',get:t=>byId.get(String(t.processo_origem_id))?.sei||''},{label:'Origem PAD',get:t=>t.origem_pad?'Sim':'Não'},{label:'Processo PAD',get:t=>t.processo_pad},{label:'Processo de comunicação da chefia',get:t=>t.processo_comunicacao_chefia},{label:'Cadastrado no ePAD',get:t=>t.cadastrado_epad?'Sim':'Não'},{label:'Status',get:t=>t.status === 'Recusado'?'TAC proposto e não aceito':t.status},{label:'Data do status',get:t=>t.data_status},{label:'Data da proposta',get:t=>t.data_proposta},{label:'Data da assinatura',get:t=>t.data_assinatura},{label:'Data da publicação',get:t=>t.data_publicacao},{label:'Prazo (dias)',get:t=>t.prazo_dias},{label:'Data limite',get:t=>t.data_limite},{label:'Data de finalização',get:t=>t.data_finalizacao},{label:'Observações',get:t=>t.observacoes}];
+                lastReportExportFields = [{label:'Número do TAC',get:t=>t.numero_processo},{label:'Processo de origem',get:t=>byId.get(String(t.processo_origem_id))?.sei||''},{label:'Origem PAD',get:t=>t.origem_pad?'Sim':'Não'},{label:'Processo PAD',get:t=>t.processo_pad},{label:'Processo de comunicação da chefia',get:t=>t.processo_comunicacao_chefia},{label:'Cadastrado no ePAD',get:t=>t.cadastrado_epad?'Sim':'Não'},{label:'Status',get:t=>t.status === 'Recusado'?'TAC proposto e não aceito':t.status},{label:'Data do status',get:t=>t.data_status},{label:'Data da proposta',get:t=>t.data_proposta},{label:'Data da assinatura',get:t=>t.data_assinatura},{label:'Data da publicação',get:t=>t.data_publicacao},{label:'Prazo (meses)',get:t=>getTacPrazoMeses(t)},{label:'Data limite',get:t=>t.data_limite},{label:'Data de finalização',get:t=>t.data_finalizacao},{label:'Observações',get:t=>t.observacoes}];
                 document.getElementById('report-content').innerHTML = html; document.getElementById('report-output').classList.remove('hidden');
             } catch (error) { console.error('Erro ao gerar relatório de TACs:', error); showToast('Não foi possível gerar o relatório de TACs. Verifique a tabela e as permissões de leitura.', 'error'); }
         }
