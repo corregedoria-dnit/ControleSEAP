@@ -525,7 +525,11 @@
                                     </div>
                                     <div id="tac-deadline-wrap" class="hidden md:col-span-2">
                                         <label class="block text-sm font-medium mb-1">Data limite para cumprimento do TAC</label>
-                                        <input type="date" id="process-tac-data-limite" class="w-full border rounded px-3 py-2">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                             <div><label class="block text-sm font-medium mb-1">Data de assinatura do TAC</label><input type="date" id="process-tac-data-assinatura" onchange="syncLegacyTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2"></div>
+                                             <div><label class="block text-sm font-medium mb-1">Prazo para cumprimento (meses)</label><input type="number" min="0" step="0.01" id="process-tac-prazo-meses" oninput="syncLegacyTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2" placeholder="Meses"></div>
+                                             <div><label class="block text-sm font-medium mb-1">Data limite para cumprimento do TAC</label><input type="date" id="process-tac-data-limite" onchange="syncLegacyTacMonthsFromDeadline()" class="w-full border rounded px-3 py-2"></div>
+                                         </div>
                                     </div>
                                     <div class="md:col-span-2">
                                         <label class="block text-sm font-medium mb-1">Observações do TAC</label>
@@ -1488,6 +1492,8 @@ if (error) {
                 tac_sit: document.getElementById('process-tac-situacao').value,
                 tac_numero_processo: document.getElementById('process-tac-numero-processo').value,
                 tac_status_data: document.getElementById('process-tac-status-data').value,
+                tac_data_assinatura: document.getElementById('process-tac-data-assinatura').value,
+                tac_prazo_meses: document.getElementById('process-tac-prazo-meses').value,
                 tac_data_limite: document.getElementById('process-tac-data-limite').value,
                 tac_obs: document.getElementById('process-tac-obs').value,
                 diligencias: currentDiligencias,
@@ -2156,13 +2162,19 @@ filtered.sort((a, b) => {
             }
             toggleTacDeadlineField();
         }
+        function parseLegacyTacDate(v){if(!v)return null;const p=String(v).slice(0,10).split('-').map(Number);if(p.length!==3||p.some(Number.isNaN))return null;return new Date(p[0],p[1]-1,p[2]);}
+        function formatLegacyTacDate(d){if(!(d instanceof Date)||Number.isNaN(d.getTime()))return '';return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');}
+        function addLegacyTacMonths(v,m){const s=parseLegacyTacDate(v),n=Number(m);if(!s||!Number.isFinite(n)||n<0)return '';const w=Math.floor(n),f=n-w,a=new Date(s.getFullYear(),s.getMonth()+w,1),last=new Date(a.getFullYear(),a.getMonth()+1,0).getDate(),d=new Date(a.getFullYear(),a.getMonth(),Math.min(s.getDate(),last));if(!f)return formatLegacyTacDate(d);const b=new Date(s.getFullYear(),s.getMonth()+w+1,1),lb=new Date(b.getFullYear(),b.getMonth()+1,0).getDate(),e=new Date(b.getFullYear(),b.getMonth(),Math.min(s.getDate(),lb));return formatLegacyTacDate(new Date(d.getTime()+Math.round((e.getTime()-d.getTime())*f)));}
+        function calculateLegacyTacMonths(a,b){const s=parseLegacyTacDate(a),e=parseLegacyTacDate(b);if(!s||!e||e<s)return null;let w=(e.getFullYear()-s.getFullYear())*12+e.getMonth()-s.getMonth(),d=parseLegacyTacDate(addLegacyTacMonths(a,w));if(d>e){w--;d=parseLegacyTacDate(addLegacyTacMonths(a,w));}const n=parseLegacyTacDate(addLegacyTacMonths(a,w+1));return Math.round((w+(e.getTime()-d.getTime())/(n.getTime()-d.getTime()))*100)/100;}
+        function syncLegacyTacDeadlineFromMonths(){const a=document.getElementById('process-tac-data-assinatura')?.value,m=document.getElementById('process-tac-prazo-meses')?.value,d=document.getElementById('process-tac-data-limite');if(!d||!a)return;if(m===''){if(d.value)syncLegacyTacMonthsFromDeadline();return;}d.value=addLegacyTacMonths(a,m);}
+        function syncLegacyTacMonthsFromDeadline(){const a=document.getElementById('process-tac-data-assinatura')?.value,d=document.getElementById('process-tac-data-limite')?.value,m=document.getElementById('process-tac-prazo-meses');if(!m)return;if(!a||!d){m.value='';return;}const n=calculateLegacyTacMonths(a,d);m.value=n===null?'':String(n);if(n===null)showToast('A data limite não pode ser anterior à data de assinatura do TAC.','error');}
         function toggleTacDeadlineField() {
             const tacStatus = document.getElementById('process-tac-situacao')?.value || '';
             const deadlineWrap = document.getElementById('tac-deadline-wrap');
             const deadlineInput = document.getElementById('process-tac-data-limite');
             const shouldShow = normalizeText(tacStatus) === normalizeText('TAC proposto e aceito');
             if (deadlineWrap) deadlineWrap.classList.toggle('hidden', !shouldShow);
-            if (!shouldShow && deadlineInput) deadlineInput.value = '';
+            if (!shouldShow && deadlineInput) { deadlineInput.value = ''; const assinatura=document.getElementById('process-tac-data-assinatura'); const prazo=document.getElementById('process-tac-prazo-meses'); if(assinatura)assinatura.value=''; if(prazo)prazo.value=''; }
         }
         function toggleConditionalField(elementId, show) { document.getElementById(elementId).classList.toggle('hidden', !show); }
         function toggleFilterDetail(elementId) { document.getElementById(elementId).classList.toggle('hidden'); }
