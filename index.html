@@ -574,7 +574,7 @@
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data da proposta</label><input id="tac-form-data-proposta" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Status do TAC</label><select id="tac-form-status" class="w-full border rounded px-3 py-2 text-sm"><option value="Em negociação">Em negociação</option><option value="TAC proposto e aceito">TAC proposto e aceito</option><option value="Celebrado">Celebrado</option><option value="TAC proposto e não aceito">TAC proposto e não aceito</option><option value="Finalizado">Finalizado</option></select></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data do status</label><input id="tac-form-data-status" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
-                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" onchange="syncTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2 text-sm"></div>
+                                        <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de assinatura</label><input id="tac-form-data-assinatura" type="date" onchange="syncTacAfterSignatureChange()" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data de publicação</label><input id="tac-form-data-publicacao" type="date" class="w-full border rounded px-3 py-2 text-sm"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Prazo para cumprimento (meses)</label><input id="tac-form-prazo-meses" type="number" min="0" step="0.01" oninput="syncTacDeadlineFromMonths()" class="w-full border rounded px-3 py-2 text-sm" placeholder="Meses"></div>
                                         <div><label class="block text-xs font-semibold text-gray-600 mb-1">Data limite para cumprimento</label><input id="tac-form-data-limite" type="date" onchange="syncTacMonthsFromDeadline()" class="w-full border rounded px-3 py-2 text-sm"></div>
@@ -805,7 +805,7 @@
                         </div>
                     </div>
                     <div>
-                        <h3 class="font-semibold text-gray-700 mb-2">Alertas de Prazos (Dias)</h3>
+                        <h3 class="font-semibold text-gray-700 mb-2">Alertas de Prazos</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div class="space-y-2"><h4 class="text-sm font-bold text-red-600">Alerta Crítico</h4>
                             <div class="flex justify-between"><label class="text-sm">Advertência:</label><input type="number" id="conf-crit-adv" class="border w-20 px-2 py-1"></div>
@@ -2314,7 +2314,8 @@ filtered.sort((a, b) => {
             const prazo=document.getElementById('tac-form-prazo-meses')?.value;
             const limite=document.getElementById('tac-form-data-limite');
             if (!limite) return;
-            if (!assinatura || prazo==='') { if (prazo==='') limite.value=''; return; }
+            if (!assinatura) return;
+            if (prazo==='') { if(limite.value) syncTacMonthsFromDeadline(); return; }
             limite.value=addTacMonths(assinatura,prazo);
         }
         function syncTacMonthsFromDeadline() {
@@ -2985,7 +2986,7 @@ async function generateSituationReport() {
             html += '</div><div class="report-section"><h3 class="report-header">Situação dos TACs (cadastro individual)</h3>';
             tacGroups.forEach(group => {
                 html += `<div class="report-item"><span>${group.label}</span><span class="font-bold">${group.items.length}</span></div>`;
-                if (isAnalytic && group.items.length) { const byId = new Map(processos.map(p => [String(p.id), p])); html += '<div class="overflow-auto"><table class="report-table w-full text-xs border"><thead><tr><th class="border p-1">Nº TAC</th><th class="border p-1">Processo de origem</th><th class="border p-1">Proposta</th><th class="border p-1">Assinatura</th><th class="border p-1">Publicação</th><th class="border p-1">Data limite</th></tr></thead><tbody>' + group.items.map(t => '<tr><td class="border p-1">'+escapeHTML(t.numero_processo || '—')+'</td><td class="border p-1">'+escapeHTML(byId.get(String(t.processo_origem_id))?.sei || '—')+'</td><td class="border p-1">'+formatDate(t.data_proposta)+'</td><td class="border p-1">'+formatDate(t.data_assinatura)+'</td><td class="border p-1">'+formatDate(t.data_publicacao)+'</td><td class="border p-1">'+formatDate(t.data_limite)+'</td></tr>').join('') + '</tbody></table></div>'; }
+                if (isAnalytic && group.items.length) { const byId = new Map(processos.map(p => [String(p.id), p])); html += '<div class="overflow-auto"><table class="report-table w-full text-xs border"><thead><tr><th class="border p-1">Nº TAC</th><th class="border p-1">Processo de Admissibilidade</th><th class="border p-1">Proposta</th><th class="border p-1">Assinatura</th><th class="border p-1">Publicação</th><th class="border p-1">Data limite</th></tr></thead><tbody>' + group.items.map(t => '<tr><td class="border p-1">'+escapeHTML(t.numero_processo || '—')+'</td><td class="border p-1">'+escapeHTML(byId.get(String(t.processo_origem_id))?.sei || '—')+'</td><td class="border p-1">'+formatDate(t.data_proposta)+'</td><td class="border p-1">'+formatDate(t.data_assinatura)+'</td><td class="border p-1">'+formatDate(t.data_publicacao)+'</td><td class="border p-1">'+formatDate(t.data_limite)+'</td></tr>').join('') + '</tbody></table></div>'; }
             });
             html += '</div>';
             setLastReport(filtered, false);
