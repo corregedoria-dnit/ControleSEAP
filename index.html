@@ -1219,10 +1219,14 @@ if (error) {
                 dbData.tac_sit = null;
                 dbData.tac_obs = null;
                 dbData.tac_status_data = null;
+                dbData.tac_data_assinatura = null;
+                dbData.tac_prazo_meses = null;
                 dbData.tac_data_limite = null;
             }
             if (normalizeText(dbData.tac_sit) !== normalizeText('TAC proposto e aceito')) {
                 dbData.tac_data_limite = null;
+                dbData.tac_data_assinatura = null;
+                dbData.tac_prazo_meses = null;
             }
             // Itera sobre todas as chaves do objeto
             for (const key in dbData) {
